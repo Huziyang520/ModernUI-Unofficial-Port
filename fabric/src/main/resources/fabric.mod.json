@@ -3,17 +3,19 @@
   "id": "modernui",
   "version": "${version}",
   "name": "Modern UI",
-  "description": "    Modern desktop framework from low-level 3D graphics API to high-level view model, for development of 2D/3D rendering software or game engine, with internationalization support and many new technologies.\n    Modern UI is a desktop application framework designed for standalone 2D and 3D rendering software development. It makes use of modern 3D graphical APIs and technologies to provide high real-time rendering performance. For good measure, Modern UI improves and optimizes a set of features used by Android and its own set of internationalization supporting text layout engine meeting Unicode specification.\n    This version is an official version that extends to Minecraft and Fabric, which combines Modern UI with Minecraft and provides a large number of additional features and modding APIs.",
+  "description": "[EN] Unofficial port of Modern UI to Minecraft 26.2, supporting NeoForge and Fabric. This is an unofficial port: please support the original project, and do NOT report issues of this port to the original author.\n[CN] Modern UI 的 Minecraft 26.2 非官方移植版，支持 NeoForge 与 Fabric。本模组为非官方移植版，请支持原项目；本模组的问题请勿向原作者反馈。",
   "authors": [
-    "BloCamLimb"
+    "BloCamLimb",
+    "Huziyang520"
   ],
   "contributors": [
+    "DragonHua",
     "The Android Open Source Project"
   ],
   "contact": {
-    "homepage": "https://curseforge.com/minecraft/mc-mods/modern-ui",
-    "issues": "https://github.com/BloCamLimb/ModernUI/issues",
-    "sources": "https://github.com/BloCamLimb/ModernUI-MC"
+    "homepage": "https://github.com/Huziyang520/ModernUI-Unofficial-Port",
+    "issues": "https://github.com/Huziyang520/ModernUI-Unofficial-Port/issues",
+    "sources": "https://github.com/Huziyang520/ModernUI-Unofficial-Port"
   },
   "license": "LGPL-3.0-or-later",
   "icon": "modernui_logo.png",

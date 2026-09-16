@@ -1,6 +1,6 @@
 modLoader="javafml"
 loaderVersion="[2,)"
-issueTrackerURL="https://github.com/BloCamLimb/ModernUI/issues"
+issueTrackerURL="https://github.com/Huziyang520/ModernUI-Unofficial-Port/issues"
 logoFile= "modernui_logo.png"
 license="LGPL-3.0-or-later"
 
@@ -8,12 +8,12 @@ license="LGPL-3.0-or-later"
     modId="modernui"
     version="${version}"
     displayName="Modern UI"
-    displayURL="https://curseforge.com/minecraft/mc-mods/modern-ui"
-    authors="BloCamLimb"
+    displayURL="https://github.com/Huziyang520/ModernUI-Unofficial-Port"
+    authors="BloCamLimb, Huziyang520"
+    credits="DragonHua"
     description='''
-    Modern desktop framework from low-level 3D graphics API to high-level view model, for development of 2D/3D rendering software or game engine, with internationalization support and many new technologies.
-    Modern UI is a desktop application framework designed for standalone 2D and 3D rendering software development. It makes use of modern 3D graphical APIs and technologies to provide high real-time rendering performance. For good measure, Modern UI improves and optimizes a set of features used by Android and its own set of internationalization supporting text layout engine meeting Unicode specification.
-    This version is an official version that extends to Minecraft and NeoForge, which combines Modern UI with Minecraft and provides a large number of additional features and modding APIs.
+    [EN] Unofficial port of Modern UI to Minecraft 26.2, supporting NeoForge and Fabric. This is an unofficial port: please support the original project, and do NOT report issues of this port to the original author.
+    [CN] Modern UI 的 Minecraft 26.2 非官方移植版，支持 NeoForge 与 Fabric。本模组为非官方移植版，请支持原项目；本模组的问题请勿向原作者反馈。
     '''
 
 [[mixins]]
