@@ -16,32 +16,15 @@
  * License along with Modern UI. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package icyllis.modernui.mc.testforge.drawable;
+package icyllis.modernui.mc;
 
-import icyllis.modernui.graphics.Canvas;
-import icyllis.modernui.graphics.Paint;
-import icyllis.modernui.graphics.drawable.Drawable;
+/**
+ * Duck interface for {@link net.minecraft.ChatFormatting}, implemented by the mixin.
+ * <p>
+ * NOTE: this interface must NOT live in a mixin package, because it is referenced
+ * directly by regular classes (see {@link MuiModApi}), which the mixin package forbids.
+ */
+public interface IChatFormattingAccessor {
 
-import javax.annotation.Nonnull;
-
-@Deprecated
-public class ScrollThumbDrawable extends Drawable {
-
-    @Override
-    public void draw(@Nonnull Canvas canvas) {
-        Paint paint = Paint.obtain();
-        paint.setStyle(Paint.FILL);
-        paint.setRGBA(128, 128, 128, 128);
-        //canvas.drawRect(0, 0, getWidth(), getHeight(), paint);
-    }
-
-    @Override
-    public int getIntrinsicWidth() {
-        return 10;
-    }
-
-    @Override
-    public int getIntrinsicHeight() {
-        return 10;
-    }
+    char mui$getCode();
 }

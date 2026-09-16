@@ -18,7 +18,6 @@
 
 package icyllis.modernui.mc.text;
 
-import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.opengl.GlTexture;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.TextureUtil;
@@ -26,6 +25,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.AddressMode;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.GpuFormat;
 import icyllis.arc3d.core.MathUtil;
 import icyllis.arc3d.core.Rect2i;
 import icyllis.arc3d.core.RectanglePacker;
@@ -201,6 +201,10 @@ public class ModernFontAtlas extends AbstractTexture implements Dumpable {
             return false;
         }
 
+        // include border
+        NativeImage.Format format = mMaskFormat == Engine.MASK_FORMAT_ARGB
+                ? NativeImage.Format.RGBA
+                : NativeImage.Format.LUMINANCE;
         var commandEncoder = RenderSystem.getDevice().createCommandEncoder();
         commandEncoder.writeToTexture(getTexture(), pixels,
                 0, 0, rect.x(), rect.y(),
@@ -208,7 +212,8 @@ public class ModernFontAtlas extends AbstractTexture implements Dumpable {
         if (mUseMipmaps) {
             assert mipPixels != null;
             commandEncoder.writeToTexture(getTexture(), mipPixels,
-                    1, 0, rect.x() / 2, rect.y() / 2);
+                    rect.x() / 2, rect.y() / 2,
+                    rect.width() / 2, rect.height() / 2);
         }
         /*int rowBytes = rect.width() * ColorInfo.bytesPerPixel(colorType);
         boolean res = ((GLDevice) mContext.getDevice()).writePixels(

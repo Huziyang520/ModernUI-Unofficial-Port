@@ -80,6 +80,10 @@ dependencies {
     compileOnly("org.lwjgl:lwjgl-vulkan:3.4.1")
     testCompileOnly("org.lwjgl:lwjgl-vulkan:3.4.1")
 
+    // Optional VulkanMod integration: compile-only, never bundled or required at runtime.
+    compileOnly("maven.modrinth:JYQhtZtO:PNODQNIn")
+    testCompileOnly("maven.modrinth:JYQhtZtO:PNODQNIn")
+
     //implementation(forgeDependencies("com.vladsch.flexmark:flexmark:${flexmark_version}"))
 
     //modRuntimeOnly("mekanism:Mekanism:1.21.1-10.7.7.64")
@@ -132,6 +136,11 @@ loom.nestJars(
 shadowJar {
     archiveClassifier.set("universal")
     configurations = [project.configurations.shadow]
+    // MC 26.2 compile-time stubs must not ship in the mod jar:
+    // these packages are exported by the minecraft module itself, and
+    // shipping them causes JPMS split-package ResolutionException at startup.
+    exclude 'net/minecraft/**'
+    exclude 'com/mojang/**'
 
     /*dependencies {
         exclude 'icu4j-59.1.jar'
@@ -199,6 +208,9 @@ processResources {
 }
 
 jar {
+    // exclude MC/Blaze3D compile-time stubs from the plain jar as well
+    exclude 'net/minecraft/**'
+    exclude 'com/mojang/**'
     manifest {
         attributes(
                 "Specification-Title"     : project.name,

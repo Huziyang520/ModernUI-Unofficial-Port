@@ -63,10 +63,13 @@ public class MixinGameRenderer {
         return BlurHandler.INSTANCE.getBlurRadius(option);
     }
 
-    @Inject(method = "extractGui",
+    // MC 26.2: GameRenderer.extractGui was removed in the new render pipeline.
+    // UI extraction now lives in GuiRenderer; this hook is disabled.
+    /*@Inject(method = "extractGui",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getToastManager()" +
                     "Lnet/minecraft/client/gui/components/toasts/ToastManager;"))
     private void onRenderToasts(DeltaTracker deltaTracker, boolean shouldRenderLevel, boolean resourcesLoaded, CallbackInfo ci) {
         UIManager.getInstance().renderAbove(gameRenderState.guiRenderState);
     }
+*/
 }

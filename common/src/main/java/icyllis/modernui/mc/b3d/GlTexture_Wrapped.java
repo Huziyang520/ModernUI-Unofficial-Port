@@ -12,16 +12,15 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with Modern UI. If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Modern UI. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package icyllis.modernui.mc.b3d;
 
-import com.mojang.blaze3d.opengl.GlConst;
-import com.mojang.blaze3d.opengl.FrameBufferCache;
-import com.mojang.blaze3d.opengl.GlTexture;
 import com.mojang.blaze3d.GpuFormat;
+import com.mojang.blaze3d.opengl.GlConst;
+import com.mojang.blaze3d.opengl.GlTexture;
 import icyllis.arc3d.core.SharedPtr;
 import icyllis.arc3d.engine.Engine;
 
@@ -41,7 +40,7 @@ public class GlTexture_Wrapped extends GlTexture {
                 source.getGLFormat() == GlConst.GL_RGBA8 ? GpuFormat.RGBA8_UNORM : GpuFormat.R8_UNORM,
                 source.getWidth(), source.getHeight(),
                 /*depthOrLayers*/ 1, source.getMipLevelCount(),
-                source.getHandle(), new FrameBufferCache());
+                source.getHandle(), null);
         assert source.getImageType() == Engine.ImageType.k2D;
         assert source.getGLFormat() == GlConst.GL_RGBA8 || source.getGLFormat() == GlConst.GL_R8;
         assert source.getDepth() == 1;

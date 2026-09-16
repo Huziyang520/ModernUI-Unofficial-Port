@@ -20,10 +20,14 @@ package icyllis.modernui.mc.mixin;
 
 import icyllis.modernui.mc.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import javax.annotation.Nullable;
 
 @Mixin(Minecraft.class)
 public abstract class MixinMinecraft {
@@ -34,6 +38,19 @@ public abstract class MixinMinecraft {
 
     @Shadow
     public abstract boolean isWindowActive();*/
+
+    /**
+     * Forge breaks the event, see
+     * <a href="https://github.com/MinecraftForge/MinecraftForge/issues/8992">this issue</a>
+     * MC 26.2: Minecraft.screen field and setScreen method were moved to Gui,
+     * the method is now setScreenAndShow.
+     */
+    @Inject(method = "setScreenAndShow", at = @At("HEAD"))
+    private void onSetScreen(Screen guiScreen, CallbackInfo ci) {
+        MuiModApi.dispatchOnScreenChange(
+                ((Minecraft) (Object) this).gui.screen(),
+                guiScreen);
+    }
 
     @Inject(method = "onGameLoadFinished", at = @At("HEAD"))
     private void beforeGameLoadFinished(@Coerce Object cookie, CallbackInfo ci) {
@@ -87,8 +104,9 @@ public abstract class MixinMinecraft {
         MuiModApi.dispatchOnRenderFrame(0, MuiModApi.RENDER_STAGE_RENDER);
     }
 
+    // MC 26.2: RenderSystem.flipFrame() was replaced by GpuSurface.present()
     @Inject(method = "renderFrame", at = @At(value = "INVOKE",
-            target = "Lcom/mojang/blaze3d/systems/RenderSystem;flipFrame(Lcom/mojang/blaze3d/TracyFrameCapture;)V"))
+            target = "Lcom/mojang/blaze3d/systems/GpuSurface;present()V"))
     private void onStartRenderFramePresent(boolean advanceGameTime, CallbackInfo ci) {
         MuiModApi.dispatchOnRenderFrame(0, MuiModApi.RENDER_STAGE_PRESENT);
     }

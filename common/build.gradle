@@ -26,7 +26,7 @@ dependencies {
         transitive = false
     }
 
-    // Keep VulkanMod API available for optional integration until a 26.2 build is published.
+    // Optional VulkanMod integration: compile-only, never bundled or required at runtime.
     compileOnly("maven.modrinth:JYQhtZtO:PNODQNIn")
     compileOnly("org.lwjgl:lwjgl-vulkan:3.4.1")
 }

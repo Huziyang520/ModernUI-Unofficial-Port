@@ -1,6 +1,6 @@
 /*
  * Modern UI.
- * Copyright (C) 2019-2021 BloCamLimb. All rights reserved.
+ * Copyright (C) 2019-2022 BloCamLimb. All rights reserved.
  *
  * Modern UI is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,18 +16,22 @@
  * License along with Modern UI. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package icyllis.modernui.mc.forge;
+package icyllis.modernui.mc.text.mixin;
 
-import icyllis.modernui.mc.ModernUIMod;
-import org.spongepowered.asm.mixin.Mixins;
-import org.spongepowered.asm.mixin.connect.IMixinConnector;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Deprecated
-public class MixinConnector implements IMixinConnector {
+import java.util.SequencedMap;
 
-    @Override
-    public void connect() {
-        Mixins.addConfiguration("mixins.modernui-forge.json");
-        ModernUIMod.LOGGER.debug(ModernUIMod.MARKER, "Connected to mixin system");
-    }
+/**
+ * Handle deferred rendering and transparency sorting (painter's algorithm).
+ */
+@Mixin(MultiBufferSource.BufferSource.class)
+public interface AccessBufferSource {
+
+    @Accessor("fixedBuffers")
+    SequencedMap<RenderType, ByteBufferBuilder> getFixedBuffers();
 }

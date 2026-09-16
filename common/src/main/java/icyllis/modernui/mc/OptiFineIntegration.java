@@ -53,7 +53,8 @@ public final class OptiFineIntegration {
         try {
             Class<?> clazz = Class.forName("net.optifine.shaders.gui.GuiShaders");
             Constructor<?> constructor = clazz.getConstructor(Screen.class, Options.class);
-            minecraft.gui.setScreen((Screen) constructor.newInstance(minecraft.gui.screen(), minecraft.options));
+            Screen current = minecraft.gui.screen();
+            minecraft.setScreenAndShow((Screen) constructor.newInstance(current, minecraft.options));
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -18,19 +18,21 @@
 
 package icyllis.modernui.mc.text;
 
-import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
+import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import icyllis.modernui.mc.ModernUIMod;
 import icyllis.modernui.mc.MuiModApi;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
@@ -60,58 +62,71 @@ public abstract class TextRenderType {
      */
     public static final int MODE_UNIFORM_SCALE = 4; // <- must be power of 2
 
-    public static final RenderPipeline.Snippet PIPELINE_SNIPPET = RenderPipeline.builder()
-            .withVertexShader(Identifier.withDefaultNamespace("core/text"))
-            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_normal"))
-            .withBindGroupLayout(BindGroupLayouts.FOG)
-            .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
-            .withBindGroupLayout(BindGroupLayouts.PROJECTION)
-            .withBindGroupLayout(BindGroupLayouts.SAMPLER0_SAMPLER2)
-            .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
-            .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP)
-            .withPrimitiveTopology(PrimitiveTopology.QUADS)
-            .buildSnippet();
-
-    public static final RenderPipeline PIPELINE_NORMAL = RenderPipeline.builder(PIPELINE_SNIPPET)
+    // MC 26.2: vanilla text shaders were merged into minecraft:core/text and are
+    // switched by shader defines, so the old minecraft:core/rendertype_text_intensity
+    // no longer exists. Vanilla's pipeline snippets are private and RenderPipeline#toBuilder
+    // is not available on the modding classpath, so copy the vanilla pipeline
+    // configuration manually and only replace the fragment shader.
+    public static final RenderPipeline PIPELINE_NORMAL = copyOf(RenderPipelines.TEXT)
             .withLocation(ModernUIMod.location("pipeline/modern_text_normal"))
-            .withDepthStencilState(DepthStencilState.DEFAULT)
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_normal"))
             .build();
 
-    public static final RenderPipeline PIPELINE_GUI_NORMAL = RenderPipeline.builder(PIPELINE_SNIPPET)
+    // GUI text uses the IS_GUI shader define, which also makes the fog varyings absent.
+    public static final RenderPipeline PIPELINE_GUI_NORMAL = copyOf(RenderPipelines.GUI_TEXT)
             .withLocation(ModernUIMod.location("pipeline/modern_text_gui_normal"))
-            .withShaderDefine("IS_GUI")
-            .withDepthStencilState(Optional.empty())
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_normal"))
             .build();
 
-    public static final RenderPipeline.Snippet PIPELINE_SDF_SNIPPET = RenderPipeline.builder()
-            .withVertexShader(Identifier.withDefaultNamespace("core/text"))
-            .withBindGroupLayout(BindGroupLayouts.FOG)
-            .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
-            .withBindGroupLayout(BindGroupLayouts.PROJECTION)
-            .withBindGroupLayout(BindGroupLayouts.SAMPLER0_SAMPLER2)
-            .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
-            .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP)
-            .withPrimitiveTopology(PrimitiveTopology.QUADS)
-            .buildSnippet();
-
-    public static final RenderPipeline PIPELINE_SDF_FILL = RenderPipeline.builder(PIPELINE_SDF_SNIPPET)
+    public static final RenderPipeline PIPELINE_SDF_FILL = copyOf(RenderPipelines.TEXT)
             .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_fill"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
             .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, true, -1.0F, -10.0F))
             .build();
 
-    public static final RenderPipeline PIPELINE_SDF_STROKE = RenderPipeline.builder(PIPELINE_SDF_SNIPPET)
+    public static final RenderPipeline PIPELINE_SDF_STROKE = copyOf(RenderPipelines.TEXT)
             .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_stroke"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_stroke"))
             .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, true, -1.0F, -10.0F))
             .build();
 
-    public static final RenderPipeline PIPELINE_GUI_SDF = RenderPipeline.builder(PIPELINE_SDF_SNIPPET)
+    public static final RenderPipeline PIPELINE_GUI_SDF = copyOf(RenderPipelines.GUI_TEXT)
             .withLocation(ModernUIMod.location("pipeline/modern_text_gui_sdf"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
-            .withShaderDefine("IS_GUI")
-            .withDepthStencilState(Optional.empty())
             .build();
+
+    /**
+     * Copies everything from a vanilla pipeline (shader defines, bind groups, vertex
+     * format, blend/depth state, ...) so that only the fragment shader needs replacing.
+     */
+    @Nonnull
+    private static RenderPipeline.Builder copyOf(@Nonnull RenderPipeline base) {
+        RenderPipeline.Builder builder = RenderPipeline.builder()
+                .withVertexShader(base.getVertexShader())
+                .withFragmentShader(base.getFragmentShader());
+        for (String flag : base.getShaderDefines().flags()) {
+            builder.withShaderDefine(flag);
+        }
+        for (var layout : base.getBindGroupLayouts()) {
+            builder.withBindGroupLayout(layout);
+        }
+        var targets = base.getColorTargetStates();
+        for (int i = 0; i < targets.length; i++) {
+            builder.withColorTargetState(i, targets[i]);
+        }
+        builder.withDepthStencilState(Optional.ofNullable(base.getDepthStencilState()));
+        var polygonMode = base.getPolygonMode();
+        if (polygonMode != null) {
+            builder.withPolygonMode(polygonMode);
+        }
+        builder.withCull(base.isCull());
+        var formats = base.getVertexFormatBindings();
+        for (int i = 0; i < formats.length; i++) {
+            builder.withVertexBinding(i, formats[i]);
+        }
+        builder.withPrimitiveTopology(base.getPrimitiveTopology());
+        return builder;
+    }
 
     /*private static volatile RenderPipeline sCurrentPipelineSDFFill = PIPELINE_SDF_FILL;
     private static volatile RenderPipeline sCurrentPipelineSDFStroke = PIPELINE_SDF_STROKE;
@@ -186,8 +201,10 @@ public abstract class TextRenderType {
     private static final HashMap<Identifier, RenderType> sPolygonOffsetTypes = new HashMap<>();
 
     private static RenderType sFirstSDFFillType;
+    private static final ByteBufferBuilder sFirstSDFFillBuffer = new ByteBufferBuilder(131072);
 
     private static RenderType sFirstSDFStrokeType;
+    private static final ByteBufferBuilder sFirstSDFStrokeBuffer = new ByteBufferBuilder(131072);
 
     // SDF requires bilinear sampling
     //@SharedPtr
@@ -367,6 +384,8 @@ public abstract class TextRenderType {
         if (sFirstSDFFillType == null) {
             assert (sSDFFillTypes.isEmpty());
             sFirstSDFFillType = renderType;
+            // MC26.2: renderBuffers (MultiBufferSource.BufferSource) was removed,
+            // the SDF fill type no longer needs to be registered into fixed buffers.
         }
         return renderType;
     }
@@ -396,6 +415,8 @@ public abstract class TextRenderType {
         if (sFirstSDFStrokeType == null) {
             assert (sSDFStrokeTypes.isEmpty());
             sFirstSDFStrokeType = renderType;
+            // MC26.2: renderBuffers (MultiBufferSource.BufferSource) was removed,
+            // the SDF stroke type no longer needs to be registered into fixed buffers.
         }
         return renderType;
     }
@@ -465,10 +486,12 @@ public abstract class TextRenderType {
     public static synchronized void clear(boolean cleanup) {
         if (sFirstSDFFillType != null) {
             assert (!sSDFFillTypes.isEmpty());
+            // MC26.2: renderBuffers removed, nothing to unregister
             sFirstSDFFillType = null;
         }
         if (sFirstSDFStrokeType != null) {
             assert (!sSDFStrokeTypes.isEmpty());
+            // MC26.2: renderBuffers removed, nothing to unregister
             sFirstSDFStrokeType = null;
         }
         sNormalTypes.clear();
@@ -477,6 +500,8 @@ public abstract class TextRenderType {
         sVanillaTypes.clear();
         sSeeThroughTypes.clear();
         sPolygonOffsetTypes.clear();
+        sFirstSDFFillBuffer.clear();
+        sFirstSDFStrokeBuffer.clear();
         if (cleanup) {
             //sLinearFontSampler = RefCnt.move(sLinearFontSampler);
             /*sCurrentShaderSDFFill = null;

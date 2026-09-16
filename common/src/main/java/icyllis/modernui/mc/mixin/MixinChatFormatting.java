@@ -18,15 +18,21 @@
 
 package icyllis.modernui.mc.mixin;
 
+import icyllis.modernui.mc.IChatFormattingAccessor;
 import icyllis.modernui.mc.MuiModApi;
 import net.minecraft.ChatFormatting;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.Overwrite;
 
 import javax.annotation.Nullable;
 
 @Mixin(ChatFormatting.class)
-public class MixinChatFormatting {
+public abstract class MixinChatFormatting implements IChatFormattingAccessor {
+
+    @Override
+    @Accessor("code")
+    public abstract char mui$getCode();
 
     /**
      * @author BloCamLimb

@@ -132,7 +132,6 @@ public class TextLayoutEngine extends FontResourceManager
      * we use this placeholder and redirect it to the <em>current</em> ModernUI default typeface list.
      */
     private static final Identifier INTERNAL_DEFAULT = ModernUIMod.location("internal-default");
-    private static final Identifier UNIFORM_FONT = Identifier.withDefaultNamespace("uniform");
 
     /*
      * Draw and cache all glyphs of all fonts needed
@@ -498,22 +497,22 @@ public class TextLayoutEngine extends FontResourceManager
             if (fontSets.get(Minecraft.DEFAULT_FONT) instanceof StandardFontSet standardFontSet) {
                 standardFontSet.reload(mFontCollections.get(Minecraft.DEFAULT_FONT), mResLevel);
             }
-            if (fontSets.get(UNIFORM_FONT) instanceof StandardFontSet standardFontSet) {
+            if (fontSets.get(net.minecraft.resources.Identifier.withDefaultNamespace("uniform")) instanceof StandardFontSet standardFontSet) {
                 standardFontSet.reload(ModernUI.getSelectedTypeface(), mResLevel);
             }
             for (var e : fontSets.entrySet()) {
                 if (e.getKey().equals(Minecraft.DEFAULT_FONT) ||
-                        e.getKey().equals(UNIFORM_FONT)) {
+                        e.getKey().equals(net.minecraft.resources.Identifier.withDefaultNamespace("uniform"))) {
                     continue;
                 }
                 if (e.getValue() instanceof StandardFontSet standardFontSet) {
                     standardFontSet.invalidateCache(mResLevel);
                 }
             }
-            if (!fontSets.containsKey(UNIFORM_FONT)) {
-                var fontSet = new StandardFontSet(Minecraft.getInstance().getTextureManager(), UNIFORM_FONT);
+            if (!fontSets.containsKey(net.minecraft.resources.Identifier.withDefaultNamespace("uniform"))) {
+                var fontSet = new StandardFontSet(Minecraft.getInstance().getTextureManager(), net.minecraft.resources.Identifier.withDefaultNamespace("uniform"));
                 fontSet.reload(ModernUI.getSelectedTypeface(), mResLevel);
-                fontSets.put(UNIFORM_FONT, fontSet);
+                fontSets.put(net.minecraft.resources.Identifier.withDefaultNamespace("uniform"), fontSet);
             }
         }
 
@@ -746,7 +745,7 @@ public class TextLayoutEngine extends FontResourceManager
     }
 
     private static boolean isUnicodeFont(@Nonnull Identifier name) {
-        if (name.equals(UNIFORM_FONT)) {
+        if (name.equals(net.minecraft.resources.Identifier.withDefaultNamespace("uniform"))) {
             return true;
         }
         if (name.getNamespace().equals(Identifier.DEFAULT_NAMESPACE)) {
@@ -1238,7 +1237,7 @@ public class TextLayoutEngine extends FontResourceManager
     public FontCollection getFontCollection(@Nonnull Identifier fontName) {
         if (mForceUnicodeFont == Boolean.TRUE &&
                 fontName.equals(Minecraft.DEFAULT_FONT)) {
-            fontName = UNIFORM_FONT;
+            fontName = net.minecraft.resources.Identifier.withDefaultNamespace("uniform");
         }
         FontCollection fontCollection;
         return (fontCollection = mFontCollections.get(fontName)) != null

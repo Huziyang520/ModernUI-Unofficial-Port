@@ -36,7 +36,9 @@ import java.util.List;
 @Mixin(GuiGraphicsExtractor.class)
 public abstract class MixinGuiGraphics {
 
-    @Inject(method = "tooltip(Lnet/minecraft/client/gui/Font;Ljava/util/List;" +
+    // MC 26.2: GuiGraphicsExtractor.tooltip was removed (replaced by setTooltipForNextFrame).
+    // Tooltip style capture is disabled.
+    /*@Inject(method = "tooltip(Lnet/minecraft/client/gui/Font;Ljava/util/List;" +
             "IILnet/minecraft/client/gui/screens/inventory/tooltip/ClientTooltipPositioner;" +
             "Lnet/minecraft/resources/Identifier;Lnet/minecraft/world/item/ItemStack;)V", at = @At("HEAD"))
     private void onRenderTooltip(Font font, List<ClientTooltipComponent> components,
@@ -46,5 +48,5 @@ public abstract class MixinGuiGraphics {
                                  CallbackInfo ci) {
         // capture the tooltipStyle
         UIManagerForge.sTooltipStyle = tooltipStyle;
-    }
+    }*/
 }
