@@ -18,11 +18,9 @@
 
 package icyllis.modernui.mc.mixin;
 
-import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderPass;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import icyllis.modernui.mc.TooltipRenderer;
 import icyllis.modernui.mc.UIManager;
 import net.minecraft.client.gui.render.GuiRenderer;
@@ -37,13 +35,20 @@ import java.util.function.Supplier;
 @Mixin(GuiRenderer.class)
 public class MixinGuiRenderer {
 
+    /**
+     * MC 26.2 changed {@code executeDrawRange} from 3 parameters to 5 by appending
+     * {@code int startIndex, int endIndex}, so the handler must declare those two
+     * parameters as well. Declaring the 26.1 leftovers (GpuBufferSlice/GpuBuffer/Object/
+     * two ints) makes Mixin choke on the local variable table ("incompatible changes"),
+     * silently passing a wrong/null renderPass, and the tooltip background never gets
+     * its ModernTooltip uniform. Only {@code renderPass} (slot 6) is needed here.
+     */
     @Inject(method = "executeDrawRange",
             at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;bindDefaultUniforms" +
                     "(Lcom/mojang/blaze3d/systems/RenderPass;)V", shift = At.Shift.AFTER, remap = false),
             locals = LocalCapture.CAPTURE_FAILSOFT)
-    private void onExecuteDrawRange(Supplier<String> $$0, RenderTarget $$1, GpuBufferSlice $$2, GpuBufferSlice $$3,
-                                    GpuBuffer $$4, Object $$5, int $$6, int $$7, CallbackInfo ci,
-                                    RenderPass renderPass) {
+    private void onExecuteDrawRange(Supplier<String> $$0, RenderTarget $$1, GpuBufferSlice $$2,
+                                    int $$3, int $$4, CallbackInfo ci, RenderPass renderPass) {
         if (TooltipRenderer.sTooltip) {
             GpuBufferSlice tooltipUniforms = UIManager.getInstance().mTooltipRenderer.mUniforms;
             if (tooltipUniforms != null) {

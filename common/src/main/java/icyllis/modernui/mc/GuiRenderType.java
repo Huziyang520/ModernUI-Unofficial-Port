@@ -25,7 +25,6 @@ import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import net.minecraft.client.renderer.RenderPipelines;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
@@ -34,31 +33,28 @@ import org.jetbrains.annotations.ApiStatus;
 @ApiStatus.Internal
 public abstract class GuiRenderType {
 
-    public static final RenderPipeline PIPELINE_TOOLTIP = buildTooltipPipeline();
-
     /**
-     * MC 26.2 renders through an explicit bind-group model: a pipeline must declare the
-     * uniform blocks it consumes, otherwise the engine reports them as "unknown and
-     * unsupported uniform" and the tooltip background silently disappears.
+     * The tooltip shader declares exactly three std140 uniform blocks: the two vanilla
+     * ones it imports (DynamicTransforms, Projection) plus its own ModernTooltip block
+     * which is filled in by {@code MixinGuiRenderer#onExecuteDrawRange}.
      * <p>
-     * We inherit vanilla's GUI bind groups (Projection / DynamicTransforms / samplers) and
-     * append our own {@code ModernTooltip} block, which is filled in by
-     * {@code MixinGuiRenderer#onExecuteDrawRange}.
+     * MC 26.2 replaced the old {@code withUniform(name, type)} builder call with an
+     * explicit bind group layout, so the three blocks must be declared here in the same
+     * order as the vanilla 26.1 definition. Declaring anything else (e.g. inheriting
+     * vanilla's GUI layout with its samplers) shifts the uniform slots and the tooltip
+     * background silently disappears.
      */
-    private static RenderPipeline buildTooltipPipeline() {
-        RenderPipeline.Builder builder = RenderPipeline.builder()
-                .withLocation(ModernUIMod.location("pipeline/modern_tooltip"))
-                .withVertexShader(ModernUIMod.location("core/rendertype_modern_tooltip"))
-                .withFragmentShader(ModernUIMod.location("core/rendertype_modern_tooltip"))
-                .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
-                .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
-                .withPrimitiveTopology(PrimitiveTopology.QUADS);
-        for (BindGroupLayout layout : RenderPipelines.GUI.getBindGroupLayouts()) {
-            builder.withBindGroupLayout(layout);
-        }
-        builder.withBindGroupLayout(BindGroupLayout.builder()
-                .withUniform("ModernTooltip", UniformType.UNIFORM_BUFFER)
-                .build());
-        return builder.build();
-    }
+    public static final RenderPipeline PIPELINE_TOOLTIP = RenderPipeline.builder()
+            .withLocation(ModernUIMod.location("pipeline/modern_tooltip"))
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_tooltip"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_tooltip"))
+            .withBindGroupLayout(BindGroupLayout.builder()
+                    .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
+                    .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+                    .withUniform("ModernTooltip", UniformType.UNIFORM_BUFFER)
+                    .build())
+            .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+            .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
+            .withPrimitiveTopology(PrimitiveTopology.QUADS)
+            .build();
 }

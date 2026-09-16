@@ -28,3 +28,6 @@ classes
 logs
 
 forge/src/main/resources/assets/modernui/emoji/a.bat
+
+# local build logs
+build_*.txt

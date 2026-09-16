@@ -1369,10 +1369,12 @@ public abstract class UIManager implements LifecycleOwner {
                 }
                 mLastFrameTask = task;
                 try {
-                    // Never wait forever: after the game began shutting down the render
-                    // thread may already be gone, and the notify from swapFrameTask()
-                    // would never come, permanently parking the UI thread.
-                    mRenderLock.wait(1000);
+                    // Must wait until the render thread consumed this frame (see the
+                    // notifyAll() in swapFrameTask): the surface is a single texture, so
+                    // proceeding early would overwrite it while it is still being rendered
+                    // and show up as flicker / corrupted content.
+                    // On shutdown, UIManager#destroy interrupts this thread to release it.
+                    mRenderLock.wait();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
