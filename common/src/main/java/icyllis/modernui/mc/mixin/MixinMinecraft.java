@@ -44,18 +44,13 @@ public abstract class MixinMinecraft {
      * <a href="https://github.com/MinecraftForge/MinecraftForge/issues/8992">this issue</a>
      * MC 26.2: Minecraft.screen field and setScreen method were moved to Gui,
      * the method is now setScreenAndShow.
-     * <p>
-     * NOTE: screen change notifications are dispatched by {@link MixinGui} @ Gui#setScreen,
-     * which is the single common entry point (Minecraft#setScreenAndShow delegates to it).
-     * Injecting here as well would dispatch twice, and at this point Gui#screen() still
-     * returns the OLD screen, which confuses the UI manager.
      */
-    /*@Inject(method = "setScreenAndShow", at = @At("HEAD"))
+    @Inject(method = "setScreenAndShow", at = @At("HEAD"))
     private void onSetScreen(Screen guiScreen, CallbackInfo ci) {
         MuiModApi.dispatchOnScreenChange(
                 ((Minecraft) (Object) this).gui.screen(),
                 guiScreen);
-    }*/
+    }
 
     @Inject(method = "onGameLoadFinished", at = @At("HEAD"))
     private void beforeGameLoadFinished(@Coerce Object cookie, CallbackInfo ci) {

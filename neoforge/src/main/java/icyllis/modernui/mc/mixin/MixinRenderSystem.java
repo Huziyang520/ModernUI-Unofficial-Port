@@ -55,6 +55,11 @@ public class MixinRenderSystem {
     private static void onInitRenderer(GpuDevice device, CallbackInfo ci) {
         Core.initialize();
         ContextOptions options = new ContextOptions();
+        // OpenGL uses the -1..1 clip-space depth convention. ContextOptions leaves this
+        // Boolean null, which makes Arc3D fall back to the D3D (0..1) convention, so
+        // ModernUI's off-screen UI layer and tooltip backgrounds render blank.
+        // The Fabric side sets this as well.
+        options.mDepthClipNegativeOneToOne = false;
         String value = ModernUIClient.getBootstrapProperty(ModernUIClient.BOOTSTRAP_USE_STAGING_BUFFERS_IN_OPENGL);
         if (value != null) {
             options.mUseStagingBuffers = Boolean.parseBoolean(value);
