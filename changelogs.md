@@ -1,5 +1,17 @@
 Changelogs
 ===
+### Modern UI 3.13.0.10
+Changes from
+* 3.13.0.5 → 3.13.0.10 for Minecraft 26.2-26.3
+#### NeoForge Extension 26.3
+* Fix modern tooltip background not rendering (GPU uniform block layout) 修复现代提示框背景不显示
+* Fix post-processing shaders (menu blur, grayscale, radial blur) failing to load 修复菜单模糊等后处理着色器加载失败导致的资源重载提示与花屏
+* Fix keyboard input in Modern UI screens (ESC to close, etc.) 修复界面内键盘输入失效（如 ESC 无法退出）
+* Fix mouse clicks and slider dragging not working in config screen 修复配置界面鼠标点击与滑块拖动失效
+* Fix possible crash when closing screens during game shutdown 修复退出游戏时关闭界面可能导致的崩溃
+#### Fabric Extension 26.3
+* Same as NeoForge version, plus fix modern tooltip not taking effect (mixin method signature) 同 NeoForge 版本，另修复现代提示框在 Fabric 端不生效（Mixin 方法签名漂移）
+
 ### Modern UI 3.13.0.5
 Changes from
 * 3.13.0.4 → 3.13.0.5 for Minecraft 26.1-26.1.2

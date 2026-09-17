@@ -137,7 +137,9 @@ public abstract class MixinGuiGraphics implements IModernGuiGraphics {
         return result;
     }
 
-    @Inject(method = "setTooltipForNextFrameInternal",
+    @Inject(method = "setTooltipForNextFrameInternal(Lnet/minecraft/client/gui/Font;Ljava/util/List;" +
+            "IILnet/minecraft/client/gui/screens/inventory/tooltip/ClientTooltipPositioner;" +
+            "Lnet/minecraft/resources/Identifier;Z)V",
             at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;" +
                     "deferredTooltip:Ljava/lang/Runnable;",
                     opcode = Opcodes.PUTFIELD))
@@ -147,12 +149,14 @@ public abstract class MixinGuiGraphics implements IModernGuiGraphics {
         modernUI_MC$deferredTooltipStack = modernUI_MC$tooltipStack;
     }
 
+    // MC 26.3: a trailing boolean parameter was appended to tooltip(), so the
+    // target descriptor and handler signature must include it (accepted, unused).
     @Inject(method = "tooltip(Lnet/minecraft/client/gui/Font;Ljava/util/List;" +
             "IILnet/minecraft/client/gui/screens/inventory/tooltip/ClientTooltipPositioner;" +
-            "Lnet/minecraft/resources/Identifier;)V", at = @At("HEAD"), cancellable = true)
+            "Lnet/minecraft/resources/Identifier;Z)V", at = @At("HEAD"), cancellable = true)
     private void onRenderTooltip(Font font, List<ClientTooltipComponent> components,
                                  int x, int y, ClientTooltipPositioner positioner,
-                                 @Nullable Identifier tooltipStyle,
+                                 @Nullable Identifier tooltipStyle, boolean bl,
                                  CallbackInfo ci) {
         ItemStack capturedTooltipStack = modernUI_MC$deferredTooltipStack;
         modernUI_MC$deferredTooltipStack = ItemStack.EMPTY;

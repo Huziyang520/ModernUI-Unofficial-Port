@@ -98,15 +98,22 @@ public abstract class MixinMinecraft {
         MuiModApi.dispatchOnRenderFrame(0, MuiModApi.RENDER_STAGE_EXTRACT);
     }
 
+    // MC 26.3: GameRenderer.render() no longer takes the DeltaTracker / advanceGameTime
+    // arguments, so the @At descriptor must be updated; otherwise this injector silently
+    // never fires and RENDER_STAGE_RENDER is never dispatched.
     @Inject(method = "renderFrame", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/renderer/GameRenderer;render(Lnet/minecraft/client/DeltaTracker;Z)V"))
+            target = "Lnet/minecraft/client/renderer/GameRenderer;render()V"))
     private void onStartRenderFrameRender(boolean advanceGameTime, CallbackInfo ci) {
         MuiModApi.dispatchOnRenderFrame(0, MuiModApi.RENDER_STAGE_RENDER);
     }
 
     // MC 26.2: RenderSystem.flipFrame() was replaced by GpuSurface.present()
+    // MC 26.3: GpuSurface moved from com.mojang.blaze3d.systems to
+    // com.mojang.renderpearl.api.device, so the @At descriptor must be updated;
+    // otherwise this injector silently never fires and RENDER_STAGE_PRESENT is
+    // never dispatched (Fabric would then never call Core.flushMainCalls()).
     @Inject(method = "renderFrame", at = @At(value = "INVOKE",
-            target = "Lcom/mojang/blaze3d/systems/GpuSurface;present()V"))
+            target = "Lcom/mojang/renderpearl/api/device/GpuSurface;present()V"))
     private void onStartRenderFramePresent(boolean advanceGameTime, CallbackInfo ci) {
         MuiModApi.dispatchOnRenderFrame(0, MuiModApi.RENDER_STAGE_PRESENT);
     }

@@ -6,15 +6,22 @@
 
 // MC 26.3: explicit locations are required for SPIR-V user input/output.
 
+// MC 26.3 DynamicTransforms layout: modelView(0), textureMatrix(64),
+// colorModulator(128), modelOffset(144). TooltipRenderer.writeTransform maps:
+//   localMat -> modelView(0), colorMatrix -> textureMatrix(64, 4 columns),
+//   pushData0 -> colorModulator(128), pushData1 -> modelOffset(144).
+// The color matrix columns carry the border gradient colors, with m33 = rainbow offset.
 layout(std140) uniform ModernTooltip {
-    mat4 u_LocalMat;
-    vec4 u_PushData0;
-    vec3 u_PushData1;
-    vec4 u_PushData2;
-    vec4 u_PushData3;
-    vec4 u_PushData4;
-    vec4 u_PushData5;
+    mat4 u_LocalMat;    // offset 0
+    mat4 u_ColorMatrix; // offset 64: columns 0-3 = border colors, column 3 w = rainbow offset
+    vec4 u_PushData0;   // offset 128
+    vec3 u_PushData1;   // offset 144
 };
+
+#define u_PushData2 u_ColorMatrix[0]
+#define u_PushData3 u_ColorMatrix[1]
+#define u_PushData4 u_ColorMatrix[2]
+#define u_PushData5 u_ColorMatrix[3]
 
 #define u_Size u_PushData0.xy
 #define u_Radius u_PushData0.z

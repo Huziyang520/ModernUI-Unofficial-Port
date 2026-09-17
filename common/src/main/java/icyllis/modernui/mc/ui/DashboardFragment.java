@@ -150,12 +150,14 @@ public class DashboardFragment extends Fragment {
                     info.setMovementMethod(LinkMovementMethod.getInstance());
                     markflow.setMarkdown(info,
                             I18n.get("gui.modernui.sourceCode_ssss",
+                                    "[ModernUI-Unofficial-Port](https://github.com/Huziyang520/ModernUI-Unofficial-Port)",
                                     "[ModernUI](https://github.com/BloCamLimb/ModernUI)",
                                     "[ModernUI-MC](https://github.com/BloCamLimb/ModernUI-MC)",
                                     "", "") + "  \n" +
                                     I18n.get("gui.modernui.modReleases_ssss",
+                                            "[CurseForge(Unofficial-Port)](https://www.curseforge.com/minecraft/mc-mods/modernui-unofficial-port)",
                                             "[CurseForge](https://www.curseforge.com/minecraft/mc-mods/modern-ui)",
-                                            "[Modrinth](https://modrinth.com/mod/modern-ui)",
+                                            "[Modrinth](https://modrinth.com/mod/modern-ui)",   
                                             "", "") + "  \n" +
                                     I18n.get("gui.modernui.community_ssss",
                                             "[Discord](https://discord.gg/kmyGKt2)",
@@ -186,14 +188,13 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.13.0") + """
-                                
+                                "Modern UI 3.13.0.10") + """
+
                                 ----
-                                * Complete Vulkan Rendering Backend
-                                * Brand-New Resources System
-                                * Graphics & Rendering API Overhaul
-                                * Major Text & Typography Improvements
-                                * New UI Components & Optimizations""");
+                                * Fix modern tooltip not rendering 修复现代提示框不显示
+                                * Fix config screen mouse & slider input 修复配置界面鼠标与滑块操作
+                                * Fix menu blur shaders loading failure 修复菜单模糊着色器加载失败
+                                * Fix keyboard input in screens (ESC) 修复界面内键盘输入（ESC）""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);

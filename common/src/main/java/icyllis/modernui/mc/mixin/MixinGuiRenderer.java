@@ -42,10 +42,16 @@ public class MixinGuiRenderer {
      * two ints) makes Mixin choke on the local variable table ("incompatible changes"),
      * silently passing a wrong/null renderPass, and the tooltip background never gets
      * its ModernTooltip uniform. Only {@code renderPass} (slot 6) is needed here.
+     * <p>
+     * MC 26.3: {@code RenderPass} moved from {@code com.mojang.blaze3d.systems} to
+     * {@code com.mojang.renderpearl.api.commands}, so the {@code @At} target descriptor
+     * must be updated too. A stale literal here does not fail the build and does not
+     * abort the game; the injector silently never fires, the ModernTooltip UBO is never
+     * bound, and the first tooltip draw dies with a NPE in {@code GlCommandEncoder.setupDraw}.
      */
     @Inject(method = "executeDrawRange",
             at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;bindDefaultUniforms" +
-                    "(Lcom/mojang/blaze3d/systems/RenderPass;)V", shift = At.Shift.AFTER, remap = false),
+                    "(Lcom/mojang/renderpearl/api/commands/RenderPass;)V", shift = At.Shift.AFTER, remap = false),
             locals = LocalCapture.CAPTURE_FAILSOFT)
     private void onExecuteDrawRange(Supplier<String> $$0, RenderTarget $$1, GpuBufferSlice $$2,
                                     int $$3, int $$4, CallbackInfo ci, RenderPass renderPass) {

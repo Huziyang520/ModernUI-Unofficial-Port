@@ -9,14 +9,15 @@
 #include <minecraft:dynamictransforms.glsl>
 #include <minecraft:projection.glsl>
 
+// MC 26.3 DynamicTransforms layout: modelView(0), textureMatrix(64),
+// colorModulator(128), modelOffset(144). TooltipRenderer.writeTransform maps:
+//   localMat -> modelView(0), colorMatrix -> textureMatrix(64, 4 columns),
+//   pushData0 -> colorModulator(128), pushData1 -> modelOffset(144).
 layout(std140) uniform ModernTooltip {
-    mat4 u_LocalMat;
-    vec4 u_PushData0;
-    vec3 u_PushData1;
-    vec4 u_PushData2;
-    vec4 u_PushData3;
-    vec4 u_PushData4;
-    vec4 u_PushData5;
+    mat4 u_LocalMat;    // offset 0
+    mat4 u_ColorMatrix; // offset 64: border gradient colors (columns 0-3)
+    vec4 u_PushData0;   // offset 128: xy=size, z=corner radius, w=half border width
+    vec3 u_PushData1;   // offset 144: x=shadow alpha, y=shadow spread, z=background alpha
 };
 
 layout(location = 0) in vec3 Position;

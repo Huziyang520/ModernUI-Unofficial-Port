@@ -390,6 +390,10 @@ public abstract class UIManager implements LifecycleOwner {
 
     protected void onScreenChange(@Nullable Screen oldScreen, @Nullable Screen newScreen) {
         BlurHandler.INSTANCE.blur(newScreen);
+        if (newScreen != null && newScreen instanceof MuiScreen && mScreen != newScreen) {
+            // Clear the self-maintained pressed-button mask when a new screen opens.
+            mButtonState = 0;
+        }
         /*if (newScreen == null) {
             removed();
         }*/
@@ -568,31 +572,31 @@ public abstract class UIManager implements LifecycleOwner {
                     minecraft.getWindow().getWidth() / minecraft.getWindow().getScreenWidth());
             float y = (float) (minecraft.mouseHandler.ypos() *
                     minecraft.getWindow().getHeight() / minecraft.getWindow().getScreenHeight());
-            // MC 26.3: GLFW was replaced by SDL, so the per-button query goes through
-            // MouseHandler (only the three primary buttons are exposed by that API).
-            int buttonState = 0;
-            if (minecraft.mouseHandler.isLeftPressed()) {
-                buttonState |= 1;
+            // MC 26.3: MouseHandler.isLeftPressed/isRightPressed/isMiddlePressed are
+            // only updated while NO screen is open (verified via javap: onButton
+            // jumps to the end when gui.screen() != null, skipping the field writes).
+            // GLFW's glfwGetMouseButton() used by 26.2 is gone, so we maintain the
+            // pressed button mask ourselves from the press/release events.
+            int actionButton = 1 << (button - 1);
+            if (button >= 1 && button <= 3) {
+                if (action == InputConstants.PRESS) {
+                    mButtonState |= actionButton;
+                } else {
+                    mButtonState &= ~actionButton;
+                }
             }
-            if (minecraft.mouseHandler.isRightPressed()) {
-                buttonState |= 1 << 1;
-            }
-            if (minecraft.mouseHandler.isMiddlePressed()) {
-                buttonState |= 1 << 2;
-            }
-            mButtonState = buttonState;
+            int buttonState = mButtonState;
             int hoverAction = action == InputConstants.PRESS ?
                     MotionEvent.ACTION_BUTTON_PRESS : MotionEvent.ACTION_BUTTON_RELEASE;
             int touchAction = action == InputConstants.PRESS ?
                     MotionEvent.ACTION_DOWN : MotionEvent.ACTION_UP;
-            int actionButton = 1 << button;
             MotionEvent ev = MotionEvent.obtain(now, hoverAction, actionButton,
-                    x, y, mods, buttonState, 0);
+                    x, y, KeyCodes.toGlfwMods(mods), buttonState, 0);
             mRoot.enqueueInputEvent(ev);
             if ((touchAction == MotionEvent.ACTION_DOWN && (buttonState ^ actionButton) == 0)
                     || (touchAction == MotionEvent.ACTION_UP && buttonState == 0)) {
                 ev = MotionEvent.obtain(now, touchAction, actionButton,
-                        x, y, mods, buttonState, 0);
+                        x, y, KeyCodes.toGlfwMods(mods), buttonState, 0);
                 mRoot.enqueueInputEvent(ev);
                 //LOGGER.info("Enqueue mouse event: {}", ev);
             }
@@ -600,14 +604,18 @@ public abstract class UIManager implements LifecycleOwner {
     }
 
     public void onKeyPress(int keyCode, int scanCode, int mods) {
-        KeyEvent keyEvent = KeyEvent.obtain(Core.timeNanos(), KeyEvent.ACTION_DOWN, keyCode, 0,
-                mods, scanCode, 0);
+        // MC 26.3: vanilla reports SDL scancodes; convert to GLFW key codes
+        // for the core library (ESC=256 etc.), and KMOD to GLFW_MOD bits.
+        KeyEvent keyEvent = KeyEvent.obtain(Core.timeNanos(), KeyEvent.ACTION_DOWN,
+                KeyCodes.toGlfwKey(keyCode), 0,
+                KeyCodes.toGlfwMods(mods), scanCode, 0);
         mRoot.enqueueInputEvent(keyEvent);
     }
 
     public void onKeyRelease(int keyCode, int scanCode, int mods) {
-        KeyEvent keyEvent = KeyEvent.obtain(Core.timeNanos(), KeyEvent.ACTION_UP, keyCode, 0,
-                mods, scanCode, 0);
+        KeyEvent keyEvent = KeyEvent.obtain(Core.timeNanos(), KeyEvent.ACTION_UP,
+                KeyCodes.toGlfwKey(keyCode), 0,
+                KeyCodes.toGlfwMods(mods), scanCode, 0);
         mRoot.enqueueInputEvent(keyEvent);
     }
 
@@ -1071,13 +1079,22 @@ public abstract class UIManager implements LifecycleOwner {
             return;
         }
         mRoot.mHandler.post(this::suppressLayoutTransition);
-        mFragmentController.getFragmentManager().beginTransaction()
-                .remove(screen.getFragment())
-                .setReorderingAllowed(true)
-                .commit();
+        // MC 26.3: during shutdown the FragmentManager may already be destroyed or
+        // state-saved; committing then throws IllegalStateException. The screen and
+        // ViewRoot are being torn down anyway, so skipping the transaction is safe.
+        final icyllis.modernui.fragment.FragmentManager fm = mFragmentController.getFragmentManager();
+        if (!fm.isDestroyed() && !fm.isStateSaved()) {
+            fm.beginTransaction()
+                    .remove(screen.getFragment())
+                    .setReorderingAllowed(true)
+                    .commit();
+        }
         mRoot.mHandler.post(this::restoreLayoutTransition);
         mRoot.mRawDrawHandlers.clear();
         mScreen = null;
+        // Clear the self-maintained pressed-button mask to avoid stuck keys
+        // when a release event is lost (e.g. drag out of window, focus loss).
+        mButtonState = 0;
         // MC 26.3: GLFW cursor calls are gone; MC's Window ownies the cursor now.
         minecraft.textInputManager().stopTextInput();
     }
