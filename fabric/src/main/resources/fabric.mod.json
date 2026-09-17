@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "id": "modernui",
+  "version": "${version}",
+  "name": "Modern UI",
+  "description": "[EN] Unofficial port of Modern UI to Minecraft 26.3, supporting NeoForge and Fabric. This is an unofficial port: please support the original project, and do NOT report issues of this port to the original author.\n[CN] Modern UI 的 Minecraft 26.3 非官方移植版，支持 NeoForge 与 Fabric。本模组为非官方移植版，请支持原项目；本模组的问题请勿向原作者反馈。",
+  "authors": [
+    "BloCamLimb",
+    "Huziyang520"
+  ],
+  "contributors": [
+    "DragonHua",
+    "The Android Open Source Project"
+  ],
+  "contact": {
+    "homepage": "https://github.com/Huziyang520/ModernUI-Unofficial-Port",
+    "issues": "https://github.com/Huziyang520/ModernUI-Unofficial-Port/issues",
+    "sources": "https://github.com/Huziyang520/ModernUI-Unofficial-Port"
+  },
+  "license": "LGPL-3.0-or-later",
+  "icon": "modernui_logo.png",
+  "environment": "client",
+  "entrypoints": {
+    "main": [
+      "icyllis.modernui.mc.fabric.ModernUIFabric"
+    ],
+    "client": [
+      "icyllis.modernui.mc.fabric.ModernUIFabricClient"
+    ],
+    "modmenu": [
+      "icyllis.modernui.mc.fabric.MuiModMenuApi"
+    ]
+  },
+  "mixins": [
+    "mixins.modernui-fabric.json",
+    "mixins.modernui-textmc.json"
+  ],
+  "accessWidener" : "modernui.classtweaker",
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": ">=26.3 <26.4",
+    "java": ">=25",
+    "fabric-api": ">=0.160.5",
+    "forgeconfigapiport": ">=26.3.0"
+  },
+  "conflicts": {
+    "blur": "*",
+    "tipthescales": "*"
+  }
+}

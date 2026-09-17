@@ -1,0 +1,37 @@
+issueTrackerURL="https://github.com/Huziyang520/ModernUI-Unofficial-Port/issues"
+logoFile= "modernui_logo.png"
+license="LGPL-3.0-or-later"
+
+[[mods]]
+    modId="modernui"
+    version="${version}"
+    displayName="Modern UI"
+    displayURL="https://github.com/Huziyang520/ModernUI-Unofficial-Port"
+    authors="BloCamLimb, Huziyang520"
+    credits="DragonHua"
+    description='''
+    [EN] Unofficial port of Modern UI to Minecraft 26.3, supporting NeoForge and Fabric. This is an unofficial port: please support the original project, and do NOT report issues of this port to the original author.
+    [CN] Modern UI 的 Minecraft 26.3 非官方移植版，支持 NeoForge 与 Fabric。本模组为非官方移植版，请支持原项目；本模组的问题请勿向原作者反馈。
+    '''
+
+[[mixins]]
+    config="mixins.modernui-neoforge.json"
+
+[[mixins]]
+    config="mixins.modernui-textmc.json"
+
+[[dependencies.modernui]]
+    modId="neoforge"
+    type="required"
+    versionRange="[26.3.0.1-beta,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.modernui]]
+    modId="minecraft"
+    type="required"
+    versionRange="[26.3, 26.4)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.modernui]]
+    modId="tipthescales"
+    type="discouraged"
