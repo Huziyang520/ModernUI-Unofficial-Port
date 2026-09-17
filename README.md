@@ -25,7 +25,7 @@ Modern UI 是一套面向 Minecraft 的桌面级 UI 框架，包含视图系统�
 - **NeoForge**：无需任何额外前置模组。
 - **Fabric**：必须安装 [Fabric API](https://modrinth.com/mod/fabric-api) 与
   [Forge Config API Port](https://modrinth.com/mod/forge-config-api-port)（前置依赖）；
-  [Mod Menu](https://modrinth.com/mod/modmenu) （或其他类似模组）为可选，用于在游戏内打开配置界面。
+  [Mod Menu](https://modrinth.com/mod/modmenu) 为可选，用于在游戏内打开配置界面。
 
 ## 构建
 

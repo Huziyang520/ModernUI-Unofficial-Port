@@ -150,12 +150,14 @@ public class DashboardFragment extends Fragment {
                     info.setMovementMethod(LinkMovementMethod.getInstance());
                     markflow.setMarkdown(info,
                             I18n.get("gui.modernui.sourceCode_ssss",
+                                    "[ModernUI-Unofficial-Port](https://github.com/Huziyang520/ModernUI-Unofficial-Port)",
                                     "[ModernUI](https://github.com/BloCamLimb/ModernUI)",
                                     "[ModernUI-MC](https://github.com/BloCamLimb/ModernUI-MC)",
                                     "", "") + "  \n" +
                                     I18n.get("gui.modernui.modReleases_ssss",
+                                            "[CurseForge(Unofficial-Port)](https://www.curseforge.com/minecraft/mc-mods/modernui-unofficial-port)",
                                             "[CurseForge](https://www.curseforge.com/minecraft/mc-mods/modern-ui)",
-                                            "[Modrinth](https://modrinth.com/mod/modern-ui)",
+                                            "[Modrinth](https://modrinth.com/mod/modern-ui)",   
                                             "", "") + "  \n" +
                                     I18n.get("gui.modernui.community_ssss",
                                             "[Discord](https://discord.gg/kmyGKt2)",
@@ -186,7 +188,7 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.13.0") + """
+                                "Modern UI 3.13.0.9") + """
                                 
                                 ----
                                 * Complete Vulkan Rendering Backend

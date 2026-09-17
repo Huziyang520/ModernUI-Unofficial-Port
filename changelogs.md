@@ -1,5 +1,11 @@
 Changelogs
 ===
+### Modern UI 3.13.0.9
+Changes from
+* 3.13.0.5 → 3.13.0.9 for Minecraft 26.1-26.2
+#### All Extensions 26.2
+* Update source code, release and community links in the Modern UI dashboard 更新操作中心"源代码/模组发布/社区"链接（指向 Unofficial-Port）
+
 ### Modern UI 3.13.0.5
 Changes from
 * 3.13.0.4 → 3.13.0.5 for Minecraft 26.1-26.1.2
