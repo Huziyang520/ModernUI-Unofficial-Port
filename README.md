@@ -15,7 +15,7 @@ Modern UI 是一套面向 Minecraft 的桌面级 UI 框架，包含视图系统�
 | Java | 25 |
 | NeoForge | 26.2.0.88 |
 | Fabric Loader | 0.19.3+ |
-| 模组版本 | 3.13.0.8-SNAPSHOT |
+| 模组版本 | 3.13.1 |
 | 核心库 | `dev.icyllis:modernui-core:3.13.0`|
 | 开源协议 | LGPL-3.0-or-later |
 

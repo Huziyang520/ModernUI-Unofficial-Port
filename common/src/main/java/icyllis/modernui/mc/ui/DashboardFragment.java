@@ -188,14 +188,14 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.13.0.9") + """
+                                "Modern UI 3.13.1") + """
                                 
                                 ----
-                                * Complete Vulkan Rendering Backend
-                                * Brand-New Resources System
-                                * Graphics & Rendering API Overhaul
-                                * Major Text & Typography Improvements
-                                * New UI Components & Optimizations""");
+                                * Fixed mod icon, banner and background in mod lists 修复模组列表（Catalogue）中图标、横幅与背景图不显示
+                                * "Config" in Catalogue now opens Modern UI settings 修复 Catalogue 中"配置"按钮无法打开本模组设置界面
+                                * Fixed the "Full Changelog" link in the dashboard 修复操作中心"完整日志"链接指向错误
+                                * Fixed modern tooltip background and blank UI 修复现代提示框背景不显示与界面空白
+                                * Fixed config screen flickering and game not exiting 修复配置界面闪烁花屏与退出游戏进程不结束""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);
@@ -258,7 +258,7 @@ public class DashboardFragment extends Fragment {
         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
         tv.setMovementMethod(LinkMovementMethod.getInstance());
         f.mMarkflow.setMarkdown(tv, result != null ? result :
-                "[Full Changelog…](https://github.com/BloCamLimb/ModernUI-MC/blob/master/changelogs.md)");
+                "[Full Changelog…](https://github.com/Huziyang520/ModernUI-Unofficial-Port/blob/26.2/changelogs.md)");
         list.addView(tv);
     }
 
@@ -497,7 +497,7 @@ public class DashboardFragment extends Fragment {
             future = CompletableFuture.supplyAsync(() -> {
                 HttpURLConnection connection = null;
                 try {
-                    URL url = new URL("https://raw.githubusercontent.com/BloCamLimb/ModernUI-MC/refs/heads/master/changelogs.md");
+                    URL url = new URL("https://raw.githubusercontent.com/Huziyang520/ModernUI-Unofficial-Port/refs/heads/26.2/changelogs.md");
                     connection = (HttpURLConnection) url.openConnection();
                     connection.setConnectTimeout(60_000); // 1min
                     connection.setReadTimeout(180_000); // 3min
@@ -527,7 +527,7 @@ public class DashboardFragment extends Fragment {
                             sb.append(line).append('\n');
                         }
                     }
-                    sb.append("[Full Changelog…](https://github.com/BloCamLimb/ModernUI-MC/blob/master/changelogs.md)");
+                    sb.append("[Full Changelog…](https://github.com/Huziyang520/ModernUI-Unofficial-Port/blob/26.2/changelogs.md)");
                     return sb.toString();
                 } catch (IOException e) {
                     throw new CompletionException(e);

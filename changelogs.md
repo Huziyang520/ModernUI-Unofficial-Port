@@ -1,5 +1,15 @@
 Changelogs
 ===
+### Modern UI 3.13.1
+Changes from
+* 3.13.0.9 → 3.13.1 for Minecraft 26.2
+#### All Extensions 26.2
+* Fix mod icon not showing in mod lists 修复模组图标在模组列表中不显示（改为 128×128 正方形图标）
+* Fix the "Full Changelog" link in the dashboard 修复操作中心"完整日志"链接指向错误
+#### Fabric Extension 26.2
+* Add banner and background image for the Catalogue mod list 为 Catalogue 模组列表新增横幅与背景图
+* Clicking "Config" in Catalogue now opens the Modern UI settings screen 修复 Catalogue 中"配置"按钮不可点击，现在可直接打开本模组设置界面
+
 ### Modern UI 3.13.0.9
 Changes from
 * 3.13.0.5 → 3.13.0.9 for Minecraft 26.1-26.2
