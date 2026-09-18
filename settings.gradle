@@ -15,6 +15,9 @@ pluginManagement {
         maven {
             url 'https://repo.codemc.io/repository/relativitymc/'
         }
+        maven {
+            url 'https://maven.maxhenkel.de/releases'
+        }
         gradlePluginPortal()
     }
 }
