@@ -3,6 +3,7 @@ import net.fabricmc.loom.build.nesting.NestableJarGenerationTask
 plugins {
     id 'org.relativitymc.neo-loom'
     //id 'com.matthewprenger.cursegradle' version '1.4.0'
+    id 'de.maxhenkel.cursegradle' version '1.5.2'
     id 'com.gradleup.shadow'
 }
 
@@ -273,3 +274,26 @@ publishing {
         }
     }
 }
+
+// CurseForge upload: NeoForge, project "ModernUI Unofficial-Port" (ID 1698418)
+// 注意：NeoForge 端没有任何前置依赖（只有 Fabric 端以 forge-config-api-port 为前置），故不写 relations。
+curseforge {
+    apiKey = project.findProperty('curseforge_api_key') ?: ''
+    project {
+        id = '1698418'
+        changelogType = 'markdown'
+        changelog = ''
+        releaseType = project.findProperty('curse_release_type') ?: 'release'
+        mainArtifact(tasks.named('shadowJar').get()) {
+            displayName = "Modern UI ${mod_version} (NeoForge) for Minecraft ${minecraft_version}"
+        }
+        addGameVersion minecraft_version
+        addGameVersion 'NeoForge'
+        addGameVersion 'Client'
+    }
+    options {
+        javaIntegration = false
+        forgeGradleIntegration = false
+    }
+}
+tasks.named('curseforge') { dependsOn 'shadowJar' }
