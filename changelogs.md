@@ -1,5 +1,12 @@
 Changelogs
 ===
+### Modern UI 3.14.0
+Changes from
+* 3.13.0.10 → 3.14.0 for Minecraft 26.3
+#### All Extensions 26.3
+* Fix mod icon not showing in mod lists 修复模组图标在模组列表中不显示（改为 128×128 正方形图标）
+* Fix the "Full Changelog" link in the dashboard 修复操作中心"完整日志"链接指向错误
+
 ### Modern UI 3.13.0.10
 Changes from
 * 3.13.0.5 → 3.13.0.10 for Minecraft 26.2-26.3

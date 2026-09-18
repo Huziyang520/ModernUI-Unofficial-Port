@@ -188,13 +188,11 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.13.0.10") + """
-
+                                "Modern UI 3.14.0") + """
+                                
                                 ----
-                                * Fix modern tooltip not rendering 修复现代提示框不显示
-                                * Fix config screen mouse & slider input 修复配置界面鼠标与滑块操作
-                                * Fix menu blur shaders loading failure 修复菜单模糊着色器加载失败
-                                * Fix keyboard input in screens (ESC) 修复界面内键盘输入（ESC）""");
+                                * Fixed mod icon not showing in mod lists 修复模组图标在模组列表中不显示（改为 128×128 正方形图标）
+                                * Fixed the "Full Changelog" link in the dashboard 修复操作中心"完整日志"链接指向错误""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);
@@ -257,7 +255,7 @@ public class DashboardFragment extends Fragment {
         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
         tv.setMovementMethod(LinkMovementMethod.getInstance());
         f.mMarkflow.setMarkdown(tv, result != null ? result :
-                "[Full Changelog…](https://github.com/BloCamLimb/ModernUI-MC/blob/master/changelogs.md)");
+                "[Full Changelog…](https://github.com/Huziyang520/ModernUI-Unofficial-Port/blob/26.3/changelogs.md)");
         list.addView(tv);
     }
 
@@ -496,7 +494,7 @@ public class DashboardFragment extends Fragment {
             future = CompletableFuture.supplyAsync(() -> {
                 HttpURLConnection connection = null;
                 try {
-                    URL url = new URL("https://raw.githubusercontent.com/BloCamLimb/ModernUI-MC/refs/heads/master/changelogs.md");
+                    URL url = new URL("https://raw.githubusercontent.com/Huziyang520/ModernUI-Unofficial-Port/refs/heads/26.3/changelogs.md");
                     connection = (HttpURLConnection) url.openConnection();
                     connection.setConnectTimeout(60_000); // 1min
                     connection.setReadTimeout(180_000); // 3min
@@ -526,7 +524,7 @@ public class DashboardFragment extends Fragment {
                             sb.append(line).append('\n');
                         }
                     }
-                    sb.append("[Full Changelog…](https://github.com/BloCamLimb/ModernUI-MC/blob/master/changelogs.md)");
+                    sb.append("[Full Changelog…](https://github.com/Huziyang520/ModernUI-Unofficial-Port/blob/26.3/changelogs.md)");
                     return sb.toString();
                 } catch (IOException e) {
                     throw new CompletionException(e);

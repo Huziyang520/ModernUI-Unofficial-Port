@@ -18,7 +18,7 @@
     "sources": "https://github.com/Huziyang520/ModernUI-Unofficial-Port"
   },
   "license": "LGPL-3.0-or-later",
-  "icon": "modernui_logo.png",
+  "icon": "assets/modernui/icon.png",
   "environment": "client",
   "entrypoints": {
     "main": [
@@ -36,6 +36,13 @@
     "mixins.modernui-textmc.json"
   ],
   "accessWidener" : "modernui.classtweaker",
+  "custom": {
+    "catalogue": {
+      "banner": "assets/modernui/banner.png",
+      "background": "assets/modernui/background.png",
+      "configFactory": "icyllis.modernui.mc.fabric.MuiCatalogueConfigFactory"
+    }
+  },
   "depends": {
     "fabricloader": ">=0.19.5",
     "minecraft": ">=26.3 <26.4",

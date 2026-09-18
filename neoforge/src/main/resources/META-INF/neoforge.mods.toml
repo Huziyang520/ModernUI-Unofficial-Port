@@ -35,3 +35,10 @@ license="LGPL-3.0-or-later"
 [[dependencies.modernui]]
     modId="tipthescales"
     type="discouraged"
+
+# Catalogue (https://github.com/MrCrayfish/Catalogue) 的品牌资源。
+# 上面的 logoFile 会被 Catalogue 当作横幅（banner）使用；
+# 这里补上方形图标与背景图（背景图必须恰好 512x256，否则 Catalogue 会拒绝渲染）。
+[modproperties.modernui]
+    catalogueImageIcon = "assets/modernui/icon.png"
+    catalogueBackground = "assets/modernui/background.png"
