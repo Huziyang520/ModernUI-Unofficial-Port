@@ -1,5 +1,25 @@
 Changelogs
 ===
+### Modern UI 3.14.2
+Changes from
+* 3.14.1 → 3.14.2 for Minecraft 26.3
+#### NeoForge Extension 26.3
+* Fix a startup crash when the game runs on its built-in Vulkan renderer 修复游戏以内置 Vulkan 渲染器运行时的启动崩溃
+* Fix a crash when exiting the game on the built-in Vulkan renderer 修复使用内置 Vulkan 渲染器时退出游戏崩溃
+* Fix the square icon not showing in the mod list 修复模组列表中不显示方形图标
+* Show a hand cursor when hovering buttons in the settings screen 配置界面中鼠标悬停按钮时显示手形光标
+* Add the backup issue tracker and replace the mod list background image 新增备用反馈入口，更换模组列表背景图
+#### Fabric Extension 26.3
+* Fix a crash when exiting the game on the built-in Vulkan renderer 修复使用内置 Vulkan 渲染器时退出游戏崩溃
+* Show a hand cursor when hovering buttons in the settings screen 配置界面中鼠标悬停按钮时显示手形光标
+* Add the backup issue tracker, also as a clickable link in the Mod Menu "Links" section, and replace the mod list background image 新增备用反馈入口（并在 Mod Menu"链接"区提供可点击链接），更换模组列表背景图
+
+### Modern UI 3.14.1
+Changes from
+* 3.14.0 → 3.14.1 for Minecraft 26.3
+#### All Extensions 26.3
+* Support Minecraft's built-in Vulkan renderer, no more crash at startup when the game runs on Vulkan 支持 Minecraft 内置 Vulkan 渲染器，游戏以 Vulkan 运行时不再启动崩溃
+
 ### Modern UI 3.14.0
 Changes from
 * 3.13.0.10 → 3.14.0 for Minecraft 26.3

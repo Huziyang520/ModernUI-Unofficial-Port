@@ -24,6 +24,7 @@ import icyllis.arc3d.engine.ContextOptions;
 import icyllis.modernui.core.Core;
 import icyllis.modernui.mc.ModernUIClient;
 import icyllis.modernui.mc.ModernUIMod;
+import icyllis.modernui.mc.VanillaVulkanIntegration;
 import icyllis.modernui.mc.VulkanModIntegration;
 import icyllis.modernui.mc.fabric.UIManagerFabric;
 import net.minecraft.util.TimeSource;
@@ -65,7 +66,10 @@ public class MixinRenderSystem {
             options.mAllowGLSPIRV = Boolean.parseBoolean(value);
         }
         options.mDriverBugWorkarounds = ModernUIClient.getGpuDriverBugWorkarounds();
-        switch (device.getDeviceInfo().backendName()) {
+        final String backendName = device.getDeviceInfo().backendName();
+        ModernUIMod.LOGGER.info(ModernUIMod.MARKER, "Graphics backend: {}, VulkanMod loaded: {}",
+                backendName, ModernUIMod.isVulkanModLoaded());
+        switch (backendName) {
             case "OpenGL" -> {
                 if (!Core.initOpenGL(options)) {
                     throw new IllegalStateException("Failed to create OpenGL device");
@@ -78,9 +82,17 @@ public class MixinRenderSystem {
                         throw new IllegalStateException("Failed to create Vulkan device");
                     }
                 } else {
-                    throw new UnsupportedOperationException("Unknown Vulkan backend");
+                    // Minecraft 26.2+ ships a built-in Vulkan backend ("Graphics API: Prefer
+                    // Vulkan"). Upstream only knows VulkanMod's Vulkan backend, so the game must
+                    // not be killed here: share the game's own VkDevice instead.
+                    var context = VanillaVulkanIntegration.wrapContext();
+                    if (!Core.initVulkan(context, options)) {
+                        throw new IllegalStateException("Failed to create Vulkan device");
+                    }
                 }
             }
+            default -> throw new UnsupportedOperationException(
+                    "Unsupported graphics backend: " + backendName);
         }
         UIManagerFabric.initialize();
         UIManagerFabric.initializeRenderer();

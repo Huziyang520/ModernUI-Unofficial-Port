@@ -3,4 +3,7 @@ accessible class net/minecraft/client/OptionInstance$IntRangeBase
 accessible class net/minecraft/client/OptionInstance$SliderableOrCyclableValueSet
 accessible class net/minecraft/client/gui/GuiGraphicsExtractor$ScissorStack
 accessible class net/minecraft/client/gui/font/FontManager$CachedFontProvider
+# NOTE: the backend of Minecraft's built-in Vulkan device is reached through the mixin
+# icyllis.modernui.mc.mixin.AccessFrontendGpuDevice, because loom drops class tweaker entries
+# outside net.minecraft when it generates the NeoForge access transformer.
 

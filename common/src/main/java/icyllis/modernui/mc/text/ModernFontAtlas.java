@@ -36,6 +36,7 @@ import icyllis.modernui.annotation.Nullable;
 import icyllis.modernui.annotation.RenderThread;
 import icyllis.modernui.core.Core;
 import icyllis.modernui.mc.ModernUIMod;
+import icyllis.modernui.mc.VanillaVulkanIntegration;
 import icyllis.modernui.mc.VulkanModIntegration;
 import icyllis.modernui.text.TextUtils;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -348,6 +349,9 @@ public class ModernFontAtlas extends AbstractTexture implements Dumpable {
                 case "Vulkan" -> {
                     if (ModernUIMod.isVulkanModLoaded()) {
                         VulkanModIntegration.replaceMainImageViewWithSwizzle(textureView, Swizzle.make("111r"));
+                    } else if (VanillaVulkanIntegration.isActive()) {
+                        textureView = VanillaVulkanIntegration.replaceImageViewWithSwizzle(
+                                texture, textureView, Swizzle.make("111r"));
                     }
                 }
             }

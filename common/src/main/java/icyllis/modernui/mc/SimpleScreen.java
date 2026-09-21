@@ -77,6 +77,8 @@ public class SimpleScreen extends Screen implements MuiScreen {
     public void extractRenderState(@Nonnull GuiGraphicsExtractor gr, int mouseX, int mouseY, float deltaTick) {
         mHost.render(gr, mouseX, mouseY, deltaTick);
         super.extractRenderState(gr, mouseX, mouseY, deltaTick);
+        // after the vanilla widgets, so the last cursor request of this frame is ours
+        mHost.applyCursor(gr);
     }
 
     @Override

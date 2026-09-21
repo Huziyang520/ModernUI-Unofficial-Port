@@ -139,7 +139,12 @@ public abstract class MixinMinecraft {
         }
     }*/
 
-    @Inject(method = "close", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Util;shutdownExecutors()V"))
+    // MC 26.3: Minecraft.close() calls RenderSystem.shutdownRenderer() (which destroys the GPU
+    // device) BEFORE Util.shutdownExecutors(), so injecting at the latter point made Modern UI
+    // release its Arc3D Vulkan resources on a destroyed VkDevice -> EXCEPTION_ACCESS_VIOLATION
+    // inside lwjgl_vma.dll. Tear down at the very beginning of close() instead (the order was the
+    // opposite in 26.2, and HEAD is correct for both).
+    @Inject(method = "close", at = @At("HEAD"))
     private void onClose(CallbackInfo ci) {
         UIManager.destroy();
     }

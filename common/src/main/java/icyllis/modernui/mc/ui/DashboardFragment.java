@@ -188,11 +188,14 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.14.0") + """
+                                "Modern UI 3.14.2") + """
                                 
                                 ----
-                                * Fixed mod icon not showing in mod lists 修复模组图标在模组列表中不显示（改为 128×128 正方形图标）
-                                * Fixed the "Full Changelog" link in the dashboard 修复操作中心"完整日志"链接指向错误""");
+                                * Fixed a crash on NeoForge when the built-in Vulkan renderer is used 修复 NeoForge 端使用内置 Vulkan 渲染器时的启动崩溃
+                                * Fixed a crash when exiting the game with the built-in Vulkan renderer 修复使用内置 Vulkan 渲染器时退出游戏崩溃
+                                * Fixed the square icon in the NeoForge mod list 修复 NeoForge 模组列表不显示方形图标
+                                * Hand cursor on buttons in the settings screen 配置界面中鼠标悬停按钮时显示手形光标
+                                * Backup issue tracker added, new mod list background 新增备用反馈入口、更换模组列表背景图""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);
