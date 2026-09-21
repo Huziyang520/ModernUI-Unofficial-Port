@@ -22,6 +22,8 @@ import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTextureView;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.platform.cursor.CursorType;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuTexture;
@@ -168,6 +170,10 @@ public abstract class UIManager implements LifecycleOwner {
     @RawPtr
     private VulkanImage mLastSubmittedVulkanLayer;
 
+    // the pointer icon type resolved by the view system (links, editable text, ...), updated on
+    // the UI thread by ViewRootImpl#applyPointerIcon and applied to the window once per frame
+    private volatile int mPointerIconType = PointerIcon.TYPE_DEFAULT;
+
     public final TooltipRenderer mTooltipRenderer = new TooltipRenderer();
 
 
@@ -226,6 +232,7 @@ public abstract class UIManager implements LifecycleOwner {
 
     @RenderThread
     public static void initializeRenderer() {
+        final long t0 = System.nanoTime();
         Core.checkRenderThread();
         Objects.requireNonNull(sInstance);
         var immediateContext = Core.requireImmediateContext();
@@ -233,7 +240,7 @@ public abstract class UIManager implements LifecycleOwner {
                 && (ModernUIMod.sDevelopment || DEBUG)) {
             Core.glSetupDebugCallback();
         }
-        LOGGER.info(MARKER, "UI renderer initialized");
+        LOGGER.info(MARKER, "UI renderer initialized in {} ms", (System.nanoTime() - t0) / 1_000_000L);
     }
 
     @Nonnull
@@ -1007,19 +1014,31 @@ public abstract class UIManager implements LifecycleOwner {
                         /*scissorArea*/ null
                 ));
             } else if (surface.getImage() instanceof @RawPtr VulkanImage layer) {
-                if (ModernUIMod.isVulkanModLoaded()) {
-                    if (mLayerTexture_Vulkan == null || !VulkanModIntegration.sameImage(mLayerTexture_Vulkan, layer)) {
+                final boolean vulkanMod = ModernUIMod.isVulkanModLoaded();
+                // VulkanMod shares its images with us, Minecraft's built-in Vulkan backend does
+                // not, see VanillaVulkanIntegration
+                if (vulkanMod || VanillaVulkanIntegration.isActive()) {
+                    final boolean sameImage = mLayerTexture_Vulkan != null && (vulkanMod
+                            ? VulkanModIntegration.sameImage(mLayerTexture_Vulkan, layer)
+                            : VanillaVulkanIntegration.sameImage(mLayerTexture_Vulkan, layer));
+                    if (!sameImage) {
                         if (mLayerTexture_Vulkan != null) {
                             // there's nothing to close, because the resource is managed by us
                             mLayerTexture_Vulkan = null;
                             mLayerTextureView_Vulkan.close();
                         }
-                        mLayerTexture_Vulkan = VulkanModIntegration.wrapTextureImageFromArc3D(layer);
+                        mLayerTexture_Vulkan = vulkanMod
+                                ? VulkanModIntegration.wrapTextureImageFromArc3D(layer)
+                                : VanillaVulkanIntegration.wrapTextureImageFromArc3D(layer);
                         mLayerTextureView_Vulkan = RenderSystem.getDevice()
                                 .createTextureView(mLayerTexture_Vulkan);
                     }
                     layer.refCommandBuffer();
-                    VulkanModIntegration.syncImageLayoutFromArc3D(mLayerTexture_Vulkan, layer);
+                    if (vulkanMod) {
+                        VulkanModIntegration.syncImageLayoutFromArc3D(mLayerTexture_Vulkan, layer);
+                    } else {
+                        VanillaVulkanIntegration.syncImageLayoutFromArc3D(mLayerTexture_Vulkan, layer);
+                    }
                     gr.nextStratum();
                     MuiModApi.get().submitGuiElementRenderState(gr, new BlitRenderState(
                             // render target is always premultiplied
@@ -1032,7 +1051,11 @@ public abstract class UIManager implements LifecycleOwner {
                             ~0,
                             /*scissorArea*/ null
                     ));
-                    VulkanModIntegration.addFrameOp(layer::unrefCommandBuffer);
+                    if (vulkanMod) {
+                        VulkanModIntegration.addFrameOp(layer::unrefCommandBuffer);
+                    } else {
+                        VanillaVulkanIntegration.addFrameOp(layer::unrefCommandBuffer);
+                    }
                 }
                 mLastSubmittedVulkanLayer = layer;
             }
@@ -1143,6 +1166,67 @@ public abstract class UIManager implements LifecycleOwner {
         }
     }
 
+    /**
+     * Requests the cursor resolved by the view system from Minecraft's GUI extractor.
+     * <p>
+     * Minecraft collects cursor requests while extracting the GUI and applies the last request to
+     * the window once per frame (see {@code GuiGraphicsExtractor#requestCursor} and
+     * {@code #applyCursor}, called by {@code net.minecraft.client.gui.Gui}). Requesting here -
+     * instead of writing to the window ourselves - is both stable and harmless to screens we do
+     * not render: writing the window at frame end raced with Minecraft's own selection, which made
+     * the cursor flicker between hand and arrow, and forcing an arrow when nothing was hovered
+     * replaced Minecraft's hand cursor over vanilla widgets.
+     */
+    @RenderThread
+    public void applyCursor(@Nonnull GuiGraphicsExtractor gr) {
+        final CursorType type = resolveCursorType();
+        if (type != null) {
+            gr.requestCursor(type);
+        }
+    }
+
+    /**
+     * @return the cursor the hovered view wants, or null if ModernUI has nothing to say this frame
+     */
+    @Nullable
+    private CursorType resolveCursorType() {
+        switch (mPointerIconType) {
+            case PointerIcon.TYPE_HAND -> {
+                return CursorTypes.POINTING_HAND;
+            }
+            case PointerIcon.TYPE_TEXT -> {
+                return CursorTypes.IBEAM;
+            }
+        }
+        // The view system resolves links (TYPE_HAND) and editable/selectable text (TYPE_TEXT)
+        // itself, but it never reports a hand for plain clickable widgets, so look that up here.
+        try {
+            return findHoveredClickable(mDecor) != null ? CursorTypes.POINTING_HAND : null;
+        } catch (Throwable t) {
+            // the view tree is owned by the UI thread, never let a race break the frame
+            return null;
+        }
+    }
+
+    @Nullable
+    private static View findHoveredClickable(@Nullable View view) {
+        if (view == null || view.getVisibility() != View.VISIBLE) {
+            return null;
+        }
+        if (view.isHovered() && view.isEnabled() && view.isClickable()) {
+            return view;
+        }
+        if (view instanceof ViewGroup group) {
+            for (int i = group.getChildCount() - 1; i >= 0; i--) {
+                final View result = findHoveredClickable(group.getChildAt(i));
+                if (result != null) {
+                    return result;
+                }
+            }
+        }
+        return null;
+    }
+
     public void onRenderFrame(long frame, int stage) {
         if (stage == MuiModApi.RENDER_STAGE_UPDATE) {
             final long lastFrameTime = mFrameTimeNanos;
@@ -1179,6 +1263,8 @@ public abstract class UIManager implements LifecycleOwner {
             if (mLayerTexture_Vulkan != null && mLastSubmittedVulkanLayer != null) {
                 if (ModernUIMod.isVulkanModLoaded()) {
                     VulkanModIntegration.syncImageLayoutFromVulkan(mLayerTexture_Vulkan, mLastSubmittedVulkanLayer);
+                } else if (VanillaVulkanIntegration.isActive()) {
+                    VanillaVulkanIntegration.syncImageLayoutFromVulkan(mLayerTexture_Vulkan, mLastSubmittedVulkanLayer);
                 }
                 mLastSubmittedVulkanLayer = null;
             }
@@ -1236,6 +1322,8 @@ public abstract class UIManager implements LifecycleOwner {
         ImageStore.getInstance().clear();
         System.gc();
         Core.requireImmediateContext().unref();
+        // release the resources we own on Minecraft's Vulkan device while it is still alive
+        VanillaVulkanIntegration.close();
         if (sInstance != null) {
             AudioManager.getInstance().close();
             try {
@@ -1482,8 +1570,11 @@ public abstract class UIManager implements LifecycleOwner {
 
         @MainThread
         protected void applyPointerIcon(int pointerType) {
-            minecraft.schedule(() -> glfwSetCursor(minecraft.getWindow().handle(),
-                    PointerIcon.getSystemIcon(pointerType).getHandle()));
+            // Minecraft selects the cursor itself once per frame while extracting the GUI, so only
+            // record the resolved type here; the render thread hands it over to Minecraft's GUI
+            // extractor at the end of the screen extraction (see UIManager#applyCursor), which is
+            // the last request of the frame and therefore survives Minecraft's own selection.
+            mPointerIconType = pointerType;
         }
 
         @Override

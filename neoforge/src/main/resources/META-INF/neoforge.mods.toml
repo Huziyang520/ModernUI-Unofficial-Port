@@ -1,19 +1,22 @@
 modLoader="javafml"
 loaderVersion="[2,)"
-issueTrackerURL="https://github.com/Huziyang520/ModernUI-Unofficial-Port/issues"
-logoFile= "modernui_logo.png"
 license="LGPL-3.0-or-later"
 
 [[mods]]
     modId="modernui"
     version="${version}"
     displayName="Modern UI"
-    displayURL="https://github.com/Huziyang520/ModernUI-Unofficial-Port"
     authors="BloCamLimb, Huziyang520"
     credits="DragonHua"
+    # 26.2+: iconFile is the square icon of the mod list, bannerFile the wide banner of the
+    # detail page (logoFile is deprecated and only used as a fallback).
+    iconFile="assets/modernui/icon.png"
+    bannerFile="modernui_logo.png"
+    displayURL="https://github.com/Huziyang520/ModernUI-Unofficial-Port"
+    issueTrackerURL="https://github.com/Huziyang520/ModernUI-Unofficial-Port/issues"
     description='''
-    [EN] Unofficial port of Modern UI to Minecraft 26.2, supporting NeoForge and Fabric. This is an unofficial port: please support the original project, and do NOT report issues of this port to the original author.
-    [CN] Modern UI 的 Minecraft 26.2 非官方移植版，支持 NeoForge 与 Fabric。本模组为非官方移植版，请支持原项目；本模组的问题请勿向原作者反馈。
+    [EN] Unofficial port of Modern UI to Minecraft 26.2, supporting NeoForge and Fabric. This is an unofficial port: please support the original project, and do NOT report issues of this port to the original author. Backup issue tracker: https://issue.mengcai.online/
+    [CN] Modern UI 的 Minecraft 26.2 非官方移植版，支持 NeoForge 与 Fabric。本模组为非官方移植版，请支持原项目；本模组的问题请勿向原作者反馈。备用反馈地址：https://issue.mengcai.online/
     '''
 
 [[mixins]]
@@ -39,7 +42,7 @@ license="LGPL-3.0-or-later"
     type="discouraged"
 
 # Catalogue (https://github.com/MrCrayfish/Catalogue) 的品牌资源。
-# 上面的 logoFile 会被 Catalogue 当作横幅（banner）使用；
+# 上面的 bannerFile 会被 Catalogue 当作横幅（banner）使用；
 # 这里补上方形图标与背景图（背景图必须恰好 512x256，否则 Catalogue 会拒绝渲染）。
 [modproperties.modernui]
     catalogueImageIcon = "assets/modernui/icon.png"

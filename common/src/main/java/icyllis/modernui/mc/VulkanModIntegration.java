@@ -29,6 +29,7 @@ import icyllis.arc3d.vulkan.VulkanImage;
 import icyllis.arc3d.vulkan.VulkanImageView;
 import icyllis.arc3d.vulkan.VulkanMemoryAllocator;
 import icyllis.modernui.core.VulkanManager;
+import icyllis.modernui.mc.mixin.AccessGpuDevice;
 import net.vulkanmod.render.engine.VkGpuDevice;
 import net.vulkanmod.vulkan.Vulkan;
 import net.vulkanmod.vulkan.device.DeviceManager;
@@ -121,7 +122,8 @@ public final class VulkanModIntegration {
     // caller must track Arc3D CommandBuffer usage and Client usage ref
     // caller must NOT close the returned object
     public static GpuTexture wrapTextureImageFromArc3D(@RawPtr VulkanImage arc3dVulkanImage) {
-        VkGpuDevice device = (VkGpuDevice) RenderSystem.getDevice().backend;
+        // accessor instead of a class tweaker entry, see AccessGpuDevice
+        VkGpuDevice device = (VkGpuDevice) ((AccessGpuDevice) RenderSystem.getDevice()).getBackend();
         var vulkanImageDesc = arc3dVulkanImage.getVulkanDesc();
         var vulkanVulkanImage = new net.vulkanmod.vulkan.texture.VulkanImage(
                 arc3dVulkanImage.getLabel(), arc3dVulkanImage.vkImage(),

@@ -132,7 +132,10 @@ public abstract class MixinMinecraft {
         }
     }*/
 
-    @Inject(method = "close", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Util;shutdownExecutors()V"))
+    // Tear down at the very beginning of close(): Minecraft destroys the GPU device inside
+    // close() (RenderSystem.shutdownRenderer) and the Arc3D Vulkan resources must be released
+    // while that device is still alive. HEAD is also immune to @At target-string drift.
+    @Inject(method = "close", at = @At("HEAD"))
     private void onClose(CallbackInfo ci) {
         UIManager.destroy();
     }

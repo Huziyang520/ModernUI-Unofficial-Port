@@ -3,7 +3,7 @@
   "id": "modernui",
   "version": "${version}",
   "name": "Modern UI",
-  "description": "[EN] Unofficial port of Modern UI to Minecraft 26.2, supporting NeoForge and Fabric. This is an unofficial port: please support the original project, and do NOT report issues of this port to the original author.\n[CN] Modern UI 的 Minecraft 26.2 非官方移植版，支持 NeoForge 与 Fabric。本模组为非官方移植版，请支持原项目；本模组的问题请勿向原作者反馈。",
+  "description": "[EN] Unofficial port of Modern UI to Minecraft 26.2, supporting NeoForge and Fabric. This is an unofficial port: please support the original project, and do NOT report issues of this port to the original author. Backup issue tracker: https://issue.mengcai.online/\n[CN] Modern UI 的 Minecraft 26.2 非官方移植版，支持 NeoForge 与 Fabric。本模组为非官方移植版，请支持原项目；本模组的问题请勿向原作者反馈。备用反馈地址：https://issue.mengcai.online/",
   "authors": [
     "BloCamLimb",
     "Huziyang520"
@@ -15,7 +15,8 @@
   "contact": {
     "homepage": "https://github.com/Huziyang520/ModernUI-Unofficial-Port",
     "issues": "https://github.com/Huziyang520/ModernUI-Unofficial-Port/issues",
-    "sources": "https://github.com/Huziyang520/ModernUI-Unofficial-Port"
+    "sources": "https://github.com/Huziyang520/ModernUI-Unofficial-Port",
+    "备用反馈": "https://issue.mengcai.online/"
   },
   "license": "LGPL-3.0-or-later",
   "icon": "assets/modernui/icon.png",

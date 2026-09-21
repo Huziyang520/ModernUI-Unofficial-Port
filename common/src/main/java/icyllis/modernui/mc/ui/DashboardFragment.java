@@ -188,14 +188,14 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.13.1") + """
+                                "Modern UI 3.13.3") + """
                                 
                                 ----
-                                * Fixed mod icon, banner and background in mod lists 修复模组列表（Catalogue）中图标、横幅与背景图不显示
-                                * "Config" in Catalogue now opens Modern UI settings 修复 Catalogue 中"配置"按钮无法打开本模组设置界面
-                                * Fixed the "Full Changelog" link in the dashboard 修复操作中心"完整日志"链接指向错误
-                                * Fixed modern tooltip background and blank UI 修复现代提示框背景不显示与界面空白
-                                * Fixed config screen flickering and game not exiting 修复配置界面闪烁花屏与退出游戏进程不结束""");
+                                * Fabric: the built-in Vulkan renderer is now supported Fabric 端支持游戏内置 Vulkan 渲染器
+                                * NeoForge: Vulkan support also needs NeoForge's early loading window fix (NeoForge#3230) NeoForge 端的 Vulkan 支持还需先修复 NeoForge 早期加载窗口问题（NeoForge#3230）
+                                * Fixed the square icon in the NeoForge mod list 修复 NeoForge 模组列表不显示方形图标
+                                * Hand cursor on buttons in the settings screen 配置界面中鼠标悬停按钮时显示手形光标
+                                * Backup issue tracker added, new mod list background 新增备用反馈入口、更换模组列表背景图""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);
