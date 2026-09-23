@@ -188,11 +188,11 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.14.2") + """
+                                "Modern UI 3.14.3") + """
                                 
                                 ----
-                                * Fixed a crash on NeoForge when the built-in Vulkan renderer is used 修复 NeoForge 端使用内置 Vulkan 渲染器时的启动崩溃
-                                * Fixed a crash when exiting the game with the built-in Vulkan renderer 修复使用内置 Vulkan 渲染器时退出游戏崩溃
+                                * Fixed the released jar missing bundled libraries, which crashed the game on OpenGL 修复发布包缺失内嵌依赖库导致 OpenGL 下启动崩溃
+                                * Built-in Vulkan renderer supported, and the exit crash is fixed 支持内置 Vulkan 渲染器，并修复退出崩溃
                                 * Fixed the square icon in the NeoForge mod list 修复 NeoForge 模组列表不显示方形图标
                                 * Hand cursor on buttons in the settings screen 配置界面中鼠标悬停按钮时显示手形光标
                                 * Backup issue tracker added, new mod list background 新增备用反馈入口、更换模组列表背景图""");
