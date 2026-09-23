@@ -207,6 +207,8 @@ final class Registration {
             event.registerCategory(UIManagerForge.KEYBIND_CATEGORY);
             event.register(UIManagerForge.OPEN_CENTER_KEY);
             event.register(UIManagerForge.ZOOM_KEY);
+            // hand the zoom key over to the shared (common) zoom state machine, see MixinCamera
+            UIManager.sZoomKey = UIManagerForge.ZOOM_KEY;
         }
 
         /*@SubscribeEvent

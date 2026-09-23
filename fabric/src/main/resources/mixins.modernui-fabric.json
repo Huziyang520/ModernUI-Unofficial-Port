@@ -10,6 +10,7 @@
     "AccessFrontendGpuDevice",
     "AccessGameRenderer",
     "AccessOptions",
+    "MixinCamera",
     "MixinChatFormatting",
     "MixinChatScreen",
     "MixinClientTelemetryManager",

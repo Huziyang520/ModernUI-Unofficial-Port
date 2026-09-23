@@ -112,6 +112,8 @@ public abstract class UIManager implements LifecycleOwner {
     public static volatile String sDingSound;
     public static volatile float sDingVolume = 0.25f;
     public static volatile boolean sZoomEnabled;
+    // the zoom key mapping, assigned by each platform after it registered key mappings
+    public static volatile KeyMapping sZoomKey;
 
     // the global instance, lazily init
     protected static volatile UIManager sInstance;
@@ -185,6 +187,38 @@ public abstract class UIManager implements LifecycleOwner {
     //protected boolean mFirstScreenOpened = false;
     protected boolean mZoomMode = false;
     protected boolean mZoomSmoothCamera;
+
+    /**
+     * Applies the C-key zoom to the world FOV of this frame. Called once per frame by
+     * {@code MixinCamera} on both loaders, so the behavior is identical everywhere.
+     * Does nothing if the UI manager has not been initialized yet.
+     *
+     * @param fov the FOV computed by the camera
+     * @return the FOV the world projection should use
+     */
+    public static float applyZoomFrame(float fov) {
+        UIManager instance = sInstance;
+        if (instance == null || !sZoomEnabled) {
+            return fov;
+        }
+        KeyMapping zoomKey = sZoomKey;
+        boolean active = zoomKey != null
+                && instance.minecraft.gui.screen() == null
+                && zoomKey.isDown();
+        if (active) {
+            if (!instance.mZoomMode) {
+                instance.mZoomMode = true;
+                instance.mZoomSmoothCamera = instance.minecraft.options.smoothCamera;
+                instance.minecraft.options.smoothCamera = true;
+            }
+            return fov * 0.25f;
+        }
+        if (instance.mZoomMode) {
+            instance.mZoomMode = false;
+            instance.minecraft.options.smoothCamera = instance.mZoomSmoothCamera;
+        }
+        return fov;
+    }
 
 
     /// Lifecycle \\\

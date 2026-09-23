@@ -9,6 +9,7 @@
     "AccessClientTextTooltip",
     "AccessFrontendGpuDevice",
     "AccessOptions",
+    "MixinCamera",
     "MixinChatFormatting",
     "MixinChatScreen",
     "MixinClientTelemetryManager",

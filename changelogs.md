@@ -1,5 +1,13 @@
 Changelogs
 ===
+### Modern UI 3.14.4
+Changes from
+* 3.14.3 → 3.14.4 for Minecraft 26.3
+#### Fabric Extension 26.3
+* Add the "C" key zoom (4x), plus a "Zoom" option in the settings screen, exactly the same as the NeoForge version 新增 C 键 4 倍缩放（按住不放），设置界面新增"缩放"开关，与 NeoForge 端完全一致
+#### NeoForge Extension 26.3
+* Zoom now shares one implementation with the Fabric version, behavior unchanged 缩放改为与 Fabric 端共用同一实现，行为不变
+
 ### Modern UI 3.14.3
 Changes from
 * 3.14.2 → 3.14.3 for Minecraft 26.3

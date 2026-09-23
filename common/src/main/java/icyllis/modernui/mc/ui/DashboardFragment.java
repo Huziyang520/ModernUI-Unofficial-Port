@@ -188,14 +188,11 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.14.3") + """
+                                "Modern UI 3.14.4") + """
                                 
                                 ----
-                                * Fixed the released jar missing bundled libraries, which crashed the game on OpenGL 修复发布包缺失内嵌依赖库导致 OpenGL 下启动崩溃
-                                * Built-in Vulkan renderer supported, and the exit crash is fixed 支持内置 Vulkan 渲染器，并修复退出崩溃
-                                * Fixed the square icon in the NeoForge mod list 修复 NeoForge 模组列表不显示方形图标
-                                * Hand cursor on buttons in the settings screen 配置界面中鼠标悬停按钮时显示手形光标
-                                * Backup issue tracker added, new mod list background 新增备用反馈入口、更换模组列表背景图""");
+                                * Fabric: press 'C' to zoom 4x, with a new "Zoom" option in the settings screen Fabric 端新增 C 键 4 倍缩放，设置界面新增"缩放"开关
+                                * Zoom is now one shared implementation on both loaders, NeoForge behavior unchanged 两端缩放统一为同一实现，NeoForge 端行为不变""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);

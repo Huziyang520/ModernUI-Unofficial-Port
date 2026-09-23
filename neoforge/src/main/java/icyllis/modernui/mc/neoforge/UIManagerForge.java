@@ -294,28 +294,9 @@ public final class UIManagerForge extends UIManager implements LifecycleOwner {
         super.onClientTick(/*isEnd*/ true);
     }
 
-    @SubscribeEvent
-    void onChangeFov(@Nonnull ViewportEvent.ComputeFov event) {
-        boolean zoomActive = false;
-        if (sZoomEnabled && minecraft.gui.screen() == null) {
-            zoomActive = ZOOM_KEY.isDown();
-        }
-        if (zoomActive) {
-            if (!mZoomMode) {
-                mZoomMode = true;
-                mZoomSmoothCamera = minecraft.options.smoothCamera;
-                minecraft.options.smoothCamera = true;
-                /* MC26.2 needsUpdate removed */
-            }
-            event.setFOV(
-                    event.getFOV() * 0.25f
-            );
-        } else if (mZoomMode) {
-            mZoomMode = false;
-            minecraft.options.smoothCamera = mZoomSmoothCamera;
-            /* MC26.2 needsUpdate removed */
-        }
-    }
+    // The C-key zoom used to be handled by ViewportEvent.ComputeFov here; it is now implemented
+    // once in the common UIManager#applyZoomFrame and driven by the common MixinCamera, so that
+    // Fabric and NeoForge behave identically and there is only one implementation.
 
     //boolean mPendingRepostCursorEvent = false;
 
