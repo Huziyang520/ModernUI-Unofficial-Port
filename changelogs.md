@@ -1,5 +1,11 @@
 Changelogs
 ===
+### Modern UI 3.13.4
+Changes from
+* 3.13.3 → 3.13.4 for Minecraft 26.2
+#### All Extensions 26.2
+* Fix the published jar missing its bundled libraries (arc3d-compiler, commonmark), which crashed the game at startup on the default OpenGL renderer 修复发布包缺失内嵌依赖库（arc3d-compiler、commonmark），导致默认 OpenGL 渲染器下启动崩溃
+
 ### Modern UI 3.13.3
 Changes from
 * 3.13.1 → 3.13.3 for Minecraft 26.2
