@@ -82,6 +82,12 @@ public class ModernUIFabricClient extends ModernUIClient implements ClientModIni
                 "key.modernui.openCenter",
                 InputConstants.Type.KEYSYM, InputConstants.KEY_K, UIManagerFabric.KEYBIND_CATEGORY);
         KeyMappingHelper.registerKeyMapping(UIManagerFabric.OPEN_CENTER_KEY);
+        UIManagerFabric.ZOOM_KEY = new KeyMapping(
+                "key.modernui.zoom",
+                InputConstants.Type.KEYSYM, InputConstants.KEY_C, UIManagerFabric.KEYBIND_CATEGORY);
+        KeyMappingHelper.registerKeyMapping(UIManagerFabric.ZOOM_KEY);
+        // hand the zoom key over to the shared (common) zoom state machine, see MixinCamera
+        UIManager.sZoomKey = UIManagerFabric.ZOOM_KEY;
 
         Image.setLegacyFactory(ImageStore.getInstance());
         var resourceLoader = ResourceLoader.get(PackType.CLIENT_RESOURCES);

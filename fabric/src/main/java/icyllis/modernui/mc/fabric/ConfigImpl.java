@@ -251,7 +251,7 @@ public final class ConfigImpl {
         public final ModConfigSpec.BooleanValue mDing;
         public final ModConfigSpec.ConfigValue<String> mDingSound;
         public final ModConfigSpec.DoubleValue mDingVolume;
-        //public final ModConfigSpec.BooleanValue mZoom;
+        public final ModConfigSpec.BooleanValue mZoom;
         //private final ModConfigSpec.BooleanValue hudBars;
         public final ModConfigSpec.ConfigValue<List<? extends String>> mTheme;
         public final ModConfigSpec.BooleanValue mForceRtl;
@@ -453,10 +453,10 @@ public final class ConfigImpl {
                     .define("dingSound", "");
             mDingVolume = builder.comment("Specify a volume multiplier to the ding sound effect.")
                     .defineInRange("dingVolume", 0.25, 0, 10);
-            /*mZoom = builder.comment(
+            mZoom = builder.comment(
                             "Press 'C' key (by default) to zoom 4x, the same as OptiFine's.",
                             "This is auto disabled when OptiFine is installed.")
-                    .define("zoom", true);*/
+                    .define("zoom", true);
 
             /*hudBars = builder.comment(
                     "Show additional HUD bars added by ModernUI on the bottom-left of the screen.")

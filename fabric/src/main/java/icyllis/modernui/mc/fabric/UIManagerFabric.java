@@ -43,6 +43,7 @@ public final class UIManagerFabric extends UIManager {
 
     public static KeyMapping.Category KEYBIND_CATEGORY;
     public static KeyMapping OPEN_CENTER_KEY;
+    public static KeyMapping ZOOM_KEY;
 
     private UIManagerFabric() {
         super();
