@@ -188,10 +188,10 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.13.6") + """
+                                "Modern UI 3.13.6fix") + """
                                 
                                 ----
-                                * Fix missing anti-aliasing for in-world text, such as entity name tags, signs, text displays and maps 修复世界内文本（实体命名牌、告示牌、文本展示实体、地图等）缺失抗锯齿""");
+                                * Fix sign text rendering introduced by the previous version: it no longer disappears at close range and is properly occluded by blocks and entities 修复上一版引入的告示牌文字显示异常（不再近处消失，且会被方块与实体正确遮挡）""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);
