@@ -95,6 +95,13 @@ public abstract class TextRenderType {
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
             .build();
 
+    // MC 26.2: Font#drawInBatch* was removed and 3D world text is now rendered by
+    // TextFeatureRenderer from Font#prepareText glyphs. See #getModernWorldType(Font.DisplayMode).
+    public static final RenderPipeline PIPELINE_SDF_FILL_SEE_THROUGH = copyOf(RenderPipelines.TEXT_SEE_THROUGH)
+            .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_fill_see_through"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
+            .build();
+
     /**
      * Copies everything from a vanilla pipeline (shader defines, bind groups, vertex
      * format, blend/depth state, ...) so that only the fragment shader needs replacing.
@@ -199,6 +206,8 @@ public abstract class TextRenderType {
     private static final HashMap<Identifier, RenderType> sVanillaTypes = new HashMap<>();
     private static final HashMap<Identifier, RenderType> sSeeThroughTypes = new HashMap<>();
     private static final HashMap<Identifier, RenderType> sPolygonOffsetTypes = new HashMap<>();
+    // Only for our own A8 font atlas, see #getModernWorldType(Font.DisplayMode)
+    private static final HashMap<Identifier, RenderType> sModernSeeThroughTypes = new HashMap<>();
 
     private static RenderType sFirstSDFFillType;
     private static final ByteBufferBuilder sFirstSDFFillBuffer = new ByteBufferBuilder(131072);
@@ -339,6 +348,29 @@ public abstract class TextRenderType {
         };
     }
 
+    /**
+     * MC 26.2: {@code Font#drawInBatch*} were removed, all 3D world text is now rendered by
+     * {@code net.minecraft.client.renderer.feature.TextFeatureRenderer} using the glyphs
+     * returned by {@code Font#prepareText}. Those glyphs are baked by {@link StandardFontSet}
+     * into our own A8 font atlas, but they carry the vanilla render types, which use point
+     * sampling and have no anti-aliasing in the 3D world. This returns the equivalent Modern
+     * Text Engine 3D world render types (SDF fill with bilinear sampling) for our font atlas.
+     *
+     * @see icyllis.modernui.mc.text.mixin.MixinTextFeatureRenderer
+     */
+    @Nonnull
+    public static RenderType getModernWorldType(@Nonnull Font.DisplayMode mode) {
+        return switch (mode) {
+            // see-through text has no depth test, keep that
+            case SEE_THROUGH -> sModernSeeThroughTypes.computeIfAbsent(
+                    GlyphManager.FONT_SHEET, TextRenderType::makeModernSeeThroughType);
+            // both vanilla TEXT and TEXT_POLYGON_OFFSET fall back to the SDF fill type,
+            // its depth bias does what the polygon offset did
+            default -> sSDFFillTypes.computeIfAbsent(
+                    GlyphManager.FONT_SHEET, TextRenderType::makeSDFFillType);
+        };
+    }
+
     @Nonnull
     private static RenderType makeNormalType(Identifier texture) {
         return MuiModApi.get().createRenderType("modern_text_normal",
@@ -463,6 +495,20 @@ public abstract class TextRenderType {
                         .createRenderSetup());
     }
 
+    /**
+     * See-through variant of {@link #makeSDFFillType}, used for 3D world text that must
+     * not be depth-tested.
+     */
+    @Nonnull
+    private static RenderType makeModernSeeThroughType(Identifier texture) {
+        return MuiModApi.get().createRenderType("modern_text_sdf_fill_see_through",
+                RenderSetup.builder(PIPELINE_SDF_FILL_SEE_THROUGH)
+                        .withTexture("Sampler0", texture, () -> RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR))
+                        .useLightmap()
+                        .sortOnUpload()
+                        .createRenderSetup());
+    }
+
     /*
      * Batch rendering and custom ordering.
      * <p>
@@ -500,6 +546,7 @@ public abstract class TextRenderType {
         sVanillaTypes.clear();
         sSeeThroughTypes.clear();
         sPolygonOffsetTypes.clear();
+        sModernSeeThroughTypes.clear();
         sFirstSDFFillBuffer.clear();
         sFirstSDFStrokeBuffer.clear();
         if (cleanup) {

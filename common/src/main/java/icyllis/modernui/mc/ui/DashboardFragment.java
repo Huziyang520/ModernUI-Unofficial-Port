@@ -188,11 +188,10 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.13.5") + """
+                                "Modern UI 3.13.6") + """
                                 
                                 ----
-                                * Fabric: press 'C' to zoom 4x, with a new "Zoom" option in the settings screen Fabric 端新增 C 键 4 倍缩放，设置界面新增"缩放"开关
-                                * Zoom is now one shared implementation on both loaders, NeoForge behavior unchanged 两端缩放统一为同一实现，NeoForge 端行为不变""");
+                                * Fix missing anti-aliasing for in-world text, such as entity name tags, signs, text displays and maps 修复世界内文本（实体命名牌、告示牌、文本展示实体、地图等）缺失抗锯齿""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);
