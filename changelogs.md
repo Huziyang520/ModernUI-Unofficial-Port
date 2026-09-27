@@ -1,5 +1,11 @@
 Changelogs
 ===
+### Modern UI 3.14.5fix
+Changes from
+* 3.14.5 → 3.14.5fix for Minecraft 26.3
+#### All Extensions 26.3
+* Fix sign text rendering introduced by the previous version: the text no longer disappears when close and is properly occluded by blocks and entities 修复上一版引入的告示牌文字显示异常（不再近处消失，且会被方块与实体正确遮挡）
+
 ### Modern UI 3.14.5
 Changes from
 * 3.14.4 → 3.14.5 for Minecraft 26.3

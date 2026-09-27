@@ -97,6 +97,24 @@ public abstract class TextRenderType {
 
     // MC 26.2: Font#drawInBatch* was removed and 3D world text is now rendered by
     // TextFeatureRenderer from Font#prepareText glyphs. See #getModernWorldType(Font.DisplayMode).
+    //
+    // IMPORTANT: each one must be copied from the *matching* vanilla text pipeline, so that all
+    // states except the fragment shader (notably the depth state, and for POLYGON_OFFSET the
+    // polygon offset itself) stay exactly as vanilla. Do NOT use PIPELINE_SDF_FILL here: it
+    // carries a slope-scaled depth bias (-1/-10) designed for the Modern Text Engine's own
+    // quads; applied to the vanilla-shaped glyph quads of an angled sign board that bias
+    // scales with the depth slope and pushes the text through the whole scene or behind the
+    // board (sign text then vanishes when near, or is visible through entities).
+    public static final RenderPipeline PIPELINE_SDF_FILL_WORLD = copyOf(RenderPipelines.TEXT)
+            .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_fill_world"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
+            .build();
+
+    public static final RenderPipeline PIPELINE_SDF_FILL_POLYGON_OFFSET = copyOf(RenderPipelines.TEXT_POLYGON_OFFSET)
+            .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_fill_polygon_offset"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
+            .build();
+
     public static final RenderPipeline PIPELINE_SDF_FILL_SEE_THROUGH = copyOf(RenderPipelines.TEXT_SEE_THROUGH)
             .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_fill_see_through"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
@@ -217,6 +235,8 @@ public abstract class TextRenderType {
     private static final HashMap<Identifier, RenderType> sSeeThroughTypes = new HashMap<>();
     private static final HashMap<Identifier, RenderType> sPolygonOffsetTypes = new HashMap<>();
     // Only for our own A8 font atlas, see #getModernWorldType(Font.DisplayMode)
+    private static final HashMap<Identifier, RenderType> sModernNormalTypes = new HashMap<>();
+    private static final HashMap<Identifier, RenderType> sModernPolygonOffsetTypes = new HashMap<>();
     private static final HashMap<Identifier, RenderType> sModernSeeThroughTypes = new HashMap<>();
 
     private static RenderType sFirstSDFFillType;
@@ -371,13 +391,12 @@ public abstract class TextRenderType {
     @Nonnull
     public static RenderType getModernWorldType(@Nonnull Font.DisplayMode mode) {
         return switch (mode) {
-            // see-through text has no depth test, keep that
-            case SEE_THROUGH -> sModernSeeThroughTypes.computeIfAbsent(
-                    GlyphManager.FONT_SHEET, TextRenderType::makeModernSeeThroughType);
-            // both vanilla TEXT and TEXT_POLYGON_OFFSET fall back to the SDF fill type,
-            // its depth bias does what the polygon offset did
-            default -> sSDFFillTypes.computeIfAbsent(
-                    GlyphManager.FONT_SHEET, TextRenderType::makeSDFFillType);
+            case SEE_THROUGH -> sModernSeeThroughTypes.computeIfAbsent(GlyphManager.FONT_SHEET,
+                    texture -> makeModernType("modern_text_sdf_fill_see_through", PIPELINE_SDF_FILL_SEE_THROUGH, texture));
+            case POLYGON_OFFSET -> sModernPolygonOffsetTypes.computeIfAbsent(GlyphManager.FONT_SHEET,
+                    texture -> makeModernType("modern_text_sdf_fill_polygon_offset", PIPELINE_SDF_FILL_POLYGON_OFFSET, texture));
+            default -> sModernNormalTypes.computeIfAbsent(GlyphManager.FONT_SHEET,
+                    texture -> makeModernType("modern_text_sdf_fill_world", PIPELINE_SDF_FILL_WORLD, texture));
         };
     }
 
@@ -506,13 +525,13 @@ public abstract class TextRenderType {
     }
 
     /**
-     * See-through variant of {@link #makeSDFFillType}, used for 3D world text that must
-     * not be depth-tested.
+     * SDF fill variant for 3D world sheet glyphs, {@code pipeline} must be the copy of the
+     * vanilla pipeline of the same display mode, see {@link #getModernWorldType(Font.DisplayMode)}.
      */
     @Nonnull
-    private static RenderType makeModernSeeThroughType(Identifier texture) {
-        return MuiModApi.get().createRenderType("modern_text_sdf_fill_see_through",
-                RenderSetup.builder(PIPELINE_SDF_FILL_SEE_THROUGH)
+    private static RenderType makeModernType(String name, RenderPipeline pipeline, Identifier texture) {
+        return MuiModApi.get().createRenderType(name,
+                RenderSetup.builder(pipeline)
                         .withTexture("Sampler0", texture, () -> RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR))
                         .useLightmap()
                         .sortOnUpload()
@@ -556,6 +575,8 @@ public abstract class TextRenderType {
         sVanillaTypes.clear();
         sSeeThroughTypes.clear();
         sPolygonOffsetTypes.clear();
+        sModernNormalTypes.clear();
+        sModernPolygonOffsetTypes.clear();
         sModernSeeThroughTypes.clear();
         sFirstSDFFillBuffer.clear();
         sFirstSDFStrokeBuffer.clear();
