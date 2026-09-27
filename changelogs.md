@@ -1,5 +1,11 @@
 Changelogs
 ===
+### Modern UI 3.14.5
+Changes from
+* 3.14.4 → 3.14.5 for Minecraft 26.3
+#### All Extensions 26.3
+* Fix missing anti-aliasing for in-world text (entity name tags, signs, text displays, maps, ...), the Modern UI text pipeline is now used again as before 修复世界内文本（实体命名牌、告示牌、文本展示实体、地图等）缺失抗锯齿的问题，现已恢复使用 Modern UI 文本管线
+
 ### Modern UI 3.14.4
 Changes from
 * 3.14.3 → 3.14.4 for Minecraft 26.3
