@@ -1,5 +1,16 @@
 Changelogs
 ===
+### Modern UI 3.14.6
+Changes from
+* 3.14.5fix → 3.14.6 for Minecraft 26.3
+#### All Extensions 26.3
+* Fix color emoji used as icons by other mods (e.g. the quick backup / world switcher buttons of backup mods) not being drawn at all 修复其他模组用作图标的彩色 emoji（例如备份类模组的快捷备份、世界切换按钮）完全不显示的问题
+* Fix icons drawn as emoji with thin strokes (star, tree, gear, trash) still not showing: the emoji atlas no longer uses mipmaps and the full resolution image is sampled now 修复细线条的 emoji 图标（星形、树木、齿轮、垃圾桶等）仍不显示的问题：emoji 图集不再使用 mipmap，改为采样全分辨率图像
+* Log a warning when an emoji image cannot be produced and keep deferring to the next frame instead of silently drawing nothing 无法生成 emoji 图像时输出警告日志并继续延迟重试，不再静默地什么都不画
+* Fix color emoji still missing in the 3D world: signs, entity name tags and text displays now draw emoji from the emoji atlas as well 修复 3D 世界内的彩色 emoji 仍不显示的问题：告示牌、实体命名牌、文本展示实体现在同样使用 emoji 图集绘制
+* Color emoji in the world are no longer tinted by the text color, so they look exactly the same as in the GUI 世界内的彩色 emoji 不再被文字颜色染色，与界面内显示一致
+* Fix the joiners and variation selectors inside multi-part emoji showing up as empty squares in the world text 修复世界内文本中多部件 emoji 的连接符与变体选择符被画成空白方块的问题
+
 ### Modern UI 3.14.5fix
 Changes from
 * 3.14.5 → 3.14.5fix for Minecraft 26.3

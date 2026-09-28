@@ -217,6 +217,11 @@ public class FontResourceManager implements PreparableReloadListener {
                 map.put(sequence, map.size() + 1);
                 files.add(fileName);
             }
+            // Do NOT register a "without VS16" alias here. The emoji set also ships images for
+            // plain text code points (0023.png, 002a.png, 0030.png ... 0039.png), and aliasing
+            // them turned every number and '#'/'*' of the UI into a color emoji (wrong advance,
+            // and broken wherever the emoji image could not be used). Emoji that must be drawn
+            // without VS16 need a per-code-point rule, not a blanket alias.
         } // CYCLE end
         LOGGER.info(GlyphManager.MARKER, "Scanned emoji map size: {}",
                 map.size());
