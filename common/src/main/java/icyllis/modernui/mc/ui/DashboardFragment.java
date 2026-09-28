@@ -188,10 +188,12 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.13.6fix") + """
+                                "Modern UI 3.13.7") + """
                                 
                                 ----
-                                * Fix sign text rendering introduced by the previous version: it no longer disappears at close range and is properly occluded by blocks and entities 修复上一版引入的告示牌文字显示异常（不再近处消失，且会被方块与实体正确遮挡）""");
+                                * Fix color emoji used as icons by other mods (e.g. the quick backup / world switcher buttons of backup mods) not being drawn at all 修复其他模组用作图标的彩色 emoji（例如备份类模组的快捷备份、世界切换按钮）完全不显示的问题
+                                * Fix thin-stroke emoji icons (star / tree / gear / trash) still not showing 修复细线条的 emoji 图标（星形/树木/齿轮/垃圾桶）仍不显示的问题
+                                * Fix emoji still missing in the world (signs / name tags / text displays) 修复世界内文本（告示牌/命名牌/文本展示实体）中的 emoji 仍不显示的问题""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);

@@ -31,6 +31,7 @@ import icyllis.modernui.graphics.text.OutlineFont;
 import icyllis.modernui.mc.ModernUIMod;
 import icyllis.modernui.mc.text.mixin.AccessFontManager;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.font.FontManager;
@@ -139,6 +140,12 @@ public class GlyphManager {
     private final Object2IntOpenHashMap<EmojiFont> mEmojiFontTable = new Object2IntOpenHashMap<>();
     private final ToIntFunction<EmojiFont> mEmojiFontTableMapper =
             f -> mEmojiFontTable.size() + 1;
+
+    /**
+     * Emoji glyph IDs that were requested but have no image in the emoji map, so a warning is
+     * logged once per glyph instead of every frame.
+     */
+    private final IntOpenHashSet mMissingEmojiGlyphs = new IntOpenHashSet();
 
     private HashMap<BitmapFont, GlyphStrike> mBitmapFontTable = new HashMap<>();
     private final Function<BitmapFont, GlyphStrike> mBitmapFontTableMapper =
@@ -351,7 +358,10 @@ public class GlyphManager {
             long key = computeEmojiKey(emojiFont, glyphId);
             if (mEmojiAtlas == null) {
                 // we assume emoji images have a border, and no additional border
-                mEmojiAtlas = new ModernFontAtlas(Engine.MASK_FORMAT_ARGB, 0, true);
+                // linear sampling, but no mipmap: the half resolution level either dilutes the
+                // alpha of sparse emoji (star / tree / gear / trash outlines) until they are
+                // invisible, or is left stale after a resize (level 0 is the only copied one)
+                mEmojiAtlas = new ModernFontAtlas(Engine.MASK_FORMAT_ARGB, 0, true, false);
                 Minecraft.getInstance().getTextureManager().register(
                         EMOJI_SHEET, mEmojiAtlas
                 );
@@ -612,6 +622,13 @@ public class GlyphManager {
             return null;
         }
         if (glyphId == 0) {
+            // The sequence is not in the emoji map at all, the font only claimed coverage for
+            // that code point. There is nothing to draw; report it (once per glyph ID) so a
+            // missing image is discoverable instead of silently rendering nothing.
+            if (mMissingEmojiGlyphs.add(glyphId)) {
+                LOGGER.warn(MARKER, "Emoji glyph ID is 0 for font '{}', no image for this sequence",
+                        font.getFamilyName());
+            }
             atlas.setNoPixels(key);
             return null;
         }
@@ -642,6 +659,7 @@ public class GlyphManager {
                 if (!success) {
                     // invalidate glyph image and defer to next frame
                     glyph.x = Integer.MIN_VALUE;
+                    LOGGER.debug(MARKER, "Emoji atlas is full, defer '{}' to the next frame", path);
                     return null;
                 }
                 return glyph;

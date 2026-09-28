@@ -123,6 +123,20 @@ public class ModernFontAtlas extends AbstractTexture implements Dumpable {
     @RenderThread
     public ModernFontAtlas(int maskFormat, int borderWidth,
                            boolean linearSampling) {
+        this(maskFormat, borderWidth, linearSampling,
+                linearSampling && maskFormat == Engine.MASK_FORMAT_ARGB);
+    }
+
+    /**
+     * @param useMipmaps whether the texture allocates a second mipmap level. Color emoji pass
+     *                   {@code false}: the half resolution level either dilutes the alpha of
+     *                   sparse images (star, tree, gear, trash outlines) until they become
+     *                   invisible on a button, or it is left stale after the atlas is resized
+     *                   (the resize path only copies level 0), so sampling it hides the emoji.
+     */
+    @RenderThread
+    public ModernFontAtlas(int maskFormat, int borderWidth,
+                           boolean linearSampling, boolean useMipmaps) {
         mMaskFormat = maskFormat;
         mBorderWidth = borderWidth;
         // 64MB at most
@@ -152,8 +166,7 @@ public class ModernFontAtlas extends AbstractTexture implements Dumpable {
         );*/
         boolean linear = linearSampling && (sLinearSamplingA8Atlas ||
                 mMaskFormat == Engine.MASK_FORMAT_ARGB);   // color emoji requires linear sampling
-        // color emoji uses one extra mipmap level
-        mUseMipmaps = linearSampling && mMaskFormat == Engine.MASK_FORMAT_ARGB;
+        mUseMipmaps = useMipmaps;
         sampler = RenderSystem.getSamplerCache().getSampler(
                 AddressMode.REPEAT, AddressMode.REPEAT,
                 linear ? FilterMode.LINEAR : FilterMode.NEAREST, FilterMode.NEAREST, mUseMipmaps
@@ -212,9 +225,14 @@ public class ModernFontAtlas extends AbstractTexture implements Dumpable {
                 rect.width(), rect.height());
         if (mUseMipmaps) {
             assert mipPixels != null;
+            // MC 26.2 changed CommandEncoder#writeToTexture(GpuTexture, NativeImage, ...) by
+            // prepending (mipLevel, depthOrLayer) and dropping the explicit width/height (the
+            // NativeImage size is used instead). The old call passed the destination rectangle
+            // as (destX, destY, width, height), so the x coordinate was consumed as mipLevel
+            // and the write threw IllegalArgumentException -> setNoPixels -> color emoji
+            // (e.g. emoji used as button icons by other mods) was never drawn.
             commandEncoder.writeToTexture(getTexture(), mipPixels,
-                    rect.x() / 2, rect.y() / 2,
-                    rect.width() / 2, rect.height() / 2);
+                    1, 0, rect.x() / 2, rect.y() / 2);
         }
         /*int rowBytes = rect.width() * ColorInfo.bytesPerPixel(colorType);
         boolean res = ((GLDevice) mContext.getDevice()).writePixels(
