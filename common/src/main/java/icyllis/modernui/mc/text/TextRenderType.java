@@ -68,29 +68,34 @@ public abstract class TextRenderType {
     // is not available on the modding classpath, so copy the vanilla pipeline
     // configuration manually and only replace the fragment shader.
     public static final RenderPipeline PIPELINE_NORMAL = copyOf(RenderPipelines.TEXT)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
             .withLocation(ModernUIMod.location("pipeline/modern_text_normal"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_normal"))
             .build();
 
     // GUI text uses the IS_GUI shader define, which also makes the fog varyings absent.
     public static final RenderPipeline PIPELINE_GUI_NORMAL = copyOf(RenderPipelines.GUI_TEXT)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
             .withLocation(ModernUIMod.location("pipeline/modern_text_gui_normal"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_normal"))
             .build();
 
     public static final RenderPipeline PIPELINE_SDF_FILL = copyOf(RenderPipelines.TEXT)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
             .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_fill"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
             .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, true, -1.0F, -10.0F))
             .build();
 
     public static final RenderPipeline PIPELINE_SDF_STROKE = copyOf(RenderPipelines.TEXT)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
             .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_stroke"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_stroke"))
             .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, true, -1.0F, -10.0F))
             .build();
 
     public static final RenderPipeline PIPELINE_GUI_SDF = copyOf(RenderPipelines.GUI_TEXT)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
             .withLocation(ModernUIMod.location("pipeline/modern_text_gui_sdf"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
             .build();
@@ -106,16 +111,19 @@ public abstract class TextRenderType {
     // scales with the depth slope and pushes the text through the whole scene or behind the
     // board (sign text then vanishes when near, or is visible through entities).
     public static final RenderPipeline PIPELINE_SDF_FILL_WORLD = copyOf(RenderPipelines.TEXT)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
             .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_fill_world"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
             .build();
 
     public static final RenderPipeline PIPELINE_SDF_FILL_POLYGON_OFFSET = copyOf(RenderPipelines.TEXT_POLYGON_OFFSET)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
             .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_fill_polygon_offset"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
             .build();
 
     public static final RenderPipeline PIPELINE_SDF_FILL_SEE_THROUGH = copyOf(RenderPipelines.TEXT_SEE_THROUGH)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
             .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_fill_see_through"))
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
             .build();

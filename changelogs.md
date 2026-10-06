@@ -1,5 +1,13 @@
 Changelogs
 ===
+### Modern UI 3.13.8
+Changes from
+* 3.13.7 → 3.13.8 for Minecraft 26.2
+#### All Extensions 26.2
+* Fix "§" formatting codes not working in chat, the player list and item custom names: every lower-case code (§a-§f, §k-§o, §r) was not recognized, so the "§" prefix was drawn as a visible character instead 修复聊天框、Tab 栏、物品自定义名称中 § 格式化代码不生效的问题：所有小写代码（§a-§f、§k-§o、§r）都无法被识别，§ 前缀被当成可见字符绘制出来
+* Fix icons from icon resource packs (e.g. Icons) not showing while this mod is installed 修复安装本模组后图标类资源包（如 Icons）的图标不显示的问题
+* Fix text being drawn as stretched white quads across the screen when a resource pack replaces Minecraft's core text shader (e.g. Recolourful Containers) 修复资源包替换原版文本核心着色器时（如 Recolourful Containers）文字被画成横跨屏幕的拉伸白色四边形的问题
+
 ### Modern UI 3.13.7
 Changes from
 * 3.13.6fix → 3.13.7 for Minecraft 26.2

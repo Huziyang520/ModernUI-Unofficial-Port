@@ -567,6 +567,25 @@ public class TextLayoutEngine extends FontResourceManager
         return this;
     }
 
+    /**
+     * A {@link com.mojang.blaze3d.font.SpaceProvider} is not a text font: it contributes no
+     * glyph image and reports zero metrics. Resource packs are allowed to declare such a
+     * provider directly inside {@code minecraft:default} (the vanilla one lives in the
+     * separate {@code minecraft:include/space} font and is already excluded by
+     * {@code defaultFontRuleSet}), and merging it into the default font is harmful - the line
+     * metrics of every GUI text are taken from the default font, and a provider that reports
+     * nothing makes text lines collapse and overlap.
+     * <p>
+     * Bitmap providers are deliberately <em>not</em> touched here: resource packs legitimately
+     * add icon fonts to {@code minecraft:default} (e.g. "Icons" adds plain text-sized glyphs in
+     * the Plane 15/16 private use area) and they must keep working.
+     *
+     * @return {@code true} if this family must never be merged into {@code minecraft:default}
+     */
+    private static boolean isSpaceOnlyFamily(@Nonnull FontFamily family) {
+        return family.getClosestMatch(FontPaint.NORMAL) instanceof SpaceFont;
+    }
+
     private void populateDefaultFonts(Set<FontFamily> set, int behavior) {
         if (mRawDefaultFontCollection == null) {
             return;
@@ -585,17 +604,34 @@ public class TextLayoutEngine extends FontResourceManager
                 }
             }
             boolean exclusive = behavior == DEFAULT_FONT_BEHAVIOR_ONLY_EXCLUDE;
+            // ONLY_INCLUDE is left untouched, so that the user can still name such a provider
+            // explicitly in defaultFontRuleSet if they really want it.
+            boolean skipSpaceOnly = exclusive;
+            List<String> skipped = skipSpaceOnly ? new ArrayList<>() : null;
             for (FontFamily family : mRawDefaultFontCollection.getFamilies()) {
                 String name = family.getFamilyName();
+                if (skipSpaceOnly && isSpaceOnlyFamily(family)) {
+                    skipped.add(name);
+                    continue;
+                }
                 boolean matches = pattern != null && pattern.matcher(name).matches();
                 // difference set
                 if (matches ^ exclusive) {
                     set.add(family);
                 }
             }
+            if (skipped != null && !skipped.isEmpty()) {
+                LOGGER.info(MARKER, "Ignored space-only glyph providers of font '{}' " +
+                                "(they report no metrics): [{}]",
+                        Minecraft.DEFAULT_FONT,
+                        String.join(", ", skipped));
+            }
         } else {
             // legacy matching, exclude vanilla fonts
             for (FontFamily family : mRawDefaultFontCollection.getFamilies()) {
+                if (isSpaceOnlyFamily(family)) {
+                    continue;
+                }
                 switch (family.getFamilyName()) {
                     case "minecraft:font/nonlatin_european.png",
                          "minecraft:font/accented.png",

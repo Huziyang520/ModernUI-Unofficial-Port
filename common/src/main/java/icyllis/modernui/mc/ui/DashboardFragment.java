@@ -151,17 +151,18 @@ public class DashboardFragment extends Fragment {
                     markflow.setMarkdown(info,
                             I18n.get("gui.modernui.sourceCode_ssss",
                                     "[ModernUI-Unofficial-Port](https://github.com/Huziyang520/ModernUI-Unofficial-Port)",
-                                    "[ModernUI](https://github.com/BloCamLimb/ModernUI)",
-                                    "[ModernUI-MC](https://github.com/BloCamLimb/ModernUI-MC)",
+                                    "[ModernUI(Original Project)](https://github.com/BloCamLimb/ModernUI)",
+                                    "[ModernUI-MC(Original Project)](https://github.com/BloCamLimb/ModernUI-MC)",
                                     "", "") + "  \n" +
                                     I18n.get("gui.modernui.modReleases_ssss",
-                                            "[CurseForge(Unofficial-Port)](https://www.curseforge.com/minecraft/mc-mods/modernui-unofficial-port)",
-                                            "[CurseForge](https://www.curseforge.com/minecraft/mc-mods/modern-ui)",
-                                            "[Modrinth](https://modrinth.com/mod/modern-ui)",   
+                                            "[CurseForge](https://www.curseforge.com/minecraft/mc-mods/modernui-unofficial-port)",
+                                            "[CurseForge(Original Project)](https://www.curseforge.com/minecraft/mc-mods/modern-ui)",
+                                            "[Modrinth(Original Project)](https://modrinth.com/mod/modern-ui)",
                                             "", "") + "  \n" +
                                     I18n.get("gui.modernui.community_ssss",
                                             "[Discord](https://discord.gg/kmyGKt2)",
-                                            "", "", ""));
+                                            "[MC百科](https://www.mcmod.cn/class/31032.html)",
+                                            "", ""));
                     var params = new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
                     params.bottomMargin = content.dp(40);
                     panel.addView(info, params);
@@ -188,12 +189,12 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.13.7") + """
+                                "Modern UI 3.13.8") + """
                                 
                                 ----
-                                * Fix color emoji used as icons by other mods (e.g. the quick backup / world switcher buttons of backup mods) not being drawn at all 修复其他模组用作图标的彩色 emoji（例如备份类模组的快捷备份、世界切换按钮）完全不显示的问题
-                                * Fix thin-stroke emoji icons (star / tree / gear / trash) still not showing 修复细线条的 emoji 图标（星形/树木/齿轮/垃圾桶）仍不显示的问题
-                                * Fix emoji still missing in the world (signs / name tags / text displays) 修复世界内文本（告示牌/命名牌/文本展示实体）中的 emoji 仍不显示的问题""");
+                                * Fix "§" formatting codes not working in chat, the player list and item custom names 修复聊天框、Tab 栏、物品自定义名称中 § 格式化代码不生效的问题
+                                * Fix icons from icon resource packs (e.g. Icons) not showing 修复图标类资源包（如 Icons）的图标不显示的问题
+                                * Fix stretched white quads when a resource pack replaces the core text shader 修复资源包替换文本核心着色器导致的屏幕拉伸白线""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);
