@@ -434,7 +434,15 @@ public abstract class MuiModApi {
     static {
         for (ChatFormatting f : ChatFormatting.values()) {
             char c = ((IChatFormattingAccessor) (Object) f).mui$getCode();
-            FORMATTING_TABLE[Character.toUpperCase(c)] = f;
+            // Vanilla's ChatFormatting#getByCode is case-insensitive (it lower-cases the
+            // argument first), and all of its codes are lower-case letters or digits.
+            // This LUT is indexed by the raw argument, so we must register BOTH cases;
+            // otherwise every lower-case code ('a'-'f', 'k'-'o', 'r') would resolve to
+            // null and the '§' prefix would be rendered as a visible character instead
+            // of being consumed as a formatting code.
+            char lower = Character.toLowerCase(c);
+            FORMATTING_TABLE[lower] = f;
+            FORMATTING_TABLE[Character.toUpperCase(lower)] = f;
         }
     }
 
