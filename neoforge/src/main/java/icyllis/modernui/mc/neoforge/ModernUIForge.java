@@ -77,7 +77,7 @@ public final class ModernUIForge extends ModernUIMod {
         sLegendaryTooltipsLoaded = ModList.get().isLoaded("legendarytooltips");
         sUntranslatedItemsLoaded = ModList.get().isLoaded("untranslateditems");
 
-        modContainer.registerConfig(ModConfig.Type.COMMON, ConfigImpl.COMMON_SPEC,
+        modContainer.registerConfig(commonConfigType(), ConfigImpl.COMMON_SPEC,
                 ModernUI.NAME_CPT + "/common.toml");
         modEventBus.addListener(
                 (Consumer<ModConfigEvent>) event -> ConfigImpl.reloadCommon(event.getConfig())
@@ -93,6 +93,23 @@ public final class ModernUIForge extends ModernUIMod {
         }*/
 
         LOGGER.info(MARKER, "Initialized Modern UI");
+    }
+
+    /**
+     * FancyModLoader 12.0.12 (shipped with NeoForge 26.3.0.77) renamed {@code ModConfig.Type.COMMON}
+     * to {@code LOCAL} (and {@code SERVER} to {@code SYNCED}); the file extension of the type stays
+     * "common". The constant is resolved by name here, so this single build keeps loading on both the
+     * old and the new loader builds of 26.3 (referencing a renamed enum constant directly would throw
+     * {@link NoSuchFieldError} on the other loader).
+     */
+    @Nonnull
+    private static ModConfig.Type commonConfigType() {
+        for (ModConfig.Type type : ModConfig.Type.values()) {
+            if (type.name().equals("LOCAL")) {
+                return type;
+            }
+        }
+        return ModConfig.Type.COMMON;
     }
 
     public static void warnSetup(String key, Object... args) {

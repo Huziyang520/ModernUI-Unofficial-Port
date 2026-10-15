@@ -189,12 +189,10 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.14.7") + """
+                                "Modern UI 3.14.8") + """
                                 
                                 ----
-                                * Fix "§" formatting codes not working in chat, the player list and item custom names 修复聊天框、Tab 栏、物品自定义名称中 § 格式化代码不生效的问题
-                                * Fix icons from icon resource packs (e.g. Icons) not showing 修复图标类资源包（如 Icons）的图标不显示的问题
-                                * Fix stretched white quads when a resource pack replaces the core text shader 修复资源包替换文本核心着色器导致的屏幕拉伸白线""");
+                                * Fix the mod not loading on the newest NeoForge 26.3 loader 修复本模组在最新的 NeoForge 26.3 加载器上加载失败的问题""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);

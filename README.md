@@ -11,7 +11,7 @@ Both loaders are built from the same common module.
 ## Requirements
 
 - **NeoForge**: No additional dependency mods required.
-- **Fabric**: Fabric API and Forge Config API Port are required. [Mod Menu](https://modrinth.com/mod/modmenu) (or a similar mod) is optional, used to open the config screen in-game.
+- **Fabric**: [Fabric API](https://modrinth.com/mod/fabric-api) and [Forge Config API Port](https://modrinth.com/mod/forge-config-api-port) are required (dependencies). [Mod Menu](https://modrinth.com/mod/modmenu) (or a similar mod) is optional, used to open the config screen in-game.
 
 ## Building
 
@@ -61,7 +61,7 @@ Modern UI 是一套面向 Minecraft 的桌面级 UI 框架，包含视图系统�
 ## 运行前置
 
 - **NeoForge**：无需任何额外前置模组。
-- **Fabric**：必须安装 Fabric API 与 Forge Config API Port（前置依赖）；[Mod Menu](https://modrinth.com/mod/modmenu)（或其他类似模组）为可选，用于在游戏内打开配置界面。
+- **Fabric**：必须安装 [Fabric API](https://modrinth.com/mod/fabric-api) 与 [Forge Config API Port](https://modrinth.com/mod/forge-config-api-port)（前置依赖）；[Mod Menu](https://modrinth.com/mod/modmenu)（或其他类似模组）为可选，用于在游戏内打开配置界面。
 
 ## 构建
 
