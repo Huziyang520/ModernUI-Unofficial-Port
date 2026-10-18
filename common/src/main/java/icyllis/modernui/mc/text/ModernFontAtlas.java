@@ -346,6 +346,17 @@ public class ModernFontAtlas extends AbstractTexture implements Dumpable {
         }
 
         assert texture != null && textureView == null;
+        createTextureView();
+
+        return true;
+    }
+
+    /**
+     * Creates the GPU texture view for the current texture and applies the A8 swizzle.
+     * Must only be called when {@link #texture} is alive.
+     */
+    @RenderThread
+    private void createTextureView() {
         textureView = RenderSystem.getDevice().createTextureView(texture);
 
         if (mMaskFormat == Engine.MASK_FORMAT_A8) {
@@ -374,8 +385,39 @@ public class ModernFontAtlas extends AbstractTexture implements Dumpable {
                 }
             }
         }
+    }
 
-        return true;
+    /**
+     * Makes sure that the GPU texture and its view exist.
+     * <p>
+     * Minecraft 26.x creates GPU textures lazily, and the texture manager may release ours
+     * when another texture is registered under the same resource id. The GUI extract phase,
+     * however, wants a texture view as soon as text is prepared, so it can observe a texture
+     * that has no view yet and crash with {@code IllegalStateException: Texture view does not
+     * exist}. See GitHub issue #6.
+     * <p>
+     * When only the view is missing it is recreated, the pixels are still there. When the
+     * texture itself is gone the baked glyphs are lost with it, so the atlas is reset and
+     * its re-allocation is left to {@link GlyphManager#onEndRenderTick()}, which also
+     * invalidates the cached layouts through the atlas invalidation callback so that the
+     * glyphs get stitched again.
+     *
+     * @return true if the texture view is available now
+     */
+    @RenderThread
+    public boolean ensureTextureView() {
+        if (textureView != null) {
+            return true;
+        }
+        if (texture != null) {
+            createTextureView();
+            return true;
+        }
+        mChunks.clear();
+        mGlyphs.clear();
+        mWidth = mHeight = 0;
+        mResizeRequested = true;
+        return false;
     }
 
     private GpuTexture createTexture() {

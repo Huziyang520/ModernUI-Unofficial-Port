@@ -44,11 +44,15 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 
+import static icyllis.modernui.mc.ModernUIMod.LOGGER;
+
 /**
  * When this object is created, all glyphs are added to the font atlas.
  */
 // Only used for vanilla GUI rendering
 public class ModernPreparedText implements Font.PreparedText {
+
+    private static boolean sWarnedMissingTextureView;
 
     public static final ModernPreparedText EMPTY = new ModernPreparedText(
             1, 0, false, 0, 0,
@@ -223,6 +227,22 @@ public class ModernPreparedText implements Font.PreparedText {
                 texture = fontTexture;
             }
             if (pipeline == null || prevTexture != texture || prevMode != mode) {
+                GpuTextureView textureView = getTextureView(texture);
+                if (textureView == null) {
+                    // Minecraft 26.x creates GPU textures lazily, so the texture that this glyph
+                    // needs (a dedicated bitmap font texture or an atlas that has just been
+                    // (re)allocated) may still have no view while the GUI is being extracted.
+                    // Submitting such a run is impossible, and asking for the view threw before
+                    // (GH issue #6). Close the previous run and leave these glyphs to the next
+                    // frame, GlyphManager (re)initializes the texture in the meantime.
+                    if (!textRuns.isEmpty()) {
+                        textRuns.getLast().glyphEnd = i;
+                    }
+                    prevTexture = null;
+                    prevMode = -1;
+                    pipeline = null;
+                    continue;
+                }
                 // no need to check isBitmapFont
                 prevTexture = texture;
                 prevMode = mode;
@@ -230,7 +250,7 @@ public class ModernPreparedText implements Font.PreparedText {
                 if (!textRuns.isEmpty()) {
                     textRuns.getLast().glyphEnd = i;
                 }
-                textRuns.add(new TextRun(pipeline, texture.getTextureView(),
+                textRuns.add(new TextRun(pipeline, textureView,
                         // setup bilinear sampler for SDF text
                         mode == TextRenderType.MODE_SDF_FILL
                                 ? RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR)
@@ -283,6 +303,25 @@ public class ModernPreparedText implements Font.PreparedText {
         this.positions = positions;
         this.flags = flags;
         this.customRenderables = customRenderables;
+    }
+
+    /**
+     * @return the GPU texture view of the given texture, or null if it has not been
+     * initialized yet (Minecraft 26.x allocates GPU textures lazily)
+     */
+    @Nullable
+    private static GpuTextureView getTextureView(@Nonnull AbstractTexture texture) {
+        try {
+            return texture.getTextureView();
+        } catch (IllegalStateException e) {
+            if (!sWarnedMissingTextureView) {
+                sWarnedMissingTextureView = true;
+                LOGGER.warn(GlyphManager.MARKER,
+                        "Texture view of {} is not initialized yet, " +
+                                "the affected text is skipped until it is uploaded", texture);
+            }
+            return null;
+        }
     }
 
     // this is not used directly by ModernUI-MC, but for debugging and compatibility reasons
