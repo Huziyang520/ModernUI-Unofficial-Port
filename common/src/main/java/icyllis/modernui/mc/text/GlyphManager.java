@@ -408,14 +408,34 @@ public class GlyphManager {
         return null;
     }
 
+    /**
+     * @return true if the given texture already has a GPU texture view, i.e. it has been
+     * initialized by whoever owns it
+     */
+    public static boolean hasTextureView(@Nonnull AbstractTexture texture) {
+        try {
+            //noinspection ResultOfMethodCallIgnored
+            texture.getTextureView();
+            return true;
+        } catch (IllegalStateException e) {
+            // AbstractTexture#getTextureView throws when the GPU texture has not been
+            // created yet or has already been released
+            return false;
+        }
+    }
+
     @RenderThread
     public AbstractTexture getCurrentTexture(int maskFormat) {
+        ModernFontAtlas atlas = null;
         if (maskFormat == Engine.MASK_FORMAT_A8) {
-            return mFontAtlas;
+            atlas = mFontAtlas;
         } else if (maskFormat == Engine.MASK_FORMAT_ARGB) {
-            return mEmojiAtlas;
+            atlas = mEmojiAtlas;
         }
-        return null;
+        if (atlas != null) {
+            atlas.ensureTextureView();
+        }
+        return atlas;
     }
 
     public AbstractTexture getFontTexture() {
@@ -432,9 +452,12 @@ public class GlyphManager {
             return null;
         }
         if (font.fitsInAtlas()) {
+            if (mBitmapAtlas != null) {
+                mBitmapAtlas.ensureTextureView();
+            }
             return mBitmapAtlas;
         } else {
-            return font.getCurrentTexture();
+            return font.ensureCurrentTexture();
         }
     }
 

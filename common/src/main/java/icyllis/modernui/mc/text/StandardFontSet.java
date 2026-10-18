@@ -135,6 +135,11 @@ public class StandardFontSet extends FontSet {
                         codePoint
                 );
                 if (glyph != null) {
+                    var texture = GlyphManager.getInstance().getCurrentTexture(bitmapFont);
+                    if (texture == null || !GlyphManager.hasTextureView(texture)) {
+                        // the atlas has no GPU texture view yet, let the caller retry later
+                        return new EmptyBakedGlyph(info);
+                    }
                     // convert to Minecraft, see SheetGlyphInfo
                     float up = TextLayout.STANDARD_BASELINE_OFFSET +
                             (float) glyph.y / TextLayoutEngine.BITMAP_SCALE;

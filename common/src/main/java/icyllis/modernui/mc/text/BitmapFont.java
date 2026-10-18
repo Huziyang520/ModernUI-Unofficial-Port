@@ -398,6 +398,26 @@ public class BitmapFont implements Font, AutoCloseable {
         return mTexture;
     }
 
+    /**
+     * Called by {@link GlyphManager} to fetch the dedicated texture info, recreating the
+     * GPU texture when it has been released. A dedicated bitmap font texture is closed when
+     * another instance of the same bitmap font registers the same texture name (which happens
+     * after a resource reload), and the cached glyphs then point at a dead texture.
+     * <p>
+     * Render thread only.
+     */
+    @Nullable
+    public DynamicTexture ensureCurrentTexture() {
+        if (nothingToDraw() || fitsInAtlas()) {
+            return mTexture;
+        }
+        if (mTexture == null || !GlyphManager.hasTextureView(mTexture)) {
+            // recreate and re-register, the pixels are re-uploaded from the retained bitmap
+            createTexture();
+        }
+        return mTexture;
+    }
+
     public Identifier getCurrentTextureName() {
         return fitsInAtlas() ? GlyphManager.BITMAP_SHEET : mTextureName;
     }

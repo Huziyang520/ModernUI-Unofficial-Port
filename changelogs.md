@@ -1,5 +1,13 @@
 Changelogs
 ===
+
+### Modern UI 3.14.8.1
+Changes from
+* 3.14.8 → 3.14.8.1 for Minecraft 26.3
+#### All Extensions 26.3
+* Fix the client crashing when text drawn with a custom bitmap font (for example the fonts a server resource pack provides for CustomFishing, Oraxen or ItemsAdder) appears in a title or subtitle: the GPU texture of that font could still be missing while the HUD was being built 修复自定义位图字体（例如服务端资源包为 CustomFishing、Oraxen、ItemsAdder 提供的字体）的文字出现在标题或副标题中时客户端崩溃的问题：构建 HUD 时该字体的 GPU 纹理可能尚未创建
+* Text using a custom bitmap font is no longer dropped when its texture is still being initialized, it is drawn on the next frame instead 自定义位图字体的纹理仍在初始化时不再丢失这段文字，改为在下一帧绘制
+
 ### Modern UI 3.14.8
 Changes from
 * 3.14.7 → 3.14.8 for Minecraft 26.3

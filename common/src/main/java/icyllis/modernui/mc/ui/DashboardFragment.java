@@ -189,10 +189,11 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.14.8") + """
+                                "Modern UI 3.14.8.1") + """
                                 
                                 ----
-                                * Fix the mod not loading on the newest NeoForge 26.3 loader 修复本模组在最新的 NeoForge 26.3 加载器上加载失败的问题""");
+                                * Fix the client crashing when a custom bitmap font is used in a title or subtitle 修复标题/副标题使用自定义位图字体时客户端崩溃
+                                * Custom bitmap font text is drawn on the next frame instead of being dropped 自定义位图字体文字改为下一帧绘制，不再丢失""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);
