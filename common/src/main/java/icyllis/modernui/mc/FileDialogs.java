@@ -22,6 +22,8 @@ import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.lwjgl.sdl.SDLDialog;
+import org.lwjgl.sdl.SDLError;
+import org.lwjgl.sdl.SDLInit;
 import org.lwjgl.sdl.SDL_DialogFileCallback;
 import org.lwjgl.sdl.SDL_DialogFileFilter;
 import org.lwjgl.system.MemoryUtil;
@@ -46,11 +48,12 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * {@code HeadlessException} and no dialog ever shows up (symptom: "Play A Music" and the
  * font file browser do nothing on 26.3).
  * <p>
- * MC 26.3 is built on SDL3, which has a native file dialog API: the platform dialog is run
- * by SDL on its own thread and the selection is delivered through the event queue, so it
- * needs neither AWT nor the caller to be on the main thread. This class is a blocking
- * wrapper around it that keeps the previous tinyfd contract: it returns {@code null} when
- * the dialog is cancelled or cannot be shown.
+ * MC 26.3 is built on SDL3, which has a native file dialog API. SDL3 only accepts the call
+ * from the <b>main thread</b> (the thread that initialized SDL video, i.e. Minecraft's game
+ * thread): calling it from the Modern UI thread makes SDL invoke the callback immediately
+ * with a null selection and the dialog never appears. So the call is handed over to the game
+ * thread and this thread waits for the selection, which keeps the previous tinyfd contract:
+ * it returns {@code null} when the dialog is cancelled or cannot be shown.
  *
  * @since 3.13
  */
@@ -96,6 +99,15 @@ public final class FileDialogs {
         return showFallbackDialog(save, title, description, defaultName, extensions);
     }
 
+    private static final class ShowResult {
+        @Nullable
+        String path;
+        /**
+         * SDL reported an error (as opposed to the user cancelling the dialog)
+         */
+        boolean failed;
+    }
+
     /**
      * Shows the SDL3 native dialog and waits for the user (or the timeout).
      *
@@ -111,16 +123,23 @@ public final class FileDialogs {
         final ByteBuffer[] strings = new ByteBuffer[count * 2];
         long filterMemory = NULL;
         SDL_DialogFileFilter.Buffer filters = null;
-        SDL_DialogFileCallback callback = null;
-        final CompletableFuture<String> result = new CompletableFuture<>();
         try {
             if (count > 0) {
                 filterMemory = MemoryUtil.nmemAlloc((long) count * SDL_DialogFileFilter.SIZEOF);
                 for (int i = 0; i < count; i++) {
-                    String pattern = extensions[i].startsWith("*.") ? extensions[i]
-                            : "*." + (extensions[i].startsWith(".") ? extensions[i].substring(1) : extensions[i]);
-                    ByteBuffer nameBuffer = MemoryUtil.memUTF8(description != null ? description : pattern);
-                    ByteBuffer patternBuffer = MemoryUtil.memUTF8(pattern);
+                    String extension = extensions[i];
+                    if (extension.startsWith("*.")) {
+                        extension = extension.substring(2);
+                    } else if (extension.startsWith(".")) {
+                        extension = extension.substring(1);
+                    }
+                    // SDL3 validates the pattern itself: only [a-zA-Z0-9_.-] is allowed and a
+                    // '*' may only appear alone, so "*.ogg" is rejected with
+                    // "Invalid dialog file filters" (and the dialog never opens). Pass the bare
+                    // extension, SDL adds the wildcard.
+                    ByteBuffer nameBuffer = MemoryUtil.memUTF8(
+                            description != null ? description : "*." + extension);
+                    ByteBuffer patternBuffer = MemoryUtil.memUTF8(extension);
                     strings[i * 2] = nameBuffer;
                     strings[i * 2 + 1] = patternBuffer;
                     SDL_DialogFileFilter.create(
@@ -129,57 +148,16 @@ public final class FileDialogs {
                 }
                 filters = SDL_DialogFileFilter.create(filterMemory, count);
             }
-            callback = SDL_DialogFileCallback.create((userdata, filelist, filter) -> {
-                String path = null;
-                try {
-                    if (filelist != NULL) {
-                        long first = MemoryUtil.memGetAddress(filelist);
-                        if (first != NULL) {
-                            path = MemoryUtil.memUTF8(first);
-                        }
-                    }
-                } catch (Throwable t) {
-                    ModernUIMod.LOGGER.warn(MARKER, "Failed to read the selected file", t);
-                }
-                result.complete(path);
-            });
-            PENDING.add(callback);
-            ByteBuffer defaultLocation = null;
-            try {
-                if (defaultName != null) {
-                    defaultLocation = MemoryUtil.memUTF8(defaultName);
-                }
-                if (save) {
-                    SDLDialog.SDL_ShowSaveFileDialog(callback, NULL, window, filters, defaultLocation);
-                } else {
-                    SDLDialog.SDL_ShowOpenFileDialog(callback, NULL, window, filters,
-                            defaultLocation, false);
-                }
-            } finally {
-                if (defaultLocation != null) {
-                    MemoryUtil.memFree(defaultLocation);
-                }
-            }
-            String path;
-            try {
-                path = result.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-                // the dialog is still open and SDL still owns the callback, never free it
-                ModernUIMod.LOGGER.warn(MARKER, "The native file dialog did not finish within {} ms",
-                        TIMEOUT_MS);
-                return null;
+            ShowResult result = showOnce(save, window, filters, defaultName);
+            if (result.failed && window != NULL) {
+                // the window handle is the only input that can be wrong here, retry unparented
+                ModernUIMod.LOGGER.info(MARKER, "Retrying the native file dialog without a parent window");
+                result = showOnce(save, NULL, filters, defaultName);
             }
             ModernUIMod.LOGGER.info(MARKER, "Native {} dialog finished in {} ms, selected: {}",
-                    save ? "save" : "open", (System.nanoTime() - t0) / 1_000_000L, path);
-            PENDING.remove(callback);
-            callback.free();
-            callback = null;
-            return path;
+                    save ? "save" : "open", (System.nanoTime() - t0) / 1_000_000L, result.path);
+            return result.path;
         } finally {
-            // a callback that was already handed to SDL and never invoked must not be freed
-            if (callback != null && !PENDING.contains(callback)) {
-                callback.free();
-            }
             if (filterMemory != NULL) {
                 MemoryUtil.nmemFree(filterMemory);
             }
@@ -189,6 +167,76 @@ public final class FileDialogs {
                 }
             }
         }
+    }
+
+    /**
+     * One attempt: creates the callback, hands the SDL call over to the game thread and
+     * waits for the selection.
+     */
+    private static ShowResult showOnce(boolean save, long window,
+                                       @Nullable SDL_DialogFileFilter.Buffer filters,
+                                       @Nullable String defaultName) throws Exception {
+        SDLError.SDL_ClearError();
+        final CompletableFuture<ShowResult> future = new CompletableFuture<>();
+        SDL_DialogFileCallback callback = SDL_DialogFileCallback.create((userdata, filelist, filter) -> {
+            ShowResult r = new ShowResult();
+            try {
+                if (filelist != NULL) {
+                    long first = MemoryUtil.memGetAddress(filelist);
+                    if (first != NULL) {
+                        r.path = MemoryUtil.memUTF8(first);
+                    }
+                } else {
+                    // SDL reports both a cancel and a failure with a null list; only a
+                    // failure leaves an error message behind (cleared before each attempt)
+                    String error = SDLError.SDL_GetError();
+                    if (filter == -1 && error != null && !error.isEmpty()) {
+                        r.failed = true;
+                        ModernUIMod.LOGGER.warn(MARKER, "The native file dialog failed: {}", error);
+                    }
+                }
+            } catch (Throwable t) {
+                ModernUIMod.LOGGER.warn(MARKER, "Failed to read the selected file", t);
+            }
+            future.complete(r);
+        });
+        PENDING.add(callback);
+        final ByteBuffer defaultLocation = defaultName != null ? MemoryUtil.memUTF8(defaultName) : null;
+        Runnable show = () -> {
+            try {
+                if (save) {
+                    SDLDialog.SDL_ShowSaveFileDialog(callback, NULL, window, filters, defaultLocation);
+                } else {
+                    SDLDialog.SDL_ShowOpenFileDialog(callback, NULL, window, filters, defaultLocation, false);
+                }
+            } catch (Throwable t) {
+                ModernUIMod.LOGGER.warn(MARKER, "Failed to open the native file dialog", t);
+                future.complete(new ShowResult());
+            } finally {
+                if (defaultLocation != null) {
+                    // SDL only reads the location while creating the dialog
+                    MemoryUtil.memFree(defaultLocation);
+                }
+            }
+        };
+        // SDL3 only supports being called from the main thread, which is not the UI thread
+        if (SDLInit.SDL_IsMainThread()) {
+            show.run();
+        } else {
+            Minecraft.getInstance().execute(show);
+        }
+        ShowResult result;
+        try {
+            result = future.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            // the dialog is still open and SDL still owns the callback, never free it
+            ModernUIMod.LOGGER.warn(MARKER, "The native file dialog did not finish within {} ms",
+                    TIMEOUT_MS);
+            return new ShowResult();
+        }
+        PENDING.remove(callback);
+        callback.free();
+        return result;
     }
 
     /**
