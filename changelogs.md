@@ -1,6 +1,14 @@
 Changelogs
 ===
 
+### Modern UI 3.13.8.2
+Changes from
+* 3.13.8.1 → 3.13.8.2 for Minecraft 26.2
+#### All Extensions 26.2
+* Fix the client crashing with a NullPointerException after switching the game language while the settings screen was used: cached images were closed on a resource reload while the settings UI still held them 修复切换游戏语言后使用设置界面时客户端因 NullPointerException 崩溃的问题：资源重载时缓存的图片被关闭，而设置界面仍在使用它们
+* Fix a chance of a corrupted first frame when the settings screen is opened: the UI render target is now cleared when it is (re)allocated and when a screen is opened 修复打开设置界面时首帧可能花屏的问题：界面渲染目标在重新分配与切换界面时会先清空
+* Log how long the settings screen takes to appear 记录设置界面从打开到首帧耗时，便于定位启动速度问题
+
 ### Modern UI 3.13.8.1
 Changes from
 * 3.13.8 → 3.13.8.1 for Minecraft 26.2

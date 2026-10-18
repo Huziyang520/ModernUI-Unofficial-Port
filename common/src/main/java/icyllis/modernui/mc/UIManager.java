@@ -185,6 +185,14 @@ public abstract class UIManager implements LifecycleOwner {
     @Nullable
     protected volatile MuiScreen mScreen;
 
+    // opening a screen: start time and name, used for exactly one INFO log per open
+    private volatile long mScreenOpenStartNanos;
+    private volatile String mScreenOpenName;
+
+    // set when the surface may still hold the previous screen (or undefined memory),
+    // consumed by ViewRootImpl#beginDrawLocked on the UI thread
+    private volatile boolean mClearSurfaceRequested;
+
     //protected boolean mFirstScreenOpened = false;
     protected boolean mZoomMode = false;
     protected boolean mZoomSmoothCamera;
@@ -408,6 +416,10 @@ public abstract class UIManager implements LifecycleOwner {
             mRoot.mHandler.post(this::restoreLayoutTransition);
         }
         mScreen = screen;
+        // measure how long the screen takes to appear, reported by endDrawLocked
+        mScreenOpenStartNanos = System.nanoTime();
+        mScreenOpenName = screen.getFragment().getClass().getSimpleName();
+        mClearSurfaceRequested = true;
         // ensure it's resized
         resize(minecraft.getWindow().getWidth(), minecraft.getWindow().getHeight());
         //TODO core framework lacks IME support
@@ -1471,10 +1483,20 @@ public abstract class UIManager implements LifecycleOwner {
                                 Engine.SurfaceOrigin.kUpperLeft,
                                 null
                         ));
+                        // A freshly allocated render target holds undefined GPU memory, and the
+                        // UI paints translucent backgrounds first, so the undefined pixels show
+                        // through as random colors until something opaque covers them.
+                        mSurface.getCanvas().clear(0);
                     }
                 }
                 if (mSurface != null && width > 0 && height > 0) {
-                    //mSurface.getCanvas().clear(0);
+                    if (mClearSurfaceRequested) {
+                        // the surface may still hold the previous screen (or undefined memory
+                        // after a re-allocation); the UI draws translucent content first, so
+                        // that would show through as a flash of stale/garbage pixels
+                        mClearSurfaceRequested = false;
+                        mSurface.getCanvas().clear(0);
+                    }
                     return new ArcCanvas(mSurface.getCanvas());
                 }
                 return null;
@@ -1485,6 +1507,12 @@ public abstract class UIManager implements LifecycleOwner {
         protected void endDrawLocked(@Nonnull Canvas canvas) {
             canvas.restoreToCount(1);
             Recording task = Core.requireUiRecordingContext().snap();
+            final long openStart = mScreenOpenStartNanos;
+            if (openStart != 0) {
+                mScreenOpenStartNanos = 0;
+                LOGGER.info(UIManager.MARKER, "Modern UI screen {} first frame ready in {} ms",
+                        mScreenOpenName, (System.nanoTime() - openStart) / 1_000_000L);
+            }
             synchronized (mRenderLock) {
                 if (mLastFrameTask != null) {
                     mLastFrameTask.close();

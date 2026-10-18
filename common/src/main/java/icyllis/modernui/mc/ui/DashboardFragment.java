@@ -189,11 +189,12 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.13.8.1") + """
+                                "Modern UI 3.13.8.2") + """
                                 
                                 ----
-                                * Fix the client crashing when a custom bitmap font is used in a title or subtitle 修复标题/副标题使用自定义位图字体时客户端崩溃
-                                * Custom bitmap font text is drawn on the next frame instead of being dropped 自定义位图字体文字改为下一帧绘制，不再丢失""");
+                                * Fix a crash after switching the game language 修复切换游戏语言后崩溃
+                                * Fix a corrupted first frame when the settings screen opens 修复设置界面首帧花屏
+                                * Log how long the settings screen takes to appear 记录设置界面打开耗时""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);
