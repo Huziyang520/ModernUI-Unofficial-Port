@@ -179,7 +179,9 @@ final class Registration {
                 if (handler != null) {
                     // Call in lambda, not in creating the lambda
                     handler.post(() -> {
-                        ImageStore.getInstance().clear();
+                        // Only drop the cached images, do not close them: views that are still alive
+                    // (e.g. the settings navigation) keep drawing them, see ImageStore
+                    ImageStore.getInstance().onResourcesReloaded();
                         UIManager.getInstance().updateLayoutDir(ConfigImpl.CLIENT.mForceRtl.get());
                     });
                 }

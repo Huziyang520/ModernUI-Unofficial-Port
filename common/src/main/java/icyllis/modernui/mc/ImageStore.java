@@ -68,6 +68,24 @@ public class ImageStore implements BiFunction<String, String, Image> {
     }
 
     /**
+     * Called on the UI thread when Minecraft reloads its resources (a resource pack, or the
+     * game language, changed).
+     * <p>
+     * The cached images are only <b>dropped</b>, never closed: views and drawables that are
+     * still alive - for example the persistent navigation buttons of the settings screen -
+     * keep the {@link Image} they obtained earlier, and closing it underneath them made
+     * {@code ImageDrawable} throw {@code NullPointerException} in
+     * {@code Image.getWidth()} on the next draw. Dropped images are freed by their
+     * {@link java.lang.ref.Cleaner} as soon as nothing references them any more.
+     */
+    @ApiStatus.Internal
+    public void onResourcesReloaded() {
+        synchronized (mLock) {
+            mImages = new HashMap<>();
+        }
+    }
+
+    /**
      * Get or create a texture image from the given resource.
      * <p>
      * This method should be called only from the UI thread; and the returned object

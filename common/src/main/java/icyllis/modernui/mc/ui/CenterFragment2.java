@@ -81,6 +81,7 @@ public class CenterFragment2 extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable DataSet savedInstanceState) {
+        final long startTime = System.nanoTime();
         var value = new TypedValue();
         var theme = requireContext().getTheme();
 
@@ -238,6 +239,8 @@ public class CenterFragment2 extends Fragment {
 
         var params = new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
         base.setLayoutParams(params);
+        ModernUIMod.LOGGER.info(MARKER, "Built the settings navigation in {} ms",
+                (System.nanoTime() - startTime) / 1_000_000L);
         return base;
     }
 
