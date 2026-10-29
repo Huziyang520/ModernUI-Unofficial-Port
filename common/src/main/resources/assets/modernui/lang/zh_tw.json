@@ -194,6 +194,7 @@
   "gui.modernui.browseFiles": "瀏覽檔案",
   "gui.modernui.sourceCode_ssss": "原始碼：%s %s %s %s",
   "gui.modernui.modReleases_ssss": "模組發布：%s %s %s %s",
+  "gui.modernui.preReleases_ssss": "預覽版取得：%s %s %s %s",
   "gui.modernui.community_ssss": "社群：%s %s %s %s",
   "gui.modernui.whatsNewIn_s": "%s 的新功能",
   "gui.modernui.resetToDefault": "重設為預設值",

@@ -195,6 +195,7 @@
   "gui.modernui.browseFiles": "浏览文件",
   "gui.modernui.sourceCode_ssss": "源代码：%s %s %s %s",
   "gui.modernui.modReleases_ssss": "模组发布：%s %s %s %s",
+  "gui.modernui.preReleases_ssss": "预览版获取：%s %s %s %s",
   "gui.modernui.community_ssss": "社区：%s %s %s %s",
   "gui.modernui.whatsNewIn_s": "%s 更新内容",
   "gui.modernui.resetToDefault": "重置为默认值",

@@ -195,6 +195,7 @@
   "gui.modernui.browseFiles": "Browse Files",
   "gui.modernui.sourceCode_ssss": "Source Code: %s %s %s %s",
   "gui.modernui.modReleases_ssss": "Mod Releases: %s %s %s %s",
+  "gui.modernui.preReleases_ssss": "Preview Builds: %s %s %s %s",
   "gui.modernui.community_ssss": "Community: %s %s %s %s",
   "gui.modernui.whatsNewIn_s": "What's New in %s",
   "gui.modernui.resetToDefault": "Reset to Default",

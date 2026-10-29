@@ -165,93 +165,128 @@ public final class TooltipRenderer implements ScrollController.IListener {
         mScroll = amount;
     }
 
-    // compute a gradient for the given item
-    void computeWorkingColor(@Nonnull ItemStack item) {
-        if (sAdaptiveColors && !item.isEmpty()) {
-            if (sRoundedShapes && mNumDrawsInThisFrame == 0 &&
+    // compute a gradient for the given item (and, as a fallback, for its tooltip)
+    void computeWorkingColor(@Nonnull ItemStack item, @Nonnull List<ClientTooltipComponent> list) {
+        if (sAdaptiveColors) {
+            if (!item.isEmpty() && sRoundedShapes && mNumDrawsInThisFrame == 0 &&
                     (item.is(Items.DRAGON_EGG) || item.is(Items.DEBUG_STICK))) {
                 mUseSpectrum = true;
                 return;
             }
-            Style baseStyle = Style.EMPTY;
-            Rarity rarity = item.getRarity();
-            if (rarity != Rarity.COMMON) {
-                baseStyle = MuiModApi.get().applyRarityTo(rarity, baseStyle);
-            }
             IntOpenHashSet colors = new IntOpenHashSet(16);
-            // consider formatting codes
-            StringDecomposer.iterateFormatted(
-                    item.getHoverName(),
-                    baseStyle,
-                    (i, style, ch) -> {
-                        TextColor textColor = style.getColor();
-                        if (textColor != null) {
-                            return !(colors.add(textColor.getValue() & 0xFFFFFF) &&
-                                    colors.size() >= 16);
-                        }
-                        return true;
-                    }
-            );
-            if (!colors.isEmpty()) {
-                ArrayList<float[]> hsvColors = new ArrayList<>(16);
-                for (var it = colors.iterator(); it.hasNext(); ) {
-                    int c = it.nextInt();
-                    float[] hsv = new float[3];
-                    Color.RGBToHSV(c, hsv);
-                    // reduce saturation and brightness
-                    hsv[1] = Math.min(hsv[1], 0.9f);
-                    hsv[2] = MathUtil.clamp(hsv[2], 0.2f, 0.85f);
-                    hsvColors.add(hsv);
+            if (!item.isEmpty()) {
+                Style baseStyle = Style.EMPTY;
+                Rarity rarity = item.getRarity();
+                if (rarity != Rarity.COMMON) {
+                    baseStyle = MuiModApi.get().applyRarityTo(rarity, baseStyle);
                 }
-                if (!hsvColors.isEmpty()) {
-                    int size = hsvColors.size();
-                    if (size > 4) {
-                        if (sRoundedShapes && mNumDrawsInThisFrame == 0) {
-                            mUseSpectrum = true;
-                            return;
+                // consider formatting codes
+                StringDecomposer.iterateFormatted(
+                        item.getHoverName(),
+                        baseStyle,
+                        (i, style, ch) -> {
+                            TextColor textColor = style.getColor();
+                            if (textColor != null) {
+                                return !(colors.add(textColor.getValue() & 0xFFFFFF) &&
+                                        colors.size() >= 16);
+                            }
+                            return true;
                         }
-                        Collections.shuffle(hsvColors);
-                    }
-                    int c1 = Color.HSVToColor(hsvColors.get(0));
-                    int c2, c3, c4;
-                    if (size > 2) {
-                        // we have 3 or 4 colors
-                        c2 = Color.HSVToColor(hsvColors.get(1));
-                        c3 = Color.HSVToColor(hsvColors.get(2));
-                        if (size == 4) {
-                            c4 = Color.HSVToColor(hsvColors.get(3));
-                        } else {
-                            // invert hue of c2
-                            float[] hsv = hsvColors.get(1);
-                            hsv[0] = (hsv[0] + 180f) % 360f;
-                            c4 = Color.HSVToColor(hsv);
-                        }
-                    } else if (size == 2) {
-                        // we have two colors, make diagonal
-                        c3 = Color.HSVToColor(hsvColors.get(1));
-                        c2 = lerpInLinearSpace(0.5f, c1, c3);
-                        float[] hsv = new float[3];
-                        Color.RGBToHSV(c2, hsv);
-                        c4 = adjustColor(hsv, false, true, false, item.isEnchanted());
-                    } else {
-                        // we have one color...
-                        float[] hsv = hsvColors.get(0);
-                        boolean mag = item.isEnchanted();
-                        c2 = adjustColor(hsv, false, true, false, mag);
-                        c3 = adjustColor(hsv, true, true, true, mag);
-                        c4 = adjustColor(hsv, true, false, true, mag);
-                    }
-                    mWorkStrokeColor[0] = (sStrokeColor[0] & 0xFF000000) | c1;
-                    mWorkStrokeColor[1] = (sStrokeColor[1] & 0xFF000000) | c2;
-                    mWorkStrokeColor[2] = (sStrokeColor[2] & 0xFF000000) | c3;
-                    mWorkStrokeColor[3] = (sStrokeColor[3] & 0xFF000000) | c4;
-                    mUseSpectrum = false;
-                    return;
-                }
+                );
+            }
+            if (colors.isEmpty()) {
+                // The first tooltip line is the item's styled hover name, so it already carries
+                // the rarity color vanilla gives it. Used when no stack was handed to us: MC 26.2+
+                // moved it out of tooltip(...) into GuiGraphicsExtractor's own bookkeeping, and our
+                // loader hooks can miss it, which left every border on the fixed colors.
+                collectTooltipColors(list, colors);
+            }
+            if (applyWorkingColors(colors, !item.isEmpty() && item.isEnchanted())) {
+                return;
             }
         }
         System.arraycopy(sStrokeColor, 0, mWorkStrokeColor, 0, 4);
         mUseSpectrum = false;
+    }
+
+    private static void collectTooltipColors(@Nonnull List<ClientTooltipComponent> list,
+                                             @Nonnull IntOpenHashSet colors) {
+        for (int i = 0, e = Math.min(list.size(), 3); i < e; i++) {
+            if (list.get(i) instanceof ClientTextTooltip) {
+                Style style = findSingleStyle((ClientTextTooltip) list.get(i));
+                TextColor textColor = style != null ? style.getColor() : null;
+                // white is Rarity.COMMON's color, keep the configured border for it
+                if (textColor != null && (textColor.getValue() & 0xFFFFFF) != 0xFFFFFF) {
+                    colors.add(textColor.getValue() & 0xFFFFFF);
+                    return;
+                }
+            }
+        }
+    }
+    /**
+     * Fills {@link #mWorkStrokeColor} from the given color set.
+     *
+     * @return false if no color could be derived, the caller then falls back to the configured ones
+     */
+    private boolean applyWorkingColors(@Nonnull IntOpenHashSet colors, boolean enchanted) {
+        if (colors.isEmpty()) {
+            return false;
+        }
+        ArrayList<float[]> hsvColors = new ArrayList<>(16);
+        for (var it = colors.iterator(); it.hasNext(); ) {
+            int c = it.nextInt();
+            float[] hsv = new float[3];
+            Color.RGBToHSV(c, hsv);
+            // reduce saturation and brightness
+            hsv[1] = Math.min(hsv[1], 0.9f);
+            hsv[2] = MathUtil.clamp(hsv[2], 0.2f, 0.85f);
+            hsvColors.add(hsv);
+        }
+        if (hsvColors.isEmpty()) {
+            return false;
+        }
+        int size = hsvColors.size();
+        if (size > 4) {
+            if (sRoundedShapes && mNumDrawsInThisFrame == 0) {
+                mUseSpectrum = true;
+                return true;
+            }
+            Collections.shuffle(hsvColors);
+        }
+        int c1 = Color.HSVToColor(hsvColors.get(0));
+        int c2, c3, c4;
+        if (size > 2) {
+            // we have 3 or 4 colors
+            c2 = Color.HSVToColor(hsvColors.get(1));
+            c3 = Color.HSVToColor(hsvColors.get(2));
+            if (size == 4) {
+                c4 = Color.HSVToColor(hsvColors.get(3));
+            } else {
+                // invert hue of c2
+                float[] hsv = hsvColors.get(1);
+                hsv[0] = (hsv[0] + 180f) % 360f;
+                c4 = Color.HSVToColor(hsv);
+            }
+        } else if (size == 2) {
+            // we have two colors, make diagonal
+            c3 = Color.HSVToColor(hsvColors.get(1));
+            c2 = lerpInLinearSpace(0.5f, c1, c3);
+            float[] hsv = new float[3];
+            Color.RGBToHSV(c2, hsv);
+            c4 = adjustColor(hsv, false, true, false, enchanted);
+        } else {
+            // we have one color...
+            float[] hsv = hsvColors.get(0);
+            c2 = adjustColor(hsv, false, true, false, enchanted);
+            c3 = adjustColor(hsv, true, true, true, enchanted);
+            c4 = adjustColor(hsv, true, false, true, enchanted);
+        }
+        mWorkStrokeColor[0] = (sStrokeColor[0] & 0xFF000000) | c1;
+        mWorkStrokeColor[1] = (sStrokeColor[1] & 0xFF000000) | c2;
+        mWorkStrokeColor[2] = (sStrokeColor[2] & 0xFF000000) | c3;
+        mWorkStrokeColor[3] = (sStrokeColor[3] & 0xFF000000) | c4;
+        mUseSpectrum = false;
+        return true;
     }
 
     static int adjustColor(float[] hsv, boolean hue, boolean sat, boolean val, boolean magnified) {
@@ -532,9 +567,9 @@ public final class TooltipRenderer implements ScrollController.IListener {
                             @Nullable Identifier tooltipStyle) {
         mDraw = true;
 
-        if (itemStack != mLastSeenItem || mNumDrawsInThisFrame > 0) {
+        if (itemStack != mLastSeenItem || mNumDrawsInThisFrame > 0 || itemStack.isEmpty()) {
             mLastSeenItem = itemStack;
-            computeWorkingColor(itemStack);
+            computeWorkingColor(itemStack, list);
         }
 
         int tooltipWidth;
