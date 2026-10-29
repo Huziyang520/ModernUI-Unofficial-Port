@@ -159,9 +159,12 @@ public class DashboardFragment extends Fragment {
                                             "[CurseForge(Original Project)](https://www.curseforge.com/minecraft/mc-mods/modern-ui)",
                                             "[Modrinth(Original Project)](https://modrinth.com/mod/modern-ui)",
                                             "", "") + "  \n" +
+                                    I18n.get("gui.modernui.preReleases_ssss",
+                                            "[GitHub(Pre-releases)](https://github.com/Huziyang520/Practical-Enchantments/releases)",
+                                            "", "", "") + "  \n" +
                                     I18n.get("gui.modernui.community_ssss",
-                                            "[Discord](https://discord.gg/kmyGKt2)",
                                             "[MC百科](https://www.mcmod.cn/class/31032.html)",
+                                            "[Discord(BloCamLimb)](https://discord.gg/kmyGKt2)",
                                             "", ""));
                     var params = new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
                     params.bottomMargin = content.dp(40);
@@ -189,12 +192,11 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.14.8.2") + """
+                                "Modern UI 3.14.8.3") + """
                                 
                                 ----
-                                * Fix a crash after switching the game language 修复切换游戏语言后崩溃
-                                * Fix a corrupted first frame when the settings screen opens 修复设置界面首帧花屏
-                                * Fix "Play A Music" not opening a file dialog 修复"Play A Music"打不开文件选择框""");
+                                * Fix the tooltip border not following the item rarity 修复提示框边框不随物品稀有度变色
+                                * Add a preview build link and move MC百科 before Discord 新增预览版获取链接，并把 MC百科 排到 Discord 之前""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);

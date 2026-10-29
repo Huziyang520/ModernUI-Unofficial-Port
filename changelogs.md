@@ -1,6 +1,13 @@
 Changelogs
 ===
 
+### Modern UI 3.14.8.3
+Changes from
+* 3.14.8.2 → 3.14.8.3 for Minecraft 26.3
+#### All Extensions 26.3
+* Fix the tooltip border not following the item rarity: the border adapts to the item's rarity colors again 修复提示框边框不随物品稀有度变色的问题：边框重新按物品稀有度配色
+* Add a "Preview Builds" section to the dashboard (GitHub pre-releases), show MC百科 before Discord and rename it to Discord(BloCamLimb) 操作中心新增"预览版获取"（GitHub 预发布），MC百科 移到 Discord 之前，Discord 改名为 Discord(BloCamLimb)
+
 ### Modern UI 3.14.8.2
 Changes from
 * 3.14.8.1 → 3.14.8.2 for Minecraft 26.3

@@ -137,9 +137,11 @@ public abstract class MixinGuiGraphics implements IModernGuiGraphics {
         return result;
     }
 
+    // MC 26.3: the deferred tooltip moved into the (……;ZZ)V overload, the (……;Z)V one only
+    // delegates to it, so this must target the two-boolean version or the captured stack is lost.
     @Inject(method = "setTooltipForNextFrameInternal(Lnet/minecraft/client/gui/Font;Ljava/util/List;" +
             "IILnet/minecraft/client/gui/screens/inventory/tooltip/ClientTooltipPositioner;" +
-            "Lnet/minecraft/resources/Identifier;Z)V",
+            "Lnet/minecraft/resources/Identifier;ZZ)V",
             at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;" +
                     "deferredTooltip:Ljava/lang/Runnable;",
                     opcode = Opcodes.PUTFIELD))
