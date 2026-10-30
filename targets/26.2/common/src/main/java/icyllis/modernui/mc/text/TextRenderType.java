@@ -1,0 +1,697 @@
+/*
+ * Modern UI.
+ * Copyright (C) 2019-2023 BloCamLimb. All rights reserved.
+ *
+ * Modern UI is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * Modern UI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with Modern UI. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package icyllis.modernui.mc.text;
+
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.ColorTargetState;
+import com.mojang.blaze3d.pipeline.DepthStencilState;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.CompareOp;
+import com.mojang.blaze3d.shaders.UniformType;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import icyllis.modernui.mc.ModernUIMod;
+import icyllis.modernui.mc.MuiModApi;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.resources.Identifier;
+
+import javax.annotation.Nonnull;
+import java.util.HashMap;
+import java.util.Optional;
+
+import static icyllis.modernui.mc.ModernUIMod.LOGGER;
+import static icyllis.modernui.mc.text.TextLayoutEngine.MARKER;
+
+/**
+ * Fast and modern text render type.
+ */
+public abstract class TextRenderType {
+
+    public static final int MODE_NORMAL = 0; // <- must be zero
+    public static final int MODE_SDF_FILL = 1;
+    public static final int MODE_SDF_STROKE = 2;
+    public static final int MODE_SEE_THROUGH = 3;
+    /**
+     * Used in 2D rendering, render as {@link #MODE_NORMAL},
+     * but we compute font size in device space from CTM.
+     *
+     * @since 3.8.1
+     */
+    public static final int MODE_UNIFORM_SCALE = 4; // <- must be power of 2
+
+    // MC 26.2: vanilla text shaders were merged into minecraft:core/text and are
+    // switched by shader defines, so the old minecraft:core/rendertype_text_intensity
+    // no longer exists. Vanilla's pipeline snippets are private and RenderPipeline#toBuilder
+    // is not available on the modding classpath, so copy the vanilla pipeline
+    // configuration manually and only replace the fragment shader.
+    public static final RenderPipeline PIPELINE_NORMAL = copyOf(RenderPipelines.TEXT)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
+            .withLocation(ModernUIMod.location("pipeline/modern_text_normal"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_normal"))
+            .build();
+
+    // GUI text uses the IS_GUI shader define, which also makes the fog varyings absent.
+    public static final RenderPipeline PIPELINE_GUI_NORMAL = copyOf(RenderPipelines.GUI_TEXT)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
+            .withLocation(ModernUIMod.location("pipeline/modern_text_gui_normal"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_normal"))
+            .build();
+
+    public static final RenderPipeline PIPELINE_SDF_FILL = copyOf(RenderPipelines.TEXT)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
+            .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_fill"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
+            .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, true, -1.0F, -10.0F))
+            .build();
+
+    public static final RenderPipeline PIPELINE_SDF_STROKE = copyOf(RenderPipelines.TEXT)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
+            .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_stroke"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_stroke"))
+            .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, true, -1.0F, -10.0F))
+            .build();
+
+    public static final RenderPipeline PIPELINE_GUI_SDF = copyOf(RenderPipelines.GUI_TEXT)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
+            .withLocation(ModernUIMod.location("pipeline/modern_text_gui_sdf"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
+            .build();
+
+    // MC 26.2: Font#drawInBatch* was removed and 3D world text is now rendered by
+    // TextFeatureRenderer from Font#prepareText glyphs. See #getModernWorldType(Font.DisplayMode).
+    //
+    // IMPORTANT: each one must be copied from the *matching* vanilla text pipeline, so that all
+    // states except the fragment shader (notably the depth state, and for POLYGON_OFFSET the
+    // polygon offset itself) stay exactly as vanilla. Do NOT use PIPELINE_SDF_FILL here: it
+    // carries a slope-scaled depth bias (-1/-10) designed for the Modern Text Engine's own
+    // quads; applied to the vanilla-shaped glyph quads of an angled sign board that bias
+    // scales with the depth slope and pushes the text through the whole scene or behind the
+    // board (sign text then vanishes when near, or is visible through entities).
+    public static final RenderPipeline PIPELINE_SDF_FILL_WORLD = copyOf(RenderPipelines.TEXT)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
+            .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_fill_world"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
+            .build();
+
+    public static final RenderPipeline PIPELINE_SDF_FILL_POLYGON_OFFSET = copyOf(RenderPipelines.TEXT_POLYGON_OFFSET)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
+            .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_fill_polygon_offset"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
+            .build();
+
+    public static final RenderPipeline PIPELINE_SDF_FILL_SEE_THROUGH = copyOf(RenderPipelines.TEXT_SEE_THROUGH)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
+            .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_fill_see_through"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
+            .build();
+
+    /**
+     * Copies everything from a vanilla pipeline (shader defines, bind groups, vertex
+     * format, blend/depth state, ...) so that only the fragment shader needs replacing.
+     */
+    @Nonnull
+    private static RenderPipeline.Builder copyOf(@Nonnull RenderPipeline base) {
+        RenderPipeline.Builder builder = RenderPipeline.builder()
+                .withVertexShader(base.getVertexShader())
+                .withFragmentShader(base.getFragmentShader());
+        for (String flag : base.getShaderDefines().flags()) {
+            builder.withShaderDefine(flag);
+        }
+        for (var layout : base.getBindGroupLayouts()) {
+            builder.withBindGroupLayout(layout);
+        }
+        var targets = base.getColorTargetStates();
+        for (int i = 0; i < targets.length; i++) {
+            builder.withColorTargetState(i, targets[i]);
+        }
+        builder.withDepthStencilState(Optional.ofNullable(base.getDepthStencilState()));
+        var polygonMode = base.getPolygonMode();
+        if (polygonMode != null) {
+            builder.withPolygonMode(polygonMode);
+        }
+        builder.withCull(base.isCull());
+        var formats = base.getVertexFormatBindings();
+        for (int i = 0; i < formats.length; i++) {
+            builder.withVertexBinding(i, formats[i]);
+        }
+        builder.withPrimitiveTopology(base.getPrimitiveTopology());
+        return builder;
+    }
+
+    /*private static volatile RenderPipeline sCurrentPipelineSDFFill = PIPELINE_SDF_FILL;
+    private static volatile RenderPipeline sCurrentPipelineSDFStroke = PIPELINE_SDF_STROKE;
+
+    // Hey buddy, I think you've got the wrong door, the leather club's two blocks down
+    public static final RenderPipeline PIPELINE_SDF_FILL_SMART = RenderPipeline.builder(PIPELINE_SDF_SNIPPET)
+            .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_fill_smart"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill_400"))
+            .withDepthBias(-1.0F, -10.0F)
+            .build();
+
+    public static final RenderPipeline PIPELINE_SDF_STROKE_SMART = RenderPipeline.builder(PIPELINE_SDF_SNIPPET)
+            .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_stroke_smart"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_stroke_400"))
+            .withDepthBias(-1.0F, -10.0F)
+            .build();*/
+
+    /*public static final ShaderProgram SHADER_NORMAL = new ShaderProgram(
+            ModernUIMod.location("core/rendertype_modern_text_normal"),
+            DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP,
+            ShaderDefines.EMPTY
+    );
+
+    public static final ShaderProgram SHADER_SDF_FILL = new ShaderProgram(
+            ModernUIMod.location("core/rendertype_modern_text_sdf_fill"),
+            DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP,
+            ShaderDefines.EMPTY
+    );
+    public static final ShaderProgram SHADER_SDF_STROKE = new ShaderProgram(
+            ModernUIMod.location("core/rendertype_modern_text_sdf_stroke"),
+            DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP,
+            ShaderDefines.EMPTY
+    );
+
+    private static volatile ShaderProgram sCurrentShaderSDFFill = SHADER_SDF_FILL;
+    private static volatile ShaderProgram sCurrentShaderSDFStroke = SHADER_SDF_STROKE;
+
+    private static final ShaderProgram SHADER_SDF_FILL_SMART = new ShaderProgram(
+            ModernUIMod.location("core/rendertype_modern_text_sdf_fill_400"),
+            DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP,
+            ShaderDefines.EMPTY
+    );
+    private static final ShaderProgram SHADER_SDF_STROKE_SMART = new ShaderProgram(
+            ModernUIMod.location("core/rendertype_modern_text_sdf_stroke_400"),
+            DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP,
+            ShaderDefines.EMPTY
+    );*/
+
+    /*static final ShaderStateShard
+            RENDERTYPE_MODERN_TEXT_NORMAL = new ShaderStateShard(TextRenderType::getShaderNormal),
+            RENDERTYPE_MODERN_TEXT_SDF_FILL = new ShaderStateShard(TextRenderType::getShaderSDFFill),
+            RENDERTYPE_MODERN_TEXT_SDF_STROKE = new ShaderStateShard(TextRenderType::getShaderSDFStroke);*/
+
+    /*
+     * Only the texture id is different, the rest state are same
+     */
+    /*private static final ImmutableList<RenderStateShard> NORMAL_STATES;
+    private static final ImmutableList<RenderStateShard> SDF_FILL_STATES;
+    private static final ImmutableList<RenderStateShard> SDF_STROKE_STATES;
+    static final ImmutableList<RenderStateShard> VANILLA_STATES;
+    static final ImmutableList<RenderStateShard> SEE_THROUGH_STATES;
+    static final ImmutableList<RenderStateShard> POLYGON_OFFSET_STATES;*/
+
+    /**
+     * Texture id to render type map
+     */
+    private static final HashMap<Identifier, RenderType> sNormalTypes = new HashMap<>();
+    private static final HashMap<Identifier, RenderType> sSDFFillTypes = new HashMap<>();
+    private static final HashMap<Identifier, RenderType> sSDFStrokeTypes = new HashMap<>();
+    private static final HashMap<Identifier, RenderType> sVanillaTypes = new HashMap<>();
+    private static final HashMap<Identifier, RenderType> sSeeThroughTypes = new HashMap<>();
+    private static final HashMap<Identifier, RenderType> sPolygonOffsetTypes = new HashMap<>();
+    // Only for our own A8 font atlas, see #getModernWorldType(Font.DisplayMode)
+    private static final HashMap<Identifier, RenderType> sModernNormalTypes = new HashMap<>();
+    private static final HashMap<Identifier, RenderType> sModernPolygonOffsetTypes = new HashMap<>();
+    private static final HashMap<Identifier, RenderType> sModernSeeThroughTypes = new HashMap<>();
+
+    private static RenderType sFirstSDFFillType;
+    private static final ByteBufferBuilder sFirstSDFFillBuffer = new ByteBufferBuilder(131072);
+
+    private static RenderType sFirstSDFStrokeType;
+    private static final ByteBufferBuilder sFirstSDFStrokeBuffer = new ByteBufferBuilder(131072);
+
+    // SDF requires bilinear sampling
+    //@SharedPtr
+    //private static GLSampler sLinearFontSampler;
+
+    static {
+        /*NORMAL_STATES = ImmutableList.of(
+                //RENDERTYPE_MODERN_TEXT_NORMAL,
+                TRANSLUCENT_TRANSPARENCY,
+                LEQUAL_DEPTH_TEST,
+                CULL,
+                LIGHTMAP,
+                NO_OVERLAY,
+                NO_LAYERING,
+                MAIN_TARGET,
+                DEFAULT_TEXTURING,
+                COLOR_DEPTH_WRITE,
+                DEFAULT_LINE
+        );*/
+        /*SDF_FILL_STATES = ImmutableList.of(
+                //RENDERTYPE_MODERN_TEXT_SDF_FILL,
+                TRANSLUCENT_TRANSPARENCY,
+                LEQUAL_DEPTH_TEST,
+                CULL,
+                LIGHTMAP,
+                NO_OVERLAY,
+                POLYGON_OFFSET_LAYERING,
+                MAIN_TARGET,
+                DEFAULT_TEXTURING,
+                COLOR_DEPTH_WRITE,
+                DEFAULT_LINE
+        );*/
+        /*SDF_STROKE_STATES = ImmutableList.of(
+                //RENDERTYPE_MODERN_TEXT_SDF_STROKE,
+                TRANSLUCENT_TRANSPARENCY,
+                LEQUAL_DEPTH_TEST,
+                CULL,
+                LIGHTMAP,
+                NO_OVERLAY,
+                POLYGON_OFFSET_LAYERING,
+                MAIN_TARGET,
+                DEFAULT_TEXTURING,
+                COLOR_DEPTH_WRITE,
+                DEFAULT_LINE
+        );*/
+        /*VANILLA_STATES = ImmutableList.of(
+                RENDERTYPE_TEXT_SHADER,
+                TRANSLUCENT_TRANSPARENCY,
+                LEQUAL_DEPTH_TEST,
+                CULL,
+                LIGHTMAP,
+                NO_OVERLAY,
+                NO_LAYERING,
+                MAIN_TARGET,
+                DEFAULT_TEXTURING,
+                COLOR_DEPTH_WRITE,
+                DEFAULT_LINE
+        );*/
+        /*SEE_THROUGH_STATES = ImmutableList.of(
+                RENDERTYPE_TEXT_SEE_THROUGH_SHADER,
+                TRANSLUCENT_TRANSPARENCY,
+                NO_DEPTH_TEST,
+                CULL,
+                LIGHTMAP,
+                NO_OVERLAY,
+                NO_LAYERING,
+                MAIN_TARGET,
+                DEFAULT_TEXTURING,
+                COLOR_WRITE,
+                DEFAULT_LINE
+        );*/
+        /*POLYGON_OFFSET_STATES = ImmutableList.of(
+                RENDERTYPE_TEXT_SHADER,
+                TRANSLUCENT_TRANSPARENCY,
+                LEQUAL_DEPTH_TEST,
+                CULL,
+                LIGHTMAP,
+                NO_OVERLAY,
+                POLYGON_OFFSET_LAYERING,
+                MAIN_TARGET,
+                DEFAULT_TEXTURING,
+                COLOR_DEPTH_WRITE,
+                DEFAULT_LINE
+        );*/
+    }
+
+    /*private TextRenderType(String name, int bufferSize, Runnable setupState, Runnable clearState) {
+        super(name, *//*DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS,*//*
+                bufferSize, false, true, setupState, clearState);
+    }*/
+
+    @Nonnull
+    public static RenderType getOrCreate(Identifier texture, int mode) {
+        return switch (mode) {
+            case MODE_SDF_FILL -> {
+                if (!TextLayoutEngine.sCurrentInWorldRendering || TextLayoutEngine.sUseTextShadersInWorld) {
+                    yield sSDFFillTypes.computeIfAbsent(texture, TextRenderType::makeSDFFillType);
+                } else {
+                    yield sPolygonOffsetTypes.computeIfAbsent(texture, TextRenderType::makePolygonOffsetType);
+                }
+            }
+            case MODE_SDF_STROKE -> sSDFStrokeTypes.computeIfAbsent(texture, TextRenderType::makeSDFStrokeType);
+            case MODE_SEE_THROUGH -> sSeeThroughTypes.computeIfAbsent(texture, TextRenderType::makeSeeThroughType);
+            default -> {
+                if (!TextLayoutEngine.sCurrentInWorldRendering || TextLayoutEngine.sUseTextShadersInWorld) {
+                    yield sNormalTypes.computeIfAbsent(texture, TextRenderType::makeNormalType);
+                } else {
+                    yield sVanillaTypes.computeIfAbsent(texture, TextRenderType::makeVanillaType);
+                }
+            }
+        };
+    }
+
+    // compatibility
+    @Nonnull
+    public static RenderType getOrCreate(Identifier texture, Font.DisplayMode mode, boolean isBitmapFont) {
+        return switch (mode) {
+            case SEE_THROUGH -> sSeeThroughTypes.computeIfAbsent(texture, TextRenderType::makeSeeThroughType);
+            case POLYGON_OFFSET -> sPolygonOffsetTypes.computeIfAbsent(texture, TextRenderType::makePolygonOffsetType);
+            default -> isBitmapFont || (TextLayoutEngine.sCurrentInWorldRendering && !TextLayoutEngine.sUseTextShadersInWorld)
+                    ? sVanillaTypes.computeIfAbsent(texture, TextRenderType::makeVanillaType)
+                    : sNormalTypes.computeIfAbsent(texture, TextRenderType::makeNormalType);
+        };
+    }
+
+    public static RenderPipeline getPipelineForGui(int mode, boolean isBitmapFont) {
+        return switch (mode) {
+            case MODE_SDF_FILL -> PIPELINE_GUI_SDF;
+            default -> isBitmapFont
+                    ? RenderPipelines.GUI_TEXT
+                    : PIPELINE_GUI_NORMAL;
+        };
+    }
+
+    /**
+     * MC 26.2: {@code Font#drawInBatch*} were removed, all 3D world text is now rendered by
+     * {@code net.minecraft.client.renderer.feature.TextFeatureRenderer} using the glyphs
+     * returned by {@code Font#prepareText}. Those glyphs are baked by {@link StandardFontSet}
+     * into our own A8 font atlas, but they carry the vanilla render types, which use point
+     * sampling and have no anti-aliasing in the 3D world. This returns the equivalent Modern
+     * Text Engine 3D world render types (SDF fill with bilinear sampling) for our font atlas.
+     *
+     * @see icyllis.modernui.mc.text.mixin.MixinTextFeatureRenderer
+     */
+    @Nonnull
+    public static RenderType getModernWorldType(@Nonnull Font.DisplayMode mode) {
+        return switch (mode) {
+            case SEE_THROUGH -> sModernSeeThroughTypes.computeIfAbsent(GlyphManager.FONT_SHEET,
+                    texture -> makeModernType("modern_text_sdf_fill_see_through", PIPELINE_SDF_FILL_SEE_THROUGH, texture));
+            case POLYGON_OFFSET -> sModernPolygonOffsetTypes.computeIfAbsent(GlyphManager.FONT_SHEET,
+                    texture -> makeModernType("modern_text_sdf_fill_polygon_offset", PIPELINE_SDF_FILL_POLYGON_OFFSET, texture));
+            default -> sModernNormalTypes.computeIfAbsent(GlyphManager.FONT_SHEET,
+                    texture -> makeModernType("modern_text_sdf_fill_world", PIPELINE_SDF_FILL_WORLD, texture));
+        };
+    }
+
+    @Nonnull
+    private static RenderType makeNormalType(Identifier texture) {
+        return MuiModApi.get().createRenderType("modern_text_normal",
+                RenderSetup.builder(PIPELINE_NORMAL)
+                        .withTexture("Sampler0", texture)
+                        .useLightmap()
+                        .sortOnUpload()
+                        .createRenderSetup());
+    }
+
+    /*private static void ensureLinearFontSampler() {
+        if (sLinearFontSampler == null) {
+            ImmediateContext context = Core.requireImmediateContext();
+            // default state is bilinear
+            sLinearFontSampler = (GLSampler) context.getResourceProvider().findOrCreateCompatibleSampler(
+                    SamplerDesc.make(SamplerDesc.FILTER_LINEAR, SamplerDesc.MIPMAP_MODE_LINEAR));
+            Objects.requireNonNull(sLinearFontSampler, "Failed to create sampler object");
+        }
+    }*/
+
+    @Nonnull
+    private static RenderType makeSDFFillType(Identifier texture) {
+        /*ensureLinearFontSampler();
+        TextRenderType renderType = new TextRenderType("modern_text_sdf_fill", 256, () -> {
+            //RenderSystem.setShader(getShaderSDFFill());
+            SDF_FILL_STATES.forEach(RenderStateShard::setupRenderState);
+            //RenderSystem.setShaderTexture(0, texture);
+            if (!TextLayoutEngine.sCurrentInWorldRendering || TextLayoutEngine.sUseTextShadersInWorld) {
+                GL33C.glBindSampler(0, sLinearFontSampler.getHandle());
+            }
+        }, () -> {
+            SDF_FILL_STATES.forEach(RenderStateShard::clearRenderState);
+            if (!TextLayoutEngine.sCurrentInWorldRendering || TextLayoutEngine.sUseTextShadersInWorld) {
+                GL33C.glBindSampler(0, 0);
+            }
+        });*/
+        RenderType renderType = MuiModApi.get().createRenderType("modern_text_sdf_fill",
+                RenderSetup.builder(PIPELINE_SDF_FILL)
+                        .withTexture("Sampler0", texture, () -> RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR))
+                        .useLightmap()
+                        .sortOnUpload()
+                        .createRenderSetup());
+        if (sFirstSDFFillType == null) {
+            assert (sSDFFillTypes.isEmpty());
+            sFirstSDFFillType = renderType;
+            // MC26.2: renderBuffers (MultiBufferSource.BufferSource) was removed,
+            // the SDF fill type no longer needs to be registered into fixed buffers.
+        }
+        return renderType;
+    }
+
+    @Nonnull
+    private static RenderType makeSDFStrokeType(Identifier texture) {
+        /*ensureLinearFontSampler();
+        TextRenderType renderType = new TextRenderType("modern_text_sdf_stroke", 256, () -> {
+            //RenderSystem.setShader(getShaderSDFStroke());
+            SDF_STROKE_STATES.forEach(RenderStateShard::setupRenderState);
+            //RenderSystem.setShaderTexture(0, texture);
+            if (!TextLayoutEngine.sCurrentInWorldRendering || TextLayoutEngine.sUseTextShadersInWorld) {
+                GL33C.glBindSampler(0, sLinearFontSampler.getHandle());
+            }
+        }, () -> {
+            SDF_STROKE_STATES.forEach(RenderStateShard::clearRenderState);
+            if (!TextLayoutEngine.sCurrentInWorldRendering || TextLayoutEngine.sUseTextShadersInWorld) {
+                GL33C.glBindSampler(0, 0);
+            }
+        });*/
+        RenderType renderType = MuiModApi.get().createRenderType("modern_text_sdf_stroke",
+                RenderSetup.builder(PIPELINE_SDF_STROKE)
+                        .withTexture("Sampler0", texture, () -> RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR))
+                        .useLightmap()
+                        .sortOnUpload()
+                        .createRenderSetup());
+        if (sFirstSDFStrokeType == null) {
+            assert (sSDFStrokeTypes.isEmpty());
+            sFirstSDFStrokeType = renderType;
+            // MC26.2: renderBuffers (MultiBufferSource.BufferSource) was removed,
+            // the SDF stroke type no longer needs to be registered into fixed buffers.
+        }
+        return renderType;
+    }
+
+    @Nonnull
+    private static RenderType makeVanillaType(Identifier texture) {
+        /*return new TextRenderType("modern_text_vanilla", 256, () -> {
+            VANILLA_STATES.forEach(RenderStateShard::setupRenderState);
+            //RenderSystem.setShaderTexture(0, texture);
+        }, () -> VANILLA_STATES.forEach(RenderStateShard::clearRenderState));*/
+        return MuiModApi.get().createRenderType("modern_text_vanilla",
+                RenderSetup.builder(RenderPipelines.TEXT)
+                        .withTexture("Sampler0", texture)
+                        .useLightmap()
+                        .sortOnUpload()
+                        .createRenderSetup());
+    }
+
+    @Nonnull
+    private static RenderType makeSeeThroughType(Identifier texture) {
+        /*return new TextRenderType("modern_text_see_through", 256, () -> {
+            SEE_THROUGH_STATES.forEach(RenderStateShard::setupRenderState);
+            //RenderSystem.setShaderTexture(0, texture);
+        }, () -> SEE_THROUGH_STATES.forEach(RenderStateShard::clearRenderState));*/
+        return MuiModApi.get().createRenderType("modern_text_see_through",
+                RenderSetup.builder(RenderPipelines.TEXT_SEE_THROUGH)
+                        .withTexture("Sampler0", texture)
+                        .useLightmap()
+                        .sortOnUpload()
+                        .createRenderSetup());
+    }
+
+    @Nonnull
+    private static RenderType makePolygonOffsetType(Identifier texture) {
+        /*return new TextRenderType("modern_text_polygon_offset", 256, () -> {
+            POLYGON_OFFSET_STATES.forEach(RenderStateShard::setupRenderState);
+            //RenderSystem.setShaderTexture(0, texture);
+        }, () -> POLYGON_OFFSET_STATES.forEach(RenderStateShard::clearRenderState));*/
+        return MuiModApi.get().createRenderType("modern_text_polygon_offset",
+                RenderSetup.builder(RenderPipelines.TEXT_POLYGON_OFFSET)
+                        .withTexture("Sampler0", texture)
+                        .useLightmap()
+                        .sortOnUpload()
+                        .createRenderSetup());
+    }
+
+    /**
+     * SDF fill variant for 3D world sheet glyphs, {@code pipeline} must be the copy of the
+     * vanilla pipeline of the same display mode, see {@link #getModernWorldType(Font.DisplayMode)}.
+     */
+    @Nonnull
+    private static RenderType makeModernType(String name, RenderPipeline pipeline, Identifier texture) {
+        return MuiModApi.get().createRenderType(name,
+                RenderSetup.builder(pipeline)
+                        .withTexture("Sampler0", texture, () -> RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR))
+                        .useLightmap()
+                        .sortOnUpload()
+                        .createRenderSetup());
+    }
+
+    /*
+     * Batch rendering and custom ordering.
+     * <p>
+     * We use a single atlas for batch rendering to improve performance.
+     */
+    /*@Nullable
+    public static RenderType getFirstSDFFillType() {
+        return sFirstSDFFillType;
+    }*/
+
+    /*
+     * Similarly, but for outline.
+     *
+     * @see #getFirstSDFFillType()
+     */
+    /*@Nullable
+    public static RenderType getFirstSDFStrokeType() {
+        return sFirstSDFStrokeType;
+    }*/
+
+    public static synchronized void clear(boolean cleanup) {
+        if (sFirstSDFFillType != null) {
+            assert (!sSDFFillTypes.isEmpty());
+            // MC26.2: renderBuffers removed, nothing to unregister
+            sFirstSDFFillType = null;
+        }
+        if (sFirstSDFStrokeType != null) {
+            assert (!sSDFStrokeTypes.isEmpty());
+            // MC26.2: renderBuffers removed, nothing to unregister
+            sFirstSDFStrokeType = null;
+        }
+        sNormalTypes.clear();
+        sSDFFillTypes.clear();
+        sSDFStrokeTypes.clear();
+        sVanillaTypes.clear();
+        sSeeThroughTypes.clear();
+        sPolygonOffsetTypes.clear();
+        sModernNormalTypes.clear();
+        sModernPolygonOffsetTypes.clear();
+        sModernSeeThroughTypes.clear();
+        sFirstSDFFillBuffer.clear();
+        sFirstSDFStrokeBuffer.clear();
+        if (cleanup) {
+            //sLinearFontSampler = RefCnt.move(sLinearFontSampler);
+            /*sCurrentShaderSDFFill = null;
+            sCurrentShaderSDFStroke = null;*/
+        }
+    }
+
+    /*public static RenderPipeline getPipelineSDFFill() {
+        return sCurrentPipelineSDFFill;
+    }*/
+
+    /*public static ShaderProgram getShaderNormal() {
+        if (TextLayoutEngine.sCurrentInWorldRendering && !TextLayoutEngine.sUseTextShadersInWorld) {
+            return CoreShaders.RENDERTYPE_TEXT;
+        }
+        return SHADER_NORMAL;
+    }
+
+    public static ShaderProgram getShaderSDFFill() {
+        if (TextLayoutEngine.sCurrentInWorldRendering && !TextLayoutEngine.sUseTextShadersInWorld) {
+            return CoreShaders.RENDERTYPE_TEXT;
+        }
+        return sCurrentShaderSDFFill;
+    }
+
+    public static ShaderProgram getShaderSDFStroke() {
+        return sCurrentShaderSDFStroke;
+    }*/
+
+    /*public static synchronized boolean toggleSDFShaders(boolean smart) {
+        if (smart) {
+            try {
+                // Caps is thread-safe, there's safe publication
+                if (((GLCaps) Core.peekImmediateContext()
+                        .getCaps()).getGLSLVersion() >= 400) {
+                    if (sCurrentPipelineSDFFill != PIPELINE_SDF_FILL_SMART) {
+                        sCurrentPipelineSDFFill = PIPELINE_SDF_FILL_SMART;
+                        sCurrentPipelineSDFStroke = PIPELINE_SDF_STROKE_SMART;
+                        return true;
+                    }
+                    return false;
+                }
+                LOGGER.info(MARKER, "No GLSL 400, smart SDF text shaders disabled");
+            } catch (Throwable e) {
+                LOGGER.warn(MARKER, "No GLSL 400, smart SDF text shaders disabled", e);
+            }
+        }
+        if (sCurrentPipelineSDFFill != PIPELINE_SDF_FILL) {
+            sCurrentPipelineSDFFill = PIPELINE_SDF_FILL;
+            sCurrentPipelineSDFStroke = PIPELINE_SDF_STROKE;
+            return true;
+        }
+        return false;
+    }*/
+
+    /*public static class ExtendedTextureStateShard extends EmptyTextureStateShard {
+
+        public ExtendedTextureStateShard(final GpuTextureView textureView) {
+            super(() -> RenderSystem.setShaderTexture(0, textureView), () -> {
+            });
+        }
+
+        // yes we can use a sampler object now, but it may not be possible in the future
+        public ExtendedTextureStateShard(final GpuTextureView textureView,
+                                         final FilterMode minFilter, final FilterMode magFilter,
+                                         final boolean useMipmaps) {
+            super(() -> {
+                GpuTexture texture = textureView.texture();
+                texture.setTextureFilter(minFilter, magFilter, useMipmaps);
+                RenderSystem.setShaderTexture(0, textureView);
+            }, restoreSampler(textureView));
+        }
+
+        private static Runnable restoreSampler(final GpuTextureView textureView) {
+            AccessGpuTexture access = (AccessGpuTexture) textureView.texture();
+            final FilterMode oldMinFilter = access.getMinFilter();
+            final FilterMode oldMagFilter = access.getMagFilter();
+            final boolean oldUseMipmaps = access.getUseMipmaps();
+            return () -> {
+                GpuTexture texture = textureView.texture();
+                texture.setTextureFilter(oldMinFilter, oldMagFilter, oldUseMipmaps);
+            };
+        }
+    }*/
+
+    /*
+     * Preload Modern UI text shaders for early text rendering.
+     */
+    /*public static synchronized void preloadShaders() {
+        var provider = obtainResourceProvider();
+        try {
+            Minecraft.getInstance().getShaderManager().preloadForStartup(
+                    provider, SHADER_NORMAL, SHADER_SDF_FILL, SHADER_SDF_STROKE
+            );
+        } catch (IOException | ShaderManager.CompilationException e) {
+            throw new IllegalStateException("Bad text shaders", e);
+        }
+        toggleSDFShaders(false);
+        LOGGER.info(MARKER, "Preloaded modern text shaders");
+    }
+
+    @Nonnull
+    private static ResourceProvider obtainResourceProvider() {
+        final var source = Minecraft.getInstance().getVanillaPackResources();
+        final var fallback = source.asProvider();
+        return location -> {
+            // don't worry, ShaderManager will close it
+            @SuppressWarnings("resource") final var stream = TextRenderType.class
+                    .getResourceAsStream("/assets/" + location.getNamespace() + "/" + location.getPath());
+            if (stream == null) {
+                // fallback to vanilla
+                return fallback.getResource(location);
+            }
+            return Optional.of(new Resource(source, () -> stream));
+        };
+    }*/
+}
