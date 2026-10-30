@@ -217,5 +217,22 @@
   "modernui.center.appearance.compact": "緊湊版面",
   "modernui.center.appearance.compact.desc": "更緊湊的行距，減少滾動距離。",
   "modernui.center.appearance.animations": "介面動效",
-  "modernui.center.appearance.animations.desc": "頁面切換與選中指示器的動畫。"
+  "modernui.center.appearance.animations.desc": "頁面切換與選中指示器的動畫。",
+  "modernui.center.tile.appearance": "主題色、背景與動效",
+  "modernui.center.tile.screen": "顯示、音效與行為",
+  "modernui.center.tile.view": "滾動、觸控容差與提示",
+  "modernui.center.tile.font": "字體族、Emoji 與度量",
+  "modernui.center.tile.extension": "縮放、輸入與快捷功能",
+  "modernui.center.tile.text": "排版、著色器與快取",
+  "modernui.center.section.theme": "主題",
+  "modernui.center.section.backdrop": "背景",
+  "modernui.center.section.display": "顯示",
+  "modernui.center.section.audio": "音效",
+  "modernui.center.section.behaviour": "行為",
+  "modernui.center.section.scrolling": "滾動",
+  "modernui.center.section.tooltipTiming": "提示時長",
+  "modernui.center.section.layout": "版面",
+  "modernui.center.section.sound": "聲音",
+  "modernui.center.section.interaction": "互動",
+  "modernui.center.section.typing": "輸入"
 }

@@ -42,6 +42,9 @@ import icyllis.modernui.mc.Config;
 import icyllis.modernui.mc.ConfigItem;
 import icyllis.modernui.mc.ModernUIClient;
 import icyllis.modernui.mc.ModernUIMod;
+import icyllis.modernui.mc.ui.studio.StudioHome;
+import icyllis.modernui.mc.ui.studio.StudioPanel;
+import icyllis.modernui.mc.ui.studio.StudioPages;
 import icyllis.modernui.mc.MuiModApi;
 import icyllis.modernui.mc.MuiPlatform;
 import icyllis.modernui.mc.UIManager;
@@ -100,7 +103,7 @@ public class PreferencesFragment extends Fragment {
 
     private static final int PAGE_COUNT = 6;
 
-    private static final String[] PAGE_TITLES = {
+    private static final String[] TILE_TITLES = {
             "modernui.center.category.appearance",
             "modernui.center.category.screen",
             "modernui.center.category.view",
@@ -109,13 +112,16 @@ public class PreferencesFragment extends Fragment {
             "modernui.center.category.text"
     };
 
-    private FrameLayout mContentArea;
-    private ChipBar mChips;
-    private AuroraHeader mHero;
-    private View mVeil;
-    private int mCurrentPage = -1;
+    private static final String[] TILE_SUBTITLES = {
+            "modernui.center.tile.appearance",
+            "modernui.center.tile.screen",
+            "modernui.center.tile.view",
+            "modernui.center.tile.font",
+            "modernui.center.tile.extension",
+            "modernui.center.tile.text"
+    };
 
-    private final View[] mPages = new View[PAGE_COUNT];
+    private StudioHome mHome;
 
     private final AccentPalette.Listener mAccentListener = this::refreshAccent;
 
@@ -124,163 +130,78 @@ public class PreferencesFragment extends Fragment {
                              @Nullable DataSet savedInstanceState) {
         final long startedAt = System.nanoTime();
         var context = requireContext();
-        var root = new FrameLayout(context);
 
-        var body = new LinearLayout(context);
-        body.setOrientation(LinearLayout.VERTICAL);
-        root.addView(body, new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
-
-        mHero = new AuroraHeader(context);
-        body.addView(mHero, new LinearLayout.LayoutParams(MATCH_PARENT, mHero.dp(152)));
-        {
-            var inner = new LinearLayout(context);
-            inner.setOrientation(LinearLayout.VERTICAL);
-            int padH = inner.dp(Design.SPACE_6);
-            inner.setPadding(padH, inner.dp(Design.SPACE_5), padH, 0);
-            mHero.addView(inner, new FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT));
-            mHero.setPadding(0, 0, 0, mHero.dp(Design.SPACE_4));
-
-            var title = new TextView(context);
-            title.setText("Modern UI");
-            title.setTextSize(24);
-            title.setTextColor(Design.onSurface(context));
-            inner.addView(title);
-
-            var subtitle = new TextView(context);
-            subtitle.setText(I18n.get("modernui.center.subtitle"));
-            subtitle.setTextSize(12);
-            subtitle.setTextColor(Design.alpha(Design.onSurface(context), 0.72f));
-            var subParams = new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
-            subParams.setMargins(0, inner.dp(Design.SPACE_1), 0, 0);
-            inner.addView(subtitle, subParams);
-
-            var badge = new TextView(context);
-            badge.setText("3.14.9-beta");
-            badge.setTextSize(11);
-            badge.setTextColor(Design.onAccentContainer(context));
-            int padH2 = badge.dp(Design.SPACE_3);
-            int padV = badge.dp(5);
-            badge.setPadding(padH2, padV, padH2, padV);
-            badge.setBackground(Design.rounded(context,
-                    Design.alpha(Design.accentContainer(context), 0.85f), Design.RADIUS_PILL));
-            var badgeParams = new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
-            badgeParams.setMargins(0, inner.dp(Design.SPACE_3), 0, 0);
-            inner.addView(badge, badgeParams);
-        }
-
-        mChips = new ChipBar(context, PAGE_COUNT);
+        var titles = new String[PAGE_COUNT];
+        var subtitles = new String[PAGE_COUNT];
         for (int i = 0; i < PAGE_COUNT; i++) {
-            mChips.addChip(I18n.get(PAGE_TITLES[i]), i);
+            titles[i] = I18n.get(TILE_TITLES[i]);
+            subtitles[i] = I18n.get(TILE_SUBTITLES[i]);
         }
-        body.addView(mChips, new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT));
-
-        mContentArea = new FrameLayout(context);
-        body.addView(mContentArea, new LinearLayout.LayoutParams(MATCH_PARENT, 0, 1));
-
-        mChips.setOnSelectionChanged(this::switchPage);
-
-        // The render target is a single shared texture, so the very first frame can show
-        // leftover pixels through the translucent backdrop. Cover it for one frame.
-        mVeil = new View(context);
-        mVeil.setBackground(Design.rounded(context, Design.surface(context), 0));
-        root.addView(mVeil, new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
 
         AccentPalette.init(context);
         AccentPalette.addListener(mAccentListener);
-        mChips.select(0, false);
-        var veil = mVeil;
-        if (veil != null) {
-            veil.postOnAnimationDelayed(this::dismissVeil, 48);
-        }
-        ModernUIMod.LOGGER.info(MARKER, "Built the preferences shell in {} ms",
+
+        mHome = new StudioHome(context, titles, subtitles, this::buildPanel,
+                "Modern UI", I18n.get("modernui.center.subtitle") + "  ·  3.14.9-beta");
+        ModernUIMod.LOGGER.info(MARKER, "Built the settings studio in {} ms",
                 (System.nanoTime() - startedAt) / 1_000_000L);
-        return root;
+        return mHome;
     }
 
-    /**
-     * Builds each page once; switching only toggles visibility, so re-entry costs no layout.
-     */
-    private View obtainPage(int position) {
-        var page = mPages[position];
-        if (page != null) {
-            return page;
-        }
-        var context = requireContext();
-        final int padH = mContentArea.dp(Design.SPACE_4);
-        final int maxWidth = mContentArea.dp(Design.CONTENT_MAX_WIDTH) + padH + padH;
-        var sv = new ClampingScrollView(context);
-        sv.setChildMaxWidth(maxWidth);
-        sv.setTag(position);
-        var layout = switch (position) {
-            case 0 -> createPage1(context);
-            case 1 -> createPage2(context);
-            case 2 -> createPage3(context);
-            case 3 -> createPage4(context);
-            case 4 -> createPage5(context);
-            default -> createPage6(context);
-        };
-        layout.setPadding(padH, mContentArea.dp(Design.SPACE_4), padH, mContentArea.dp(Design.SPACE_6));
-        var params = new ScrollView.LayoutParams(MATCH_PARENT, WRAP_CONTENT, Gravity.CENTER_HORIZONTAL);
-        sv.addView(layout, params);
-        sv.setVisibility(View.GONE);
-        mContentArea.addView(sv, new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
-        mPages[position] = sv;
-        return sv;
+    private void buildPanel(int index, StudioPanel panel) {
+        StudioPages.build(index, panel, mHost);
     }
 
-    private void switchPage(int position, boolean animate) {
-        if (position < 0 || position >= PAGE_COUNT || position == mCurrentPage) {
-            return;
-        }
-        var incoming = obtainPage(position);
-        var outgoing = mCurrentPage >= 0 ? mPages[mCurrentPage] : null;
-        incoming.setVisibility(View.VISIBLE);
-        if (outgoing != null) {
-            outgoing.setVisibility(View.GONE);
-        }
-        boolean motion = animate && SurfacePrefs.animations();
-        if (motion && outgoing != null) {
-            float distance = mContentArea.dp(24) * (position > mCurrentPage ? 1 : -1);
-            incoming.setTranslationX(distance);
-            incoming.setAlpha(0f);
-            var slide = ObjectAnimator.ofFloat(incoming, View.TRANSLATION_X, distance, 0);
-            var fade = ObjectAnimator.ofFloat(incoming, View.ALPHA, 0f, 1f);
-            var set = new AnimatorSet();
-            set.play(slide).with(fade);
-            set.setDuration(210);
-            set.setInterpolator(MotionEasingUtils.MOTION_EASING_STANDARD_DECELERATE);
-            set.start();
-        } else {
-            incoming.setTranslationX(0);
-            incoming.setAlpha(1f);
-        }
-        mCurrentPage = position;
-        dismissVeil();
-    }
+    private final StudioPages.Host mHost = new StudioPages.Host() {
 
-    /** The veil only has to survive the first recorded frame. */
-    private void dismissVeil() {
-        var veil = mVeil;
-        if (veil == null || veil.getVisibility() != View.VISIBLE) {
-            return;
+        @NonNull
+        @Override
+        public Runnable clientChanged() {
+            return mOnClientConfigChanged;
         }
-        mVeil = null;
-        if (SurfacePrefs.animations()) {
-            var fade = ObjectAnimator.ofFloat(veil, View.ALPHA, 1f, 0f);
-            fade.setDuration(120);
-            fade.start();
-            veil.postOnAnimationDelayed(() -> veil.setVisibility(View.GONE), 140);
-        } else {
-            veil.setVisibility(View.GONE);
+
+        @NonNull
+        @Override
+        public Runnable commonChanged() {
+            return mOnCommonConfigChanged;
         }
-    }
+
+        @NonNull
+        @Override
+        public Runnable textChanged() {
+            return mOnTextConfigChanged;
+        }
+
+        @NonNull
+        @Override
+        public View legacyPage(@NonNull Context context, int page) {
+            return switch (page) {
+                // font page keeps its family and registration editors for now
+                case 3 -> createPage4(context);
+                case 5 -> createPage6(context);
+                default -> new LinearLayout(context);
+            };
+        }
+
+        @NonNull
+        @Override
+        public View colorListRow(@NonNull Context context, @NonNull String key,
+                                 @NonNull ConfigItem<List<? extends String>> item,
+                                 @NonNull Runnable onChanged) {
+            return createColorOpacityOption(context, key, item, onChanged);
+        }
+
+        @NonNull
+        @Override
+        public View guiScaleRow(@NonNull Context context) {
+            return createGuiScaleOption(context);
+        }
+    };
 
     private void refreshAccent() {
-        if (mHero != null) {
-            mHero.reloadAccent();
-        }
-        if (mChips != null) {
-            mChips.repaint();
+        // the studio reads colours while building, so an open panel is rebuilt on demand
+        if (mHome != null) {
+            mHome.invalidate();
         }
     }
 
@@ -314,215 +235,6 @@ public class PreferencesFragment extends Fragment {
                 }
             });
         }
-    }
-
-    public LinearLayout createPage1(Context context) {
-        var content = new LinearLayout(context);
-        content.setOrientation(LinearLayout.VERTICAL);
-        Runnable onChanged = mOnClientConfigChanged;
-
-        content.addView(createThemeColorCard(context));
-
-        {
-            var card = createCard(content, "modernui.center.category.layout");
-            new BooleanOption(context, "modernui.center.appearance.compact",
-                    SurfacePrefs::compactLayout,
-                    v -> {
-                        SurfacePrefs.setCompactLayout(v);
-                        onChanged.run();
-                    })
-                    .create(card);
-            new BooleanOption(context, "modernui.center.appearance.animations",
-                    SurfacePrefs::animations,
-                    v -> {
-                        SurfacePrefs.setAnimations(v);
-                        onChanged.run();
-                    })
-                    .create(card);
-        }
-
-        {
-            var card = createCard(content, "modernui.center.category.backdrop");
-            card.addView(createColorOpacityOption(context, "modernui.center.screen.backgroundOpacity",
-                    Config.CLIENT.mBackgroundColor, onChanged));
-
-            new IntegerOption(context, "modernui.center.screen.backgroundDuration",
-                    50, Config.CLIENT.mBackgroundDuration, onChanged)
-                    .create(card, 3);
-
-            new BooleanOption(context, "modernui.center.screen.blurEffect",
-                    Config.CLIENT.mBlurEffect, onChanged)
-                    .create(card);
-
-            new IntegerOption(context, "modernui.center.screen.blurRadius",
-                    1, Config.CLIENT.mBlurRadius, onChanged)
-                    .create(card, 2);
-
-            new BooleanOption(context, "modernui.center.screen.additionalBlurEffect",
-                    Config.CLIENT.mAdditionalBlurEffect, onChanged)
-                    .create(card);
-
-            new BooleanOption(context, "modernui.center.screen.overrideVanillaBlur",
-                    Config.CLIENT.mOverrideVanillaBlur, onChanged)
-                    .create(card);
-        }
-
-        return content;
-    }
-
-    public LinearLayout createPage2(Context context) {
-        var content = new LinearLayout(context);
-        content.setOrientation(LinearLayout.VERTICAL);
-        Runnable onChanged = mOnClientConfigChanged;
-
-        {
-            var card = createCard(content, "modernui.center.category.display");
-            card.addView(createGuiScaleOption(context));
-
-            new DropDownOption<>(context, "modernui.center.screen.windowMode",
-                    Config.Client.WindowMode.values(),
-                    Config.CLIENT.mWindowMode, onChanged)
-                    .create(card);
-
-            new IntegerOption(context, "modernui.center.screen.framerateInactive",
-                    10, Config.CLIENT.mFramerateInactive, onChanged)
-                    .create(card, 3);
-        }
-
-        {
-            var card = createCard(content, "modernui.center.category.audio");
-            new FloatOption(context, "modernui.center.screen.masterVolumeInactive",
-                    Config.CLIENT.mMasterVolumeInactive, 100, onChanged)
-                    .create(card, 4);
-
-            new FloatOption(context, "modernui.center.screen.masterVolumeMinimized",
-                    Config.CLIENT.mMasterVolumeMinimized, 100, onChanged)
-                    .create(card, 4);
-
-            new BooleanOption(context, "modernui.center.screen.globalVolumeControl",
-                    Config.CLIENT.mGlobalVolumeControl, onChanged)
-                    .create(card);
-        }
-
-        {
-            var card = createCard(content, "modernui.center.category.gameplay");
-            new BooleanOption(context, "modernui.center.screen.inventoryPause",
-                    Config.CLIENT.mInventoryPause, onChanged)
-                    .create(card);
-        }
-
-        return content;
-    }
-
-    /**
-     * Swatches for the whole interface: presets for a quick pick, a picker for anything else.
-     */
-    public CardView createThemeColorCard(Context context) {
-        var card = createCard(context, "modernui.center.appearance.themeColor");
-        var custom = AccentPalette.isCustom();
-        int initial = custom ? AccentPalette.seed() : Design.resolve(context,
-                R.attr.colorPrimary, 0xFF8AB4F8);
-
-        var row = new LinearLayout(context);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setMinimumHeight(Design.rowHeight(context));
-        int padH = row.dp(Design.SPACE_4);
-        row.setPadding(padH, row.dp(Design.SPACE_2), padH, row.dp(Design.SPACE_2));
-
-        var title = new TextView(context);
-        title.setText(I18n.get("modernui.center.appearance.themeColor"));
-        title.setTextSize(14);
-        title.setTextColor(Design.onSurface(context));
-        title.setGravity(Gravity.CENTER_VERTICAL);
-        row.addView(title, new LinearLayout.LayoutParams(0, WRAP_CONTENT, 1));
-
-        var hex = new TextView(context);
-        hex.setText(custom ? ColorPickerView.toHexString(initial) : I18n.get("modernui.center.accent.follow"));
-        hex.setTextSize(12);
-        hex.setTextColor(Design.onSurfaceVariant(context));
-        hex.setGravity(Gravity.CENTER_VERTICAL);
-        row.addView(hex, new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT));
-
-        var preview = new ColorSwatchView(context);
-        preview.setColor(initial);
-        {
-            var params = new LinearLayout.LayoutParams(preview.dp(24), preview.dp(24));
-            params.gravity = Gravity.CENTER_VERTICAL;
-            params.setMargins(preview.dp(Design.SPACE_3), 0, 0, 0);
-            row.addView(preview, params);
-        }
-        card.addView(row);
-
-        // preset swatches, six per line so narrow windows keep a tidy grid
-        int[] presets = {
-                0xFF7C4DFF, 0xFF448AFF, 0xFF00BCD4, 0xFF00C853, 0xFFFFC400, 0xFFFF6D00,
-                0xFFFF5252, 0xFFE040FB, 0xFF9E9E9E, 0xFF795548, 0xFF00BFA5, 0xFFFF4081
-        };
-        var picker = new ColorPickerPanel(context);
-        picker.setColor(initial);
-        picker.setVisibility(View.GONE);
-
-        var swatchHandler = new Object() {
-            void apply(int argb) {
-                preview.setColor(argb);
-                hex.setText(ColorPickerView.toHexString(argb));
-                picker.setColor(argb);
-            }
-        };
-
-        for (int line = 0; line < 2; line++) {
-            var swatchRow = new LinearLayout(context);
-            swatchRow.setOrientation(LinearLayout.HORIZONTAL);
-            int linePadH = swatchRow.dp(Design.SPACE_4);
-            swatchRow.setPadding(linePadH, swatchRow.dp(Design.SPACE_1), linePadH, swatchRow.dp(Design.SPACE_1));
-            for (int i = line * 6; i < line * 6 + 6; i++) {
-                final int argb = presets[i];
-                var swatch = new TextView(context);
-                swatch.setBackground(Design.rounded(context, argb, Design.RADIUS_PILL));
-                swatch.setClickable(true);
-                swatch.setFocusable(true);
-                swatch.setOnClickListener(v -> {
-                    AccentPalette.setSeed(argb);
-                    swatchHandler.apply(argb);
-                });
-                var params = new LinearLayout.LayoutParams(swatchRow.dp(28), swatchRow.dp(28));
-                params.gravity = Gravity.CENTER_VERTICAL;
-                params.setMargins(0, 0, swatchRow.dp(Design.SPACE_2), 0);
-                swatchRow.addView(swatch, params);
-            }
-            card.addView(swatchRow);
-        }
-
-        {
-            var follow = new TextView(context);
-            follow.setText(I18n.get("modernui.center.accent.follow"));
-            follow.setTextSize(12);
-            follow.setTextColor(Design.accent(context));
-            follow.setClickable(true);
-            follow.setFocusable(true);
-            int followPadH = follow.dp(Design.SPACE_4);
-            follow.setPadding(followPadH, follow.dp(Design.SPACE_2), followPadH, follow.dp(Design.SPACE_2));
-            follow.setOnClickListener(v -> {
-                AccentPalette.setSeed(0);
-                int accent = Design.accent(context);
-                swatchHandler.apply(accent);
-                hex.setText(I18n.get("modernui.center.accent.follow"));
-                picker.setVisibility(View.GONE);
-            });
-            card.addView(follow);
-        }
-
-        card.addView(picker);
-        preview.setOnClickListener(v -> picker.setVisibility(
-                picker.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE));
-
-        picker.setOnColorCommitted(argb -> {
-            preview.setColor(argb);
-            hex.setText(ColorPickerView.toHexString(argb));
-            AccentPalette.setSeed(argb);
-        });
-
-        return card;
     }
 
     public LinearLayout createPage3(Context context) {
@@ -1065,10 +777,13 @@ public class PreferencesFragment extends Fragment {
     /**
      * @param name section title, null for an untitled card
      */
+    /**
+     * Legacy entry point: returns an unattached titled card, the caller adds it to the page.
+     */
     @NonNull
     public static LinearLayout createCategoryList(@NonNull ViewGroup page,
                                                   @Nullable String name) {
-        return createCard(page, name);
+        return createCard(page.getContext(), name);
     }
 
     /**

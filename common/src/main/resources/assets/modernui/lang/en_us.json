@@ -217,5 +217,22 @@
   "modernui.center.appearance.compact": "Compact layout",
   "modernui.center.appearance.compact.desc": "Tighter rows, fewer pixels scrolled.",
   "modernui.center.appearance.animations": "Interface animations",
-  "modernui.center.appearance.animations.desc": "Animate page changes and selection indicators."
+  "modernui.center.appearance.animations.desc": "Animate page changes and selection indicators.",
+  "modernui.center.tile.appearance": "Theme colour, backdrop and motion",
+  "modernui.center.tile.screen": "Display, audio and behaviour",
+  "modernui.center.tile.view": "Scrolling, slop and tooltips",
+  "modernui.center.tile.font": "Families, emoji and metrics",
+  "modernui.center.tile.extension": "Zoom, typing and shortcuts",
+  "modernui.center.tile.text": "Layout, shaders and cache",
+  "modernui.center.section.theme": "THEME",
+  "modernui.center.section.backdrop": "BACKDROP",
+  "modernui.center.section.display": "DISPLAY",
+  "modernui.center.section.audio": "AUDIO",
+  "modernui.center.section.behaviour": "BEHAVIOUR",
+  "modernui.center.section.scrolling": "SCROLLING",
+  "modernui.center.section.tooltipTiming": "TOOLTIP TIMING",
+  "modernui.center.section.layout": "LAYOUT",
+  "modernui.center.section.sound": "SOUND",
+  "modernui.center.section.interaction": "INTERACTION",
+  "modernui.center.section.typing": "TYPING"
 }
