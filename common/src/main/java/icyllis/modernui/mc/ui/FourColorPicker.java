@@ -31,8 +31,10 @@ import icyllis.modernui.resources.TypedValue;
 import icyllis.modernui.text.InputFilter;
 import icyllis.modernui.text.Typeface;
 import icyllis.modernui.view.ContextMenu;
+import icyllis.modernui.view.MotionEvent;
 import icyllis.modernui.widget.EditText;
 import icyllis.modernui.widget.RelativeLayout;
+import net.minecraft.client.resources.language.I18n;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,7 +57,13 @@ public class FourColorPicker extends RelativeLayout {
     private final int mBorderColor;
 
     private final ConfigItem<List<? extends String>> mConfig;
+    private final Runnable mOnChanged;
     private final OnFocusChangeListener mOnFieldFocusChange;
+
+    private float mDownX;
+    private float mDownY;
+    private long mDownTime;
+    private static final long TAP_TIMEOUT_MS = 260;
 
     public FourColorPicker(Context context,
                            ConfigItem<List<? extends String>> config,
@@ -67,6 +75,7 @@ public class FourColorPicker extends RelativeLayout {
         mBorderColor = value.data;
 
         mConfig = config;
+        mOnChanged = onChanged;
 
         mOnFieldFocusChange = (v, hasFocus) -> {
             EditText input = (EditText) v;
@@ -149,6 +158,7 @@ public class FourColorPicker extends RelativeLayout {
         }
         setWillNotDraw(false);
         setLongClickable(true);
+        setTooltipText(I18n.get("modernui.center.color.pickHint"));
     }
 
     @NonNull
@@ -247,6 +257,79 @@ public class FourColorPicker extends RelativeLayout {
         );
         int inset = dp(8);
         mPreviewBox.inset(inset, inset);
+    }
+
+
+    @Override
+    public boolean onTouchEvent(@NonNull MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN -> {
+                mDownX = event.getX();
+                mDownY = event.getY();
+                mDownTime = System.currentTimeMillis();
+            }
+            case MotionEvent.ACTION_UP -> {
+                if (System.currentTimeMillis() - mDownTime < TAP_TIMEOUT_MS
+                        && Math.abs(event.getX() - mDownX) < dp(8)
+                        && Math.abs(event.getY() - mDownY) < dp(8)) {
+                    int index = quadrantAt(event.getX(), event.getY());
+                    if (index >= 0) {
+                        openPicker(index);
+                        return true;
+                    }
+                }
+            }
+            default -> {
+            }
+        }
+        return super.onTouchEvent(event);
+    }
+
+    private int quadrantAt(float x, float y) {
+        if (x < mPreviewBox.left || x > mPreviewBox.right
+                || y < mPreviewBox.top || y > mPreviewBox.bottom) {
+            return -1;
+        }
+        boolean right = x > mPreviewBox.centerX();
+        boolean bottom = y > mPreviewBox.centerY();
+        if (!bottom) {
+            return right ? 1 : 0;
+        }
+        return right ? 2 : 3;
+    }
+
+    /**
+     * Live edits stay local; the config is written once the picker is released.
+     */
+    private void openPicker(int index) {
+        var popup = new ColorPickerPopup(this, mColors[index], true, argb -> {
+            writeColor(index, argb);
+        });
+        popup.show(this);
+    }
+
+    private void writeColor(int index, int color) {
+        if (mColors[index] == color) {
+            return;
+        }
+        mColors[index] = color;
+        mColorFields[index].setText(ColorPickerView.toHexString(color));
+        invalidate();
+        var oldList = mConfig.get();
+        var newList = new ArrayList<String>(oldList);
+        if (newList.isEmpty()) {
+            newList.add("#FFFFFFFF");
+        }
+        while (newList.size() < 4) {
+            newList.add(newList.get(newList.size() - 1));
+        }
+        newList.set(index, ColorPickerView.toHexString(color));
+        if (!newList.equals(oldList)) {
+            mConfig.set(newList);
+            if (mOnChanged != null) {
+                mOnChanged.run();
+            }
+        }
     }
 
     @Override

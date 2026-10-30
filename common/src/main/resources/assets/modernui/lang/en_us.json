@@ -121,7 +121,7 @@
   "modernui.center.text.allowSDFTextIn2D.tooltip": "When enabled, Modern UI will use SDF text rendering if appropriate.\nOtherwise, it uses nearest-neighbor or bilinear sampling based on texel density.\nThis option only applies to outline fonts.",
   "modernui.center.text.bitmapRepl": "Bitmap Replacement",
   "modernui.center.text.emojiShortcodes": "Emoji Shortcodes",
-  "modernui.center.text.emojiShortcodes.tooltip": "When enabled, shortcodes in Chat Screen will be replaced with their Emoji sequences. For example:\n:phoenix: → \uD83D\uDC26\u200D\uD83D\uDD25",
+  "modernui.center.text.emojiShortcodes.tooltip": "When enabled, shortcodes in Chat Screen will be replaced with their Emoji sequences. For example:\n:phoenix: → 🐦‍🔥",
   "modernui.center.text.distanceField": "Use Distance Field",
   "modernui.center.text.allowShadow": "Allow Shadow",
   "modernui.center.text.allowAsyncLayout": "Allow Asynchronous Text Layout",
@@ -200,5 +200,9 @@
   "gui.modernui.whatsNewIn_s": "What's New in %s",
   "gui.modernui.resetToDefault": "Reset to Default",
   "gui.modernui.restart_to_work": "Restart the game for settings to take effect",
-  "gui.modernui.font_reloaded": "Reloaded default typeface list"
+  "gui.modernui.font_reloaded": "Reloaded default typeface list",
+  "modernui.center.category.accent": "Appearance",
+  "modernui.center.accent.color": "Accent color",
+  "modernui.center.accent.follow": "Tap to follow the theme color",
+  "modernui.center.color.pickHint": "Tap a corner to pick its color"
 }

@@ -57,7 +57,8 @@
   "modernui.center.screen.blurWithBackground": "Blur with Screen Background",
   "modernui.center.screen.blurWithBackground.tooltip": "When enabled, Gaussian blur is applied only when the screen has a default background, similar to Minecraft 1.20.6, with better optimization and compatibility.",
   "modernui.center.screen.overrideVanillaBlur": "覆蓋原版模糊特效",
-  "modernui.center.screen.overrideVanillaBlur.tooltip": "When enabled, Vanilla 3-pass box blur will be replaced with Modern UI Gaussian blur, which will give you better blur quality and rendering performance.\nModern UI has lower CPU and GPU usage to achieve similar blur strength as Vanilla at the same frame rate, it's recommended that you enable this option.","modernui.center.screen.blurRadius": "模糊半徑",
+  "modernui.center.screen.overrideVanillaBlur.tooltip": "When enabled, Vanilla 3-pass box blur will be replaced with Modern UI Gaussian blur, which will give you better blur quality and rendering performance.\nModern UI has lower CPU and GPU usage to achieve similar blur strength as Vanilla at the same frame rate, it's recommended that you enable this option.",
+  "modernui.center.screen.blurRadius": "模糊半徑",
   "modernui.center.screen.inventoryPause": "物品欄暫停",
   "modernui.center.screen.inventoryPause.tooltip": "當你開啟物品欄時，暫停單人遊戲。",
   "modernui.center.screen.windowMode": "視窗模式",
@@ -120,7 +121,7 @@
   "modernui.center.text.allowSDFTextIn2D.tooltip": "啟用時，Modern UI 將在適當的情況下使用 SDF 文字繪製。\n否則，它將根據紋理像素密度使用最近鄰或雙線性採樣。\n此選項僅適用於輪廓字型。",
   "modernui.center.text.bitmapRepl": "位圖替換",
   "modernui.center.text.emojiShortcodes": "表情圖案簡碼",
-  "modernui.center.text.emojiShortcodes.tooltip": "啟用時，聊天畫面中的簡碼將被其表情圖案序列替換。例如：\n:phoenix: → \uD83D\uDC26\u200D\uD83D\uDD25",
+  "modernui.center.text.emojiShortcodes.tooltip": "啟用時，聊天畫面中的簡碼將被其表情圖案序列替換。例如：\n:phoenix: → 🐦‍🔥",
   "modernui.center.text.distanceField": "使用距離場",
   "modernui.center.text.allowShadow": "允許陰影",
   "modernui.center.text.allowAsyncLayout": "允許非同步文字佈局",
@@ -199,5 +200,9 @@
   "gui.modernui.whatsNewIn_s": "%s 的新功能",
   "gui.modernui.resetToDefault": "重設為預設值",
   "gui.modernui.restart_to_work": "重新啟動遊戲使設定生效",
-  "gui.modernui.font_reloaded": "重新載入預設字型清單"
+  "gui.modernui.font_reloaded": "重新載入預設字型清單",
+  "modernui.center.category.accent": "外觀",
+  "modernui.center.accent.color": "強調色",
+  "modernui.center.accent.follow": "點擊恢復跟隨主題色",
+  "modernui.center.color.pickHint": "點擊色塊開啟取色器"
 }

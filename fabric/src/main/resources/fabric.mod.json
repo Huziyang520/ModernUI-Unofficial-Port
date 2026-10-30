@@ -17,13 +17,6 @@
     "issues": "https://github.com/Huziyang520/ModernUI-Unofficial-Port/issues",
     "sources": "https://github.com/Huziyang520/ModernUI-Unofficial-Port"
   },
-  "custom": {
-    "modmenu": {
-      "links": {
-        "备用反馈地址": "https://issue.mengcai.online/"
-      }
-    }
-  },
   "license": "LGPL-3.0-or-later",
   "icon": "assets/modernui/icon.png",
   "environment": "client",
@@ -40,10 +33,16 @@
   },
   "mixins": [
     "mixins.modernui-fabric.json",
-    "mixins.modernui-textmc.json"
+    "mixins.modernui-textmc.json",
+    "mixins.modernui-lib.json"
   ],
   "accessWidener" : "modernui.classtweaker",
   "custom": {
+    "modmenu": {
+      "links": {
+        "备用反馈地址": "https://issue.mengcai.online/"
+      }
+    },
     "catalogue": {
       "banner": "assets/modernui/banner.png",
       "background": "assets/modernui/background.png",

@@ -20,6 +20,7 @@ package icyllis.modernui.mc.ui;
 
 import icyllis.modernui.ModernUI;
 import icyllis.modernui.R;
+import icyllis.modernui.animation.AnimatorSet;
 import icyllis.modernui.animation.LayoutTransition;
 import icyllis.modernui.animation.MotionEasingUtils;
 import icyllis.modernui.animation.ObjectAnimator;
@@ -34,6 +35,7 @@ import icyllis.modernui.graphics.MathUtil;
 import icyllis.modernui.graphics.drawable.BuiltinIconDrawable;
 import icyllis.modernui.graphics.drawable.ColorDrawable;
 import icyllis.modernui.graphics.drawable.RippleDrawable;
+import icyllis.modernui.graphics.drawable.ShapeDrawable;
 import icyllis.modernui.graphics.drawable.StateListDrawable;
 import icyllis.modernui.graphics.text.FontFamily;
 import icyllis.modernui.mc.Config;
@@ -93,53 +95,269 @@ public class PreferencesFragment extends Fragment {
         Config.TEXT.reload();
     };
 
+    private static final int PAGE_COUNT = 5;
+
+    private static final String[] PAGE_TITLES = {
+            "modernui.center.category.screen",
+            "modernui.center.category.view",
+            "modernui.center.category.font",
+            "modernui.center.category.extension",
+            "modernui.center.category.text"
+    };
+
+    private FrameLayout mContentArea;
+    private LinearLayout mNavRail;
+    private LinearLayout mNavList;
+    private View mNavIndicator;
+    private boolean mNarrow;
+    private int mCurrentPage = -1;
+
+    private final View[] mPages = new View[PAGE_COUNT];
+    private final TextView[] mNavLabels = new TextView[PAGE_COUNT];
+
+    private final AccentPalette.Listener mAccentListener = this::refreshAccent;
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable DataSet savedInstanceState) {
         var context = requireContext();
-        var base = new FrameLayout(context);
-        var pager = new ViewPager(context);
+        var root = new FrameLayout(context);
+
+        var body = new LinearLayout(context);
+        body.setOrientation(LinearLayout.HORIZONTAL);
+        root.addView(body, new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+
+        mNavRail = new LinearLayout(context);
+        mNavRail.setOrientation(LinearLayout.VERTICAL);
+        mNavRail.setClipToPadding(false);
+        mNavList = new LinearLayout(context);
+        mNavList.setOrientation(LinearLayout.VERTICAL);
+
+        var railInner = new FrameLayout(context);
+        railInner.addView(mNavList, new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+        mNavIndicator = new View(context);
         {
-            pager.setAdapter(this.new PreferencesAdapter());
-            pager.setFocusableInTouchMode(true);
-            pager.setKeyboardNavigationCluster(true);
+            var drawable = new ShapeDrawable();
+            drawable.setShape(ShapeDrawable.RECTANGLE);
+            drawable.setColor(iconAccentColor(context));
+            var params = new FrameLayout.LayoutParams(railInner.dp(3), railInner.dp(24));
+            params.gravity = Gravity.START | Gravity.TOP;
+            railInner.addView(mNavIndicator, params);
+        }
+        mNavRail.addView(railInner, new LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
 
-            OneShotPreDrawListener.add(pager, () -> {
-                var animator = ObjectAnimator.ofFloat(pager,
-                        View.ROTATION_Y, pager.isLayoutRtl() ? -45 : 45, 0);
-                animator.setInterpolator(MotionEasingUtils.MOTION_EASING_EMPHASIZED);
-                animator.start();
-            });
-
-            var lp = new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
-            lp.gravity = Gravity.CENTER_HORIZONTAL;
-            lp.topMargin = base.dp(48);
-            base.addView(pager, lp);
+        for (int i = 0; i < PAGE_COUNT; i++) {
+            final int page = i;
+            var label = new TextView(context);
+            label.setText(I18n.get(PAGE_TITLES[i]));
+            label.setTextSize(14);
+            label.setSingleLine(true);
+            label.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+            label.setGravity(Gravity.CENTER_VERTICAL);
+            label.setPadding(mNavList.dp(18), 0, mNavList.dp(10), 0);
+            label.setMinimumHeight(mNavList.dp(44));
+            label.setClickable(true);
+            label.setFocusable(true);
+            label.setOnClickListener(v -> switchPage(page, true));
+            mNavList.addView(label, new LinearLayout.LayoutParams(MATCH_PARENT, mNavList.dp(44)));
+            mNavLabels[i] = label;
         }
 
-        {
-            var tabLayout = new TabLayout(context);
-            {
-                var value = new TypedValue();
-                var theme = context.getTheme();
-                if (theme.resolveAttribute(R.ns, R.attr.colorSurfaceContainerLow, value, true))
-                    tabLayout.setBackground(theme.getResources().loadDrawable(value, null, theme));
+        mContentArea = new FrameLayout(context);
+        body.addView(mNavRail, new LinearLayout.LayoutParams(mNavRail.dp(184), MATCH_PARENT));
+        body.addView(mContentArea, new LinearLayout.LayoutParams(0, MATCH_PARENT, 1));
+
+        root.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+            boolean narrow = (r - l) < root.dp(620);
+            if (narrow != mNarrow) {
+                applyRailLayout(narrow);
             }
-            tabLayout.setElevation(base.dp(3));
-            tabLayout.setTabMode(TabLayout.MODE_AUTO);
-            tabLayout.setTabGravity(TabLayout.GRAVITY_CENTER);
-            tabLayout.setupWithViewPager(pager);
+        });
 
-            var lp = new FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
-            lp.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
-            base.addView(tabLayout, lp);
+        AccentPalette.init(context);
+        AccentPalette.addListener(mAccentListener);
+        switchPage(0, false);
+        return root;
+    }
+
+    /**
+     * Wide windows get the rail, narrow ones keep the labels in a single scrollable row.
+     */
+    private void applyRailLayout(boolean narrow) {
+        if (mNarrow == narrow) {
+            return;
         }
+        mNarrow = narrow;
+        var parent = (LinearLayout) mNavRail.getParent();
+        var body = (LinearLayout) parent;
+        if (narrow) {
+            body.setOrientation(LinearLayout.VERTICAL);
+            mNavRail.setOrientation(LinearLayout.HORIZONTAL);
+            mNavList.setOrientation(LinearLayout.HORIZONTAL);
+            mNavRail.setPadding(0, mNavRail.dp(6), 0, mNavRail.dp(6));
+            var params = (LinearLayout.LayoutParams) mNavRail.getLayoutParams();
+            params.width = MATCH_PARENT;
+            params.height = WRAP_CONTENT;
+            params.weight = 0;
+            mNavRail.setLayoutParams(params);
+            var contentParams = (LinearLayout.LayoutParams) mContentArea.getLayoutParams();
+            contentParams.width = MATCH_PARENT;
+            contentParams.height = 0;
+            contentParams.weight = 1;
+            mContentArea.setLayoutParams(contentParams);
+            for (var label : mNavLabels) {
+                if (label != null) {
+                    var lp = (LinearLayout.LayoutParams) label.getLayoutParams();
+                    lp.width = WRAP_CONTENT;
+                    lp.height = mNavList.dp(44);
+                    label.setLayoutParams(lp);
+                }
+            }
+            mNavIndicator.setVisibility(View.GONE);
+        } else {
+            body.setOrientation(LinearLayout.HORIZONTAL);
+            mNavRail.setOrientation(LinearLayout.VERTICAL);
+            mNavList.setOrientation(LinearLayout.VERTICAL);
+            mNavRail.setPadding(0, mNavRail.dp(16), 0, mNavRail.dp(16));
+            var params = (LinearLayout.LayoutParams) mNavRail.getLayoutParams();
+            params.width = mNavRail.dp(184);
+            params.height = MATCH_PARENT;
+            params.weight = 0;
+            mNavRail.setLayoutParams(params);
+            var contentParams = (LinearLayout.LayoutParams) mContentArea.getLayoutParams();
+            contentParams.width = 0;
+            contentParams.height = MATCH_PARENT;
+            contentParams.weight = 1;
+            mContentArea.setLayoutParams(contentParams);
+            for (var label : mNavLabels) {
+                if (label != null) {
+                    var lp = (LinearLayout.LayoutParams) label.getLayoutParams();
+                    lp.width = MATCH_PARENT;
+                    lp.height = mNavList.dp(44);
+                    label.setLayoutParams(lp);
+                }
+            }
+            mNavIndicator.setVisibility(View.VISIBLE);
+        }
+    }
 
-        return base;
+    /**
+     * Builds each page once; switching only toggles visibility, so re-entry costs no layout.
+     */
+    private View obtainPage(int position) {
+        var page = mPages[position];
+        if (page != null) {
+            return page;
+        }
+        var context = requireContext();
+        final int dp20 = mContentArea.dp(20);
+        final int maxWidth = mContentArea.dp(840) + dp20 + dp20;
+        var sv = new ClampingScrollView(context);
+        sv.setChildMaxWidth(maxWidth);
+        sv.setTag(position);
+        var layout = switch (position) {
+            case 0 -> createPage1(context);
+            case 1 -> createPage2(context);
+            case 2 -> createPage3(context);
+            case 3 -> createPage4(context);
+            default -> createPage5(context);
+        };
+        layout.setPadding(dp20, mContentArea.dp(20), dp20, mContentArea.dp(28));
+        var params = new ScrollView.LayoutParams(MATCH_PARENT, WRAP_CONTENT, Gravity.CENTER_HORIZONTAL);
+        sv.addView(layout, params);
+        sv.setVisibility(View.GONE);
+        mContentArea.addView(sv, new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+        mPages[position] = sv;
+        return sv;
+    }
+
+    private void switchPage(int position, boolean animate) {
+        if (position == mCurrentPage) {
+            return;
+        }
+        var incoming = obtainPage(position);
+        var outgoing = mCurrentPage >= 0 ? mPages[mCurrentPage] : null;
+        incoming.setVisibility(View.VISIBLE);
+        if (outgoing != null) {
+            outgoing.setVisibility(View.GONE);
+        }
+        if (animate && outgoing != null) {
+            float distance = mContentArea.dp(18) * (position > mCurrentPage ? 1 : -1);
+            incoming.setTranslationX(distance);
+            incoming.setAlpha(0f);
+            var slide = ObjectAnimator.ofFloat(incoming, View.TRANSLATION_X, distance, 0);
+            var fade = ObjectAnimator.ofFloat(incoming, View.ALPHA, 0f, 1f);
+            var set = new AnimatorSet();
+            set.play(slide).with(fade);
+            set.setDuration(180);
+            set.setInterpolator(MotionEasingUtils.MOTION_EASING_STANDARD_DECELERATE);
+            set.start();
+        } else {
+            incoming.setTranslationX(0);
+            incoming.setAlpha(1f);
+        }
+        mCurrentPage = position;
+        for (int i = 0; i < PAGE_COUNT; i++) {
+            var label = mNavLabels[i];
+            if (label == null) {
+                continue;
+            }
+            boolean selected = i == position;
+            label.setTextColor(selected ? iconAccentColor(label.getContext()) : labelTextColor(label.getContext()));
+            ObjectAnimator.ofFloat(label, View.ALPHA, selected ? 1f : 0.72f)
+                    .setDuration(140)
+                    .start();
+        }
+        if (!mNarrow) {
+            int target = position * mNavList.dp(44) + (mNavList.dp(44) - mNavIndicator.getHeight()) / 2;
+            var indicator = ObjectAnimator.ofFloat(mNavIndicator, View.TRANSLATION_Y, target);
+            indicator.setDuration(220);
+            indicator.setInterpolator(MotionEasingUtils.MOTION_EASING_EMPHASIZED_DECELERATE);
+            indicator.start();
+        }
+    }
+
+    private static int iconAccentColor(@NonNull Context context) {
+        var palette = AccentPalette.get(context);
+        if (palette != null && AccentPalette.isCustom()) {
+            return palette.primary;
+        }
+        var value = new TypedValue();
+        if (context.getTheme().resolveAttribute(R.ns, R.attr.colorPrimary, value, true)) {
+            return value.data;
+        }
+        return 0xFF9E9E9E;
+    }
+
+    private static int labelTextColor(@NonNull Context context) {
+        var value = new TypedValue();
+        if (context.getTheme().resolveAttribute(R.ns, R.attr.colorOnSurfaceVariant, value, true)) {
+            return value.data;
+        }
+        return 0xFFBDBDBD;
+    }
+
+    private void refreshAccent() {
+        if (mNavIndicator == null) {
+            return;
+        }
+        var drawable = new ShapeDrawable();
+        drawable.setShape(ShapeDrawable.RECTANGLE);
+        drawable.setColor(iconAccentColor(requireContext()));
+        mNavIndicator.setBackground(drawable);
+        for (int i = 0; i < PAGE_COUNT; i++) {
+            var label = mNavLabels[i];
+            if (label != null) {
+                label.setTextColor(i == mCurrentPage
+                        ? iconAccentColor(label.getContext())
+                        : labelTextColor(label.getContext()));
+            }
+        }
     }
 
     @Override
     public void onDestroy() {
+        AccentPalette.removeListener(mAccentListener);
         super.onDestroy();
         int count = (mClientConfigChanged ? 1 : 0) +
                 (mCommonConfigChanged ? 1 : 0) +
@@ -169,79 +387,13 @@ public class PreferencesFragment extends Fragment {
         }
     }
 
-    private class PreferencesAdapter extends PagerAdapter {
-
-        @Override
-        public int getCount() {
-            return 5;
-        }
-
-        @NonNull
-        @Override
-        public Object instantiateItem(@NonNull ViewGroup container, int position) {
-            final int dp20 = container.dp(20);
-            final int maxWidth = container.dp(800) + dp20 + dp20;
-            var context = container.getContext();
-            var sv = new ClampingScrollView(context);
-            sv.setChildMaxWidth(maxWidth);
-            sv.setTag(position);
-            ViewGroup layout = switch (position) {
-                case 0 -> createPage1(context);
-                case 1 -> createPage2(context);
-                case 2 -> createPage3(context);
-                case 3 -> createPage4(context);
-                default -> createPage5(context);
-            };
-            layout.setPadding(dp20, 0, dp20, 0);
-            var params = new ScrollView.LayoutParams(MATCH_PARENT, WRAP_CONTENT, Gravity.CENTER_HORIZONTAL);
-            sv.addView(layout, params);
-            //sv.setEdgeEffectColor(ThemeControl.THEME_COLOR);
-            //sv.setTopEdgeEffectBlendMode(BlendMode.SRC_OVER);
-            //sv.setBottomEdgeEffectBlendMode(BlendMode.SRC_OVER);
-
-            container.addView(sv);
-
-            return sv;
-        }
-
-        @Override
-        public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
-            container.removeView((View) object);
-        }
-
-        @Override
-        public boolean isViewFromObject(@NonNull View view, @NonNull Object object) {
-            return view == object;
-        }
-
-        @Override
-        public int getItemPosition(@NonNull Object object) {
-            if (object instanceof View) {
-                Object tag = ((View) object).getTag();
-                if (tag != null) {
-                    return (int) tag;
-                }
-            }
-            return POSITION_NONE;
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            return I18n.get(switch (position) {
-                case 0 -> "modernui.center.category.screen";
-                case 1 -> "modernui.center.category.view";
-                case 2 -> "modernui.center.category.font";
-                case 3 -> "modernui.center.category.extension";
-                default -> "modernui.center.category.text";
-            });
-        }
-    }
-
     public LinearLayout createPage1(Context context) {
         var content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
 
         Runnable onChanged = mOnClientConfigChanged;
+
+        content.addView(createAccentCategory(context));
 
         {
             var list = createCategoryList(content, null);
@@ -304,6 +456,98 @@ public class PreferencesFragment extends Fragment {
         }
 
         return content;
+    }
+
+
+    /**
+     * Accent editor: swatch opens an inline picker, hex stays editable for exact values.
+     */
+    public LinearLayout createAccentCategory(Context context) {
+        var holder = new LinearLayout(context);
+        holder.setOrientation(LinearLayout.VERTICAL);
+        var list = createCategoryList(holder, "modernui.center.category.accent");
+
+        var row = new LinearLayout(context);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setMinimumHeight(row.dp(48));
+
+        var title = new TextView(context);
+        title.setText(I18n.get("modernui.center.accent.color"));
+        title.setTextSize(14);
+        title.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+        title.setGravity(Gravity.CENTER_VERTICAL);
+        row.addView(title, new LinearLayout.LayoutParams(0, WRAP_CONTENT, 1));
+
+        int initial = AccentPalette.isCustom() ? AccentPalette.seed() : iconAccentColor(context);
+
+        var swatch = new ColorSwatchView(context);
+        swatch.setColor(initial);
+        {
+            var params = new LinearLayout.LayoutParams(swatch.dp(28), swatch.dp(28));
+            params.gravity = Gravity.CENTER_VERTICAL;
+            params.setMargins(swatch.dp(6), 0, swatch.dp(10), 0);
+            row.addView(swatch, params);
+        }
+
+        var hex = new EditText(context, null, R.attr.editTextOutlinedStyle);
+        hex.setSingleLine(true);
+        hex.setText(ColorPickerView.toHexString(initial));
+        hex.setFilters(new InputFilter.LengthFilter(10));
+        {
+            var params = new LinearLayout.LayoutParams(hex.dp(112), WRAP_CONTENT);
+            params.gravity = Gravity.CENTER_VERTICAL;
+            row.addView(hex, params);
+        }
+        list.addView(row);
+
+        var picker = new ColorPickerView(context);
+        picker.setAlphaEnabled(false);
+        picker.setColor(initial);
+        picker.setVisibility(View.GONE);
+        list.addView(picker);
+
+        var hint = new TextView(context);
+        hint.setText(I18n.get("modernui.center.accent.follow"));
+        hint.setTextSize(12);
+        hint.setTextColor(labelTextColor(context));
+        hint.setPadding(0, hint.dp(6), 0, hint.dp(4));
+        hint.setClickable(true);
+        list.addView(hint);
+
+        swatch.setOnClickListener(v -> {
+            boolean show = picker.getVisibility() != View.VISIBLE;
+            picker.setVisibility(show ? View.VISIBLE : View.GONE);
+        });
+
+        picker.setOnColorChangeListener((argb, committed) -> {
+            swatch.setColor(argb);
+            hex.setText(ColorPickerView.toHexString(argb));
+            if (committed) {
+                AccentPalette.setSeed(argb);
+            }
+        });
+
+        hex.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                return;
+            }
+            int parsed = ColorPickerView.parseOrDefault(hex.getText().toString(), swatch.getColor());
+            swatch.setColor(parsed);
+            picker.setColor(parsed);
+            AccentPalette.setSeed(parsed);
+        });
+
+        hint.setOnClickListener(v -> {
+            AccentPalette.setSeed(0);
+            int follow = iconAccentColor(context);
+            swatch.setColor(follow);
+            picker.setColor(follow);
+            hex.setText("");
+            picker.setVisibility(View.GONE);
+        });
+
+        holder.setTag(swatch);
+        return holder;
     }
 
     public LinearLayout createPage2(Context context) {

@@ -7,7 +7,11 @@ plugins {
     id 'com.gradleup.shadow'
 }
 
-version = "${minecraft_version}-${mod_version}" as String
+def tv = rootProject.ext.tv
+def targetMinecraft = tv('minecraft_version', minecraft_version)
+def targetModVersion = tv('mod_version', mod_version)
+
+version = "${targetMinecraft}-${targetModVersion}" as String
 
 configurations {
     shadow
@@ -24,6 +28,21 @@ loom {
     }
     accessWidenerPath = project(":common").file("src/main/resources/modernui.classtweaker")
     runConfigs.each { it.setIdeConfigGenerated(true) } // Uncomment this if run configs not generated
+}
+
+rootProject.ext.applyTargetSources(project, 'neoforge')
+
+tasks.withType(org.gradle.api.tasks.bundling.Jar).configureEach {
+    dependsOn project(":common").tasks.named('mergeTargetJava')
+    dependsOn project(":common").tasks.named('mergeTargetResources')
+}
+
+tasks.withType(Javadoc).configureEach {
+    dependsOn project(":common").tasks.named('mergeTargetJava')
+}
+
+tasks.withType(ProcessResources).configureEach {
+    dependsOn project(":common").tasks.named('mergeTargetResources')
 }
 
 repositories {
@@ -47,8 +66,8 @@ repositories {
 }
 
 dependencies {
-    minecraft "com.mojang:minecraft:${minecraft_version}"
-    forgeUserdev "net.neoforged:neoforge:${neoforge_version}:userdev"
+    minecraft "com.mojang:minecraft:${targetMinecraft}"
+    forgeUserdev "net.neoforged:neoforge:${tv('neoforge_version', neoforge_version)}:userdev"
 
     implementation project(':common')
 
@@ -201,10 +220,10 @@ if (project.hasProperty("keystore")) {
 }
 
 processResources {
-    inputs.property 'version', mod_version
+    inputs.property 'version', targetModVersion
 
     filesMatching("META-INF/neoforge.mods.toml") {
-        expand 'version': mod_version
+        expand 'version': targetModVersion
     }
 }
 
@@ -285,9 +304,9 @@ curseforge {
         changelog = ''
         releaseType = project.findProperty('curse_release_type') ?: 'release'
         mainArtifact(tasks.named('shadowJar').get()) {
-            displayName = "Modern UI ${mod_version} (NeoForge) for Minecraft ${minecraft_version}"
+            displayName = "Modern UI ${targetModVersion} (NeoForge) for Minecraft ${targetMinecraft}"
         }
-        addGameVersion minecraft_version
+        addGameVersion targetMinecraft
         addGameVersion 'NeoForge'
         addGameVersion 'Client'
     }

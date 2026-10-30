@@ -1,0 +1,10 @@
+{
+  "minVersion": "0.8.5",
+  "required": true,
+  "package": "icyllis.modernui.mc.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "remap": false,
+  "client": [
+    "MixinThemeAccent"
+  ]
+}

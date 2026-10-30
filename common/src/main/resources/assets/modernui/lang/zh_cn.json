@@ -121,7 +121,7 @@
   "modernui.center.text.allowSDFTextIn2D.tooltip": "启用时，如果合适，Modern UI 会使用SDF文字渲染。\n否则，Modern UI 会根据纹素密度使用最近邻采样或双线性采样。\n该选项只适用于轮廓字体。",
   "modernui.center.text.bitmapRepl": "位图替换",
   "modernui.center.text.emojiShortcodes": "表情符号简码",
-  "modernui.center.text.emojiShortcodes.tooltip": "启用时，聊天栏中的简码将被替换成它们的 Emoji 字符串，例如：\n:phoenix: → \uD83D\uDC26\u200D\uD83D\uDD25",
+  "modernui.center.text.emojiShortcodes.tooltip": "启用时，聊天栏中的简码将被替换成它们的 Emoji 字符串，例如：\n:phoenix: → 🐦‍🔥",
   "modernui.center.text.distanceField": "使用距离场",
   "modernui.center.text.allowShadow": "允许阴影",
   "modernui.center.text.allowAsyncLayout": "允许异步文本布局",
@@ -200,5 +200,9 @@
   "gui.modernui.whatsNewIn_s": "%s 更新内容",
   "gui.modernui.resetToDefault": "重置为默认值",
   "gui.modernui.restart_to_work": "重启游戏以使设置生效",
-  "gui.modernui.font_reloaded": "已重载默认字体列表"
+  "gui.modernui.font_reloaded": "已重载默认字体列表",
+  "modernui.center.category.accent": "外观",
+  "modernui.center.accent.color": "强调色",
+  "modernui.center.accent.follow": "点击恢复跟随主题色",
+  "modernui.center.color.pickHint": "点击色块打开取色器"
 }

@@ -23,6 +23,9 @@ license="LGPL-3.0-or-later"
 [[mixins]]
     config="mixins.modernui-textmc.json"
 
+[[mixins]]
+    config="mixins.modernui-lib.json"
+
 [[dependencies.modernui]]
     modId="neoforge"
     type="required"

@@ -4,6 +4,58 @@ plugins {
     id 'com.gradleup.shadow' version '9.3.0' apply false
 }
 
+// --- multi-version targets ---------------------------------------------------
+// One shared source tree plus a per-target delta: -Ptarget=26.2 selects targets/26.2.
+ext.targetName = (findProperty('target') ?: '26.3').toString()
+ext.targetProps = new Properties()
+def targetPropsFile = file("targets/${ext.targetName}/target.properties")
+if (!targetPropsFile.exists()) {
+    throw new GradleException("Unknown target '${ext.targetName}', missing ${targetPropsFile}")
+}
+targetPropsFile.withInputStream { ext.targetProps.load(it) }
+
+ext.tv = { String key, String fallback -> ext.targetProps.getProperty(key) ?: fallback }
+
+// Merges the shared sources with the target overlay before compiling, so a class
+// exists exactly once no matter how many files a target overrides.
+ext.applyTargetSources = { Project prj, String modulePath ->
+    def root = rootProject
+    def overlay = root.file("targets/${root.ext.targetName}/${modulePath}/src/main")
+    def deletedFile = root.file("targets/${root.ext.targetName}/deleted.txt")
+    def deleted = deletedFile.exists() ? deletedFile.readLines().findAll { it.trim() && !it.startsWith('#') } : []
+    def deletedFor = { String sub ->
+        deleted.findAll { it.replace('\\', '/').startsWith("${modulePath}/${sub}/") }
+                .collect { it.replace('\\', '/').substring("${modulePath}/${sub}/".length()) }
+    }
+
+    def mergedJava = prj.layout.buildDirectory.dir('targetSrc/java')
+    def mergedRes = prj.layout.buildDirectory.dir('targetSrc/resources')
+    // EXCLUDE keeps the first copy, so the overlay is listed before the shared tree
+    def syncJava = prj.tasks.register('mergeTargetJava', Sync) {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        if (new File(overlay, 'java').isDirectory()) {
+            from(new File(overlay, 'java'))
+        }
+        from(prj.file('src/main/java')) { exclude deletedFor('src/main/java') }
+        into mergedJava
+    }
+    def syncRes = prj.tasks.register('mergeTargetResources', Sync) {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        if (new File(overlay, 'resources').isDirectory()) {
+            from(new File(overlay, 'resources'))
+        }
+        from(prj.file('src/main/resources')) { exclude deletedFor('src/main/resources') }
+        into mergedRes
+    }
+    prj.sourceSets.main.java.setSrcDirs([mergedJava.get().asFile])
+    prj.sourceSets.main.resources.setSrcDirs([mergedRes.get().asFile])
+    prj.tasks.withType(JavaCompile).configureEach { dependsOn syncJava, syncRes }
+    prj.tasks.withType(ProcessResources).configureEach { dependsOn syncJava, syncRes }
+    prj.tasks.withType(Javadoc).configureEach { dependsOn syncJava, syncRes }
+    prj.tasks.withType(org.gradle.api.tasks.bundling.Jar).configureEach { dependsOn syncJava, syncRes }
+    return [syncJava, syncRes]
+}
+
 publishing {
     repositories {
         maven {
