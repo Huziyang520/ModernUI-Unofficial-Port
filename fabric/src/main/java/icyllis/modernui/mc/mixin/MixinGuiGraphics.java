@@ -147,7 +147,8 @@ public abstract class MixinGuiGraphics implements IModernGuiGraphics {
                     opcode = Opcodes.PUTFIELD))
     private void onRenderTooltipInternal(Font arg, List<ClientTooltipComponent> list, int m, int n,
                                          ClientTooltipPositioner arg2,
-                                         @Nullable Identifier arg3, boolean bl, CallbackInfo ci) {
+                                         @Nullable Identifier arg3, boolean bl, boolean bl2,
+                                         CallbackInfo ci) {
         modernUI_MC$deferredTooltipStack = modernUI_MC$tooltipStack;
     }
 
