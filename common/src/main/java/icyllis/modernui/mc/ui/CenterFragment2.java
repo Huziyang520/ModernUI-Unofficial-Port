@@ -87,15 +87,13 @@ public class CenterFragment2 extends Fragment {
 
         var base = new LinearLayout(getContext());
         base.setOrientation(LinearLayout.HORIZONTAL);
-        base.setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE);
-        base.setDividerDrawable(ThemeControl.makeDivider(base, true));
 
         // NAV BUTTONS
         {
             var buttonGroup = new RadioGroup(getContext());
-            if (theme.resolveAttribute(R.ns, R.attr.colorSurfaceContainer, value, true))
-                buttonGroup.setBackground(theme.getResources().loadDrawable(value, null, theme));
             buttonGroup.setOrientation(LinearLayout.VERTICAL);
+            int padV = buttonGroup.dp(Design.SPACE_4);
+            buttonGroup.setPadding(0, padV, 0, padV);
             buttonGroup.setGravity(Gravity.CENTER);
 
             var icons = Image.create(ModernUI.ID, "gui/new_icon.png");
@@ -255,7 +253,7 @@ public class CenterFragment2 extends Fragment {
         button.setClickable(true);
         button.setId(id);
         button.setText(ThemeControl.stripFormattingCodes(I18n.get(text)));
-        button.setTextSize(12);
+        button.setTextSize(11);
         button.setTextColor(itemTextColor);
         button.setGravity(Gravity.CENTER);
         final int dp8 = button.dp(8);
@@ -280,7 +278,7 @@ public class CenterFragment2 extends Fragment {
             button.setCompoundDrawablePadding(button.dp(4));
         }
 
-        var params = new LinearLayout.LayoutParams(button.dp(88), WRAP_CONTENT);
+        var params = new LinearLayout.LayoutParams(button.dp(76), WRAP_CONTENT);
         button.setLayoutParams(params);
 
         return button;

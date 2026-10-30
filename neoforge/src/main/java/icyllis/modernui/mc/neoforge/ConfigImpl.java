@@ -289,6 +289,10 @@ public final class ConfigImpl {
         public final ModConfigSpec.BooleanValue mLinearMetrics;
         public final ModConfigSpec.BooleanValue mEmojiShortcodes;
 
+        public final ModConfigSpec.ConfigValue<String> mInterfaceThemeColor;
+        public final ModConfigSpec.BooleanValue mInterfaceCompactLayout;
+        public final ModConfigSpec.BooleanValue mInterfaceAnimations;
+
         /*public final ModConfigSpec.BooleanValue mSkipGLCapsError;
         public final ModConfigSpec.BooleanValue mShowGLCapsError;*/
 
@@ -589,6 +593,22 @@ public final class ConfigImpl {
                             "When enabled, text layout uses fractional metrics with no font hinting and applies sub-pixel positioning.",
                             "When disabled, text layout uses integer metrics with full font hinting.")
                     .define("linearMetrics", true);
+
+            builder.pop();
+
+            builder.comment("Interface Config")
+                    .push("interface");
+
+            mInterfaceThemeColor = builder.comment(
+                            "Theme colour of the Modern UI interface, in #RRGGBB or #AARRGGBB format.",
+                            "Leave empty to follow the resource-pack theme.")
+                    .define("themeColor", "");
+            mInterfaceCompactLayout = builder.comment(
+                            "Use a tighter vertical rhythm in the settings screen.")
+                    .define("compactLayout", false);
+            mInterfaceAnimations = builder.comment(
+                            "Animate page changes, selection indicators and expandable sections.")
+                    .define("animations", true);
 
             builder.pop();
         }

@@ -204,5 +204,18 @@
   "modernui.center.category.accent": "外观",
   "modernui.center.accent.color": "强调色",
   "modernui.center.accent.follow": "点击恢复跟随主题色",
-  "modernui.center.color.pickHint": "点击色块打开取色器"
+  "modernui.center.color.pickHint": "点击色块打开取色器",
+  "modernui.center.subtitle": "界面设置",
+  "modernui.center.category.appearance": "外观",
+  "modernui.center.category.layout": "布局",
+  "modernui.center.category.backdrop": "背景",
+  "modernui.center.category.display": "显示",
+  "modernui.center.category.audio": "音频",
+  "modernui.center.category.gameplay": "游戏行为",
+  "modernui.center.appearance.themeColor": "主题色",
+  "modernui.center.appearance.themeColor.desc": "为整个界面换色：开关、滑杆、标签与高亮。",
+  "modernui.center.appearance.compact": "紧凑布局",
+  "modernui.center.appearance.compact.desc": "更紧凑的行距，减少滚动距离。",
+  "modernui.center.appearance.animations": "界面动效",
+  "modernui.center.appearance.animations.desc": "页面切换与选中指示器的动画。"
 }

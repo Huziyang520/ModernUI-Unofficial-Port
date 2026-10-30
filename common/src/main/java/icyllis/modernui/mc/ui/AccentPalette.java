@@ -114,10 +114,26 @@ public final class AccentPalette {
     public static int seed() {
         int seed = sSeed;
         if (seed < 0) {
-            seed = loadSeed();
+            seed = loadSeedFromConfig();
+            if (seed == 0) {
+                // value written before the option existed, adopt it once
+                seed = loadSeed();
+            }
             sSeed = seed;
         }
         return seed;
+    }
+
+    private static int loadSeedFromConfig() {
+        String value = SurfacePrefs.themeColor();
+        if (value == null || value.isBlank()) {
+            return 0;
+        }
+        try {
+            return Color.parseColor(value.trim()) | 0xFF000000;
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     public static boolean isCustom() {
@@ -133,8 +149,10 @@ public final class AccentPalette {
         }
         sSeed = argb;
         sCurrent = null;
-        ModernUIClient.setBootstrapProperty(BOOTSTRAP_KEY,
-                argb == 0 ? "" : ColorPickerView.toHexString(argb));
+        String text = argb == 0 ? "" : ColorPickerView.toHexString(argb);
+        SurfacePrefs.setThemeColor(text);
+        // the bootstrap copy is read during theme resolution, before config maps exist
+        ModernUIClient.setBootstrapProperty(BOOTSTRAP_KEY, text);
         for (var listener : LISTENERS) {
             listener.onAccentChanged();
         }

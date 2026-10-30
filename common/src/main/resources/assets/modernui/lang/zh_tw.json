@@ -204,5 +204,18 @@
   "modernui.center.category.accent": "外觀",
   "modernui.center.accent.color": "強調色",
   "modernui.center.accent.follow": "點擊恢復跟隨主題色",
-  "modernui.center.color.pickHint": "點擊色塊開啟取色器"
+  "modernui.center.color.pickHint": "點擊色塊開啟取色器",
+  "modernui.center.subtitle": "介面設定",
+  "modernui.center.category.appearance": "外觀",
+  "modernui.center.category.layout": "版面",
+  "modernui.center.category.backdrop": "背景",
+  "modernui.center.category.display": "顯示",
+  "modernui.center.category.audio": "音效",
+  "modernui.center.category.gameplay": "遊戲行為",
+  "modernui.center.appearance.themeColor": "主題色",
+  "modernui.center.appearance.themeColor.desc": "為整個介面換色：開關、滑桿、標籤與高亮。",
+  "modernui.center.appearance.compact": "緊湊版面",
+  "modernui.center.appearance.compact.desc": "更緊湊的行距，減少滾動距離。",
+  "modernui.center.appearance.animations": "介面動效",
+  "modernui.center.appearance.animations.desc": "頁面切換與選中指示器的動畫。"
 }

@@ -204,5 +204,18 @@
   "modernui.center.category.accent": "Appearance",
   "modernui.center.accent.color": "Accent color",
   "modernui.center.accent.follow": "Tap to follow the theme color",
-  "modernui.center.color.pickHint": "Tap a corner to pick its color"
+  "modernui.center.color.pickHint": "Tap a corner to pick its color",
+  "modernui.center.subtitle": "Interface settings",
+  "modernui.center.category.appearance": "Appearance",
+  "modernui.center.category.layout": "Layout",
+  "modernui.center.category.backdrop": "Backdrop",
+  "modernui.center.category.display": "Display",
+  "modernui.center.category.audio": "Audio",
+  "modernui.center.category.gameplay": "Gameplay",
+  "modernui.center.appearance.themeColor": "Theme colour",
+  "modernui.center.appearance.themeColor.desc": "Recolours the whole interface: switches, sliders, tabs and highlights.",
+  "modernui.center.appearance.compact": "Compact layout",
+  "modernui.center.appearance.compact.desc": "Tighter rows, fewer pixels scrolled.",
+  "modernui.center.appearance.animations": "Interface animations",
+  "modernui.center.appearance.animations.desc": "Animate page changes and selection indicators."
 }

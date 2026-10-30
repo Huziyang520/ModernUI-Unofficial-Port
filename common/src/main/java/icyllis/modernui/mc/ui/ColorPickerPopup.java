@@ -37,7 +37,7 @@ public final class ColorPickerPopup {
     }
 
     private final PopupWindow mPopup;
-    private final ColorPickerView mPicker;
+    private final ColorPickerPanel mPicker;
 
     public ColorPickerPopup(@NonNull View anchor, int initialColor, boolean alpha,
                             @NonNull OnColorPickedListener listener) {
@@ -54,17 +54,13 @@ public final class ColorPickerPopup {
         content.setBackground(background);
         content.setElevation(content.dp(6));
 
-        mPicker = new ColorPickerView(context);
+        mPicker = new ColorPickerPanel(context);
         mPicker.setAlphaEnabled(alpha);
         mPicker.setColor(initialColor);
         content.addView(mPicker, new ViewGroup.LayoutParams(
                 content.dp(260), ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        mPicker.setOnColorChangeListener((argb, committed) -> {
-            if (committed) {
-                listener.onColorPicked(argb);
-            }
-        });
+        mPicker.setOnColorCommitted(listener::onColorPicked);
 
         mPopup = new PopupWindow(content);
         mPopup.setFocusable(true);
@@ -85,7 +81,7 @@ public final class ColorPickerPopup {
         mPopup.showAsDropDown(anchor, 0, -anchor.getHeight() / 2, Gravity.TOP);
     }
 
-    public ColorPickerView getPicker() {
+    public ColorPickerPanel getPicker() {
         return mPicker;
     }
 
