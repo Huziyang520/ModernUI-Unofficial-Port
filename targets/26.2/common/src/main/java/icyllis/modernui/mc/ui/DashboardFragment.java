@@ -192,7 +192,7 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.13.8.3") + """
+                                "Modern UI 3.14.9-beta") + """
                                 
                                 ----
                                 * Fix the tooltip border not following the item rarity 修复提示框边框不随物品稀有度变色
