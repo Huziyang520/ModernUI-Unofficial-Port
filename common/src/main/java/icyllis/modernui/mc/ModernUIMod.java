@@ -40,6 +40,38 @@ public abstract class ModernUIMod {
     public static volatile boolean sDevelopment;
     public static volatile boolean sDeveloperMode;
 
+    private static volatile String sVersion;
+
+    /**
+     * The mod version, read from the packaged manifest which the build stamps from
+     * {@code gradle.properties}. The entry has the form {@code <mc>-<mod>}.
+     */
+    @Nonnull
+    public static String getVersion() {
+        String version = sVersion;
+        if (version == null) {
+            version = loadVersion();
+            sVersion = version;
+        }
+        return version;
+    }
+
+    @Nonnull
+    private static String loadVersion() {
+        try {
+            var pkg = ModernUIMod.class.getPackage();
+            if (pkg != null) {
+                String impl = pkg.getImplementationVersion();
+                if (impl != null && !impl.isBlank()) {
+                    int dash = impl.indexOf('-');
+                    return dash >= 0 ? impl.substring(dash + 1) : impl;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return "";
+    }
+
     protected static boolean sOptiFineLoaded;
     protected static boolean sIrisApiLoaded;
     protected static volatile boolean sVulkanModLoaded;

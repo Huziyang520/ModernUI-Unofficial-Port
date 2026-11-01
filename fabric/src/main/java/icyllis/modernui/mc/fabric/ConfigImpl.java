@@ -224,6 +224,11 @@ public final class ConfigImpl {
         public static final int TOOLTIP_ARROW_SCROLL_FACTOR_MIN = 0;
         public static final int TOOLTIP_ARROW_SCROLL_FACTOR_MAX = 320;
 
+        /** Whitelist of interface style ids; keep in sync with SkinRegistry. */
+        public static final java.util.List<String> STYLES = java.util.List.of(
+                "industrial", "pixel", "mono", "neon",
+                "glass", "blueprint", "terminal", "editorial");
+
         public final ModConfigSpec.BooleanValue mBlurEffect;
         //public final ModConfigSpec.BooleanValue mBlurWithBackground;
         public final ModConfigSpec.BooleanValue mAdditionalBlurEffect;
@@ -293,6 +298,8 @@ public final class ConfigImpl {
         public final ModConfigSpec.ConfigValue<String> mInterfaceThemeColor;
         public final ModConfigSpec.BooleanValue mInterfaceCompactLayout;
         public final ModConfigSpec.BooleanValue mInterfaceAnimations;
+        public final ModConfigSpec.ConfigValue<String> mInterfaceThemeStyle;
+        public final ModConfigSpec.BooleanValue mInterfaceIndexRail;
 
         /*public final ModConfigSpec.BooleanValue mSkipGLCapsError;
         public final ModConfigSpec.BooleanValue mShowGLCapsError;*/
@@ -610,6 +617,13 @@ public final class ConfigImpl {
             mInterfaceAnimations = builder.comment(
                             "Animate page changes, selection indicators and expandable sections.")
                     .define("animations", true);
+            mInterfaceThemeStyle = builder.comment(
+                            "Visual style of the settings screen: industrial, pixel, mono, neon, glass,",
+                            "blueprint, terminal or editorial. Unknown values fall back to industrial.")
+                    .define("themeStyle", "industrial", o -> o instanceof String s && STYLES.contains(s));
+            mInterfaceIndexRail = builder.comment(
+                            "Show the anchor index rail beside the scrolling settings page.")
+                    .define("indexRail", true);
 
             builder.pop();
         }

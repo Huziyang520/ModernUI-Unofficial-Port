@@ -149,7 +149,7 @@ public final class AccentPalette {
         }
         sSeed = argb;
         sCurrent = null;
-        String text = argb == 0 ? "" : ColorPickerView.toHexString(argb);
+        String text = argb == 0 ? "" : String.format(java.util.Locale.ROOT, "#%08X", argb);
         SurfacePrefs.setThemeColor(text);
         // the bootstrap copy is read during theme resolution, before config maps exist
         ModernUIClient.setBootstrapProperty(BOOTSTRAP_KEY, text);

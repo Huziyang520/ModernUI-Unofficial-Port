@@ -149,6 +149,8 @@ public final class Config {
         public final ConfigItem<String> mInterfaceThemeColor;
         public final ConfigItem<Boolean> mInterfaceCompactLayout;
         public final ConfigItem<Boolean> mInterfaceAnimations;
+        public final ConfigItem<String> mInterfaceThemeStyle;
+        public final ConfigItem<Boolean> mInterfaceIndexRail;
 
         public volatile WindowMode mLastWindowMode = WindowMode.NORMAL;
         public volatile List<? extends String> mLastTheme;
@@ -223,6 +225,8 @@ public final class Config {
             mInterfaceThemeColor = get(map, "mInterfaceThemeColor");
             mInterfaceCompactLayout = get(map, "mInterfaceCompactLayout");
             mInterfaceAnimations = get(map, "mInterfaceAnimations");
+            mInterfaceThemeStyle = get(map, "mInterfaceThemeStyle");
+            mInterfaceIndexRail = get(map, "mInterfaceIndexRail");
         }
 
         public void reload() {

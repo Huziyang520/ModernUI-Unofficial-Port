@@ -18,42 +18,61 @@
 
 package icyllis.modernui.mc.ui;
 
-import icyllis.modernui.ModernUI;
-import icyllis.modernui.R;
 import icyllis.modernui.annotation.NonNull;
 import icyllis.modernui.annotation.Nullable;
 import icyllis.modernui.core.Context;
 import icyllis.modernui.fragment.Fragment;
 import icyllis.modernui.fragment.FragmentContainerView;
 import icyllis.modernui.fragment.FragmentTransaction;
-import icyllis.modernui.graphics.Image;
-import icyllis.modernui.graphics.drawable.ImageDrawable;
-import icyllis.modernui.graphics.drawable.RippleDrawable;
-import icyllis.modernui.graphics.drawable.ShapeDrawable;
+import icyllis.modernui.graphics.Canvas;
 import icyllis.modernui.mc.ModernUIMod;
-import icyllis.modernui.resources.TypedValue;
-import icyllis.modernui.util.ColorStateList;
+import icyllis.modernui.mc.ui.v2.page.PageMeta;
+import icyllis.modernui.mc.ui.v2.page.SettingsPage;
+import icyllis.modernui.mc.ui.v2.page.SettingsPages;
+import icyllis.modernui.mc.ui.v2.shell.CenterShell;
+import icyllis.modernui.mc.ui.v2.skin.Skin;
+import icyllis.modernui.mc.ui.v2.skin.SkinRegistry;
 import icyllis.modernui.util.DataSet;
-import icyllis.modernui.util.DisplayMetrics;
-import icyllis.modernui.util.StateSet;
 import icyllis.modernui.view.Gravity;
 import icyllis.modernui.view.LayoutInflater;
+import icyllis.modernui.view.MotionEvent;
 import icyllis.modernui.view.View;
 import icyllis.modernui.view.ViewGroup;
 import icyllis.modernui.widget.FrameLayout;
 import icyllis.modernui.widget.LinearLayout;
-import icyllis.modernui.widget.RadioButton;
-import icyllis.modernui.widget.RadioGroup;
-import net.minecraft.client.resources.language.I18n;
+import net.minecraft.util.Util;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static icyllis.modernui.view.ViewGroup.LayoutParams.*;
 
-public class CenterFragment2 extends Fragment {
+/**
+ * The operation centre: a narrow destination rail on the left, the shell on the right.
+ *
+ * <p>The settings destination is the shell's own long page; the other three are fragments
+ * hosted in the shell's content area, so every destination shares one backdrop, one header
+ * and one visual language. The shell also carries the settings anchor rail, which is what
+ * the Plan means by "one long scroll with an index".</p>
+ */
+public class CenterFragment2 extends Fragment implements SkinRegistry.Listener {
 
     public static final Marker MARKER = MarkerManager.getMarker("Center");
-    private static final int id_tab_container = 0x2002;
+
+    private static final int id_dest_container = 0x2002;
+
+    private static final int DEST_DASHBOARD = 1;
+    private static final int DEST_SETTINGS = CenterShell.DESTINATION_SETTINGS;
+    private static final int DEST_DEVELOPER = 2;
+    private static final int DEST_MUSIC = 3;
+    private static final int DEST_MARKDOWN = 4;
+
+    private CenterShell mShell;
+    private DestinationRail mRail;
+    private SettingsHost mHost;
+    private int mDestination = -1;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -64,223 +83,305 @@ public class CenterFragment2 extends Fragment {
     }
 
     @Override
-    public void onCreate(@Nullable DataSet savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        var ft = getChildFragmentManager().beginTransaction();
-        var args = getArguments();
-        if (args != null && args.getBoolean("navigateToPreferences")) {
-            ft.replace(id_tab_container, PreferencesFragment.class, null, "preferences");
-        } else {
-            ft.replace(id_tab_container, DashboardFragment.class, null, "dashboard");
-        }
-        ft
-                .setReorderingAllowed(true)
-                .commit();
-    }
-
-    @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable DataSet savedInstanceState) {
         final long startTime = System.nanoTime();
-        var value = new TypedValue();
-        var theme = requireContext().getTheme();
+        var context = requireContext();
 
-        var base = new LinearLayout(getContext());
+        var base = new LinearLayout(context);
         base.setOrientation(LinearLayout.HORIZONTAL);
 
-        // NAV BUTTONS
-        {
-            var buttonGroup = new RadioGroup(getContext());
-            buttonGroup.setOrientation(LinearLayout.VERTICAL);
-            int padV = buttonGroup.dp(Design.SPACE_4);
-            buttonGroup.setPadding(0, padV, 0, padV);
-            buttonGroup.setGravity(Gravity.CENTER);
+        mRail = new DestinationRail(context);
+        base.addView(mRail, new LinearLayout.LayoutParams(
+                Math.round(56f * context.getResources().getDisplayMetrics().density), MATCH_PARENT));
 
-            var icons = Image.create(ModernUI.ID, "gui/new_icon.png");
-            if (icons != null) {
-                // icons are designed for xxhigh
-                icons.setDensity(DisplayMetrics.DENSITY_DEFAULT * 3);
-            }
-            int colorOnSecondaryContainer;
-            ColorStateList itemTextColor;
-            {
-                int[] colors = new int[2];
-                theme.resolveAttribute(R.ns, R.attr.colorSecondary, value, true);
-                colors[0] = value.data; // selected
-                theme.resolveAttribute(R.ns, R.attr.colorOnSurfaceVariant, value, true);
-                colors[1] = value.data; // other
-                itemTextColor = new ColorStateList(
-                        new int[][]{
-                                new int[]{R.attr.state_checked},
-                                StateSet.WILD_CARD
-                        },
-                        colors
-                );
-            }
-            ColorStateList itemIconTint;
-            {
-                int[] colors = new int[2];
-                theme.resolveAttribute(R.ns, R.attr.colorOnSecondaryContainer, value, true);
-                colors[0] = colorOnSecondaryContainer = value.data; // selected
-                theme.resolveAttribute(R.ns, R.attr.colorOnSurfaceVariant, value, true);
-                colors[1] = value.data; // other
-                itemIconTint = new ColorStateList(
-                        new int[][]{
-                                new int[]{R.attr.state_checked},
-                                StateSet.WILD_CARD
-                        },
-                        colors
-                );
-            }
-            ColorStateList itemRippleColor = new ColorStateList(
-                    new int[][]{
-                            new int[]{R.attr.state_pressed},
-                            new int[]{R.attr.state_focused},
-                            new int[]{R.attr.state_hovered},
-                            StateSet.WILD_CARD
-                    },
-                    new int[]{
-                            ColorStateList.modulateColor(colorOnSecondaryContainer, 0.1f),
-                            ColorStateList.modulateColor(colorOnSecondaryContainer, 0.1f),
-                            ColorStateList.modulateColor(colorOnSecondaryContainer, 0.08f),
-                            ColorStateList.modulateColor(colorOnSecondaryContainer, 0.08f)
-                    }
-            );
-            ColorStateList activeIndicatorColor;
-            {
-                int[] colors = new int[2];
-                theme.resolveAttribute(R.ns, R.attr.colorSecondaryContainer, value, true);
-                colors[0] = value.data; // selected
-                activeIndicatorColor = new ColorStateList(
-                        new int[][]{
-                                new int[]{R.attr.state_checked},
-                                StateSet.WILD_CARD
-                        },
-                        colors
-                );
+        mShell = new CenterShell(context);
+        mShell.setVersionText("Modern UI " + ModernUIMod.getVersion());
+        mShell.setPageSource(new CenterShell.PageSource() {
+            @NonNull
+            @Override
+            public SettingsPage build(@NonNull Context context) {
+                return SettingsPages.build(context, host());
             }
 
-            buttonGroup.addView(createNavButton(1001, "modernui.center.tab.dashboard",
-                    itemTextColor, icons, 2, 0,
-                    itemIconTint, itemRippleColor, activeIndicatorColor));
-            buttonGroup.addView(createNavButton(1002, "modernui.center.tab.preferences",
-                    itemTextColor, icons, 0, 0,
-                    itemIconTint, itemRippleColor, activeIndicatorColor));
-            buttonGroup.addView(createNavButton(1003, "modernui.center.tab.developerOptions",
-                    itemTextColor, icons, 0, 6,
-                    itemIconTint, itemRippleColor, activeIndicatorColor));
-            buttonGroup.addView(createNavButton(1004, "soundCategory.music",
-                    itemTextColor, icons, 1, 1,
-                    itemIconTint, itemRippleColor, activeIndicatorColor));
-            /*if (ModernUIMod.isDeveloperMode()) {
-                buttonGroup.addView(createNavButton(1005, "Dev",
-                        itemTextColor, icons, 0, 6,
-                        itemIconTint, itemRippleColor, activeIndicatorColor));
-            }*/
-            if (ModernUIMod.isDeveloperMode()) {
-                buttonGroup.addView(createNavButton(1006, "Markdown",
-                        itemTextColor, icons, 0, 6,
-                        itemIconTint, itemRippleColor, activeIndicatorColor));
+            @NonNull
+            @Override
+            public List<PageMeta> meta() {
+                return SettingsPages.meta();
             }
+        });
+        base.addView(mShell, new LinearLayout.LayoutParams(0, MATCH_PARENT, 1f));
 
-            var args = getArguments();
-            buttonGroup.check(args != null && args.getBoolean("navigateToPreferences") ? 1002 : 1001);
+        var destContainer = new FragmentContainerView(context);
+        destContainer.setId(id_dest_container);
+        mShell.content().addView(destContainer, new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
 
-            buttonGroup.setOnCheckedChangeListener((group, checkedId) -> {
-                var fm = getChildFragmentManager();
-                FragmentTransaction ft = null;
-                switch (checkedId) {
-                    case 1001 -> {
-                        ft = fm.beginTransaction()
-                                .replace(id_tab_container, DashboardFragment.class, null, "dashboard");
-                    }
-                    case 1002 -> {
-                        ft = fm.beginTransaction()
-                                .replace(id_tab_container, PreferencesFragment.class, null, "preferences");
-                    }
-                    case 1003 -> {
-                        ft = fm.beginTransaction()
-                                .replace(id_tab_container, AdvancedOptionsFragment.class, null, "developerOptions");
-                    }
-                    case 1004 -> {
-                        ft = fm.beginTransaction()
-                                .replace(id_tab_container, MusicFragment.class, null, "music");
-                    }
-                    /*case 1005 -> {
-                        ft = fm.beginTransaction()
-                                .replace(id_tab_container, TestFragment.class, null, "dev");
-                    }*/
-                    case 1006 -> {
-                        ft = fm.beginTransaction()
-                                .replace(id_tab_container, MarkdownFragment.class, null, "markdown");
-                    }
-                }
-                if (ft != null) {
-                    ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                            .setReorderingAllowed(true)
-                            .commit();
-                }
-            });
+        var args = getArguments();
+        boolean toPreferences = args != null && args.getBoolean("navigateToPreferences");
+        setDestination(toPreferences ? DEST_SETTINGS : DEST_DASHBOARD);
 
-            var params = new LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT);
-            params.gravity = Gravity.CENTER;
-            base.addView(buttonGroup, params);
-        }
-
-        // TAB CONTAINER
-        {
-            var tabContainer = new FragmentContainerView(getContext());
-            tabContainer.setId(id_tab_container);
-            var params = new LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
-            base.addView(tabContainer, params);
-        }
-
-        var params = new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
-        base.setLayoutParams(params);
         ModernUIMod.LOGGER.info(MARKER, "Built the settings navigation in {} ms",
                 (System.nanoTime() - startTime) / 1_000_000L);
         return base;
     }
 
-    private RadioButton createNavButton(int id, String text,
-                                        ColorStateList itemTextColor,
-                                        Image icons, int row, int col,
-                                        ColorStateList itemIconTint,
-                                        ColorStateList itemRippleColor,
-                                        ColorStateList activeIndicatorColor) {
-        var button = new RadioButton(getContext(), null, null, null);
-        button.setFocusable(true);
-        button.setClickable(true);
-        button.setId(id);
-        button.setText(ThemeControl.stripFormattingCodes(I18n.get(text)));
-        button.setTextSize(11);
-        button.setTextColor(itemTextColor);
-        button.setGravity(Gravity.CENTER);
-        final int dp8 = button.dp(8);
-        button.setPadding(0, dp8, 0, dp8);
+    private void setDestination(int destination) {
+        if (mShell == null || destination == mDestination) {
+            return;
+        }
+        mDestination = destination;
+        mRail.setActive(destination);
+        mShell.setDestination(destination);
+        if (destination == CenterShell.DESTINATION_SETTINGS) {
+            return;
+        }
+        Class<? extends Fragment> fragment = switch (destination) {
+            case DEST_DEVELOPER -> AdvancedOptionsFragment.class;
+            case DEST_MUSIC -> MusicFragment.class;
+            case DEST_MARKDOWN -> MarkdownFragment.class;
+            default -> DashboardFragment.class;
+        };
+        getChildFragmentManager().beginTransaction()
+                .replace(id_dest_container, fragment, null, "dest" + destination)
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                .setReorderingAllowed(true)
+                .commit();
+    }
 
-        {
-            ShapeDrawable indicator = new ShapeDrawable();
-            indicator.setSize(button.dp(56), button.dp(32));
-            indicator.setColor(activeIndicatorColor);
-            indicator.setCornerRadius(1000);
-            RippleDrawable ripple = new RippleDrawable(itemRippleColor,
-                    indicator, null);
-            if (icons != null) {
-                ImageDrawable icon = new ImageDrawable(requireContext().getResources(), icons);
-                icon.setSrcRect(col * 72, row * 72, (col + 1) * 72, (row + 1) * 72);
-                icon.setTintList(itemIconTint);
-                icon.setGravity(Gravity.CENTER);
-                ripple.addLayer(icon);
+    @NonNull
+    private SettingsHost host() {
+        if (mHost == null) {
+            mHost = new SettingsHost();
+        }
+        return mHost;
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (mRail != null) {
+            mRail.release();
+        }
+        saveDirtyConfigs();
+        super.onDestroyView();
+    }
+
+    /** Writes every config that the player touched, off the render thread. */
+    private void saveDirtyConfigs() {
+        if (mHost == null) {
+            return;
+        }
+        var dirty = mHost.takeDirty();
+        if (dirty.isEmpty()) {
+            return;
+        }
+        Util.ioPool().execute(() -> {
+            var platform = icyllis.modernui.mc.MuiPlatform.get();
+            for (int type : dirty) {
+                platform.saveConfig(type);
             }
-            button.setCompoundDrawablesWithIntrinsicBounds(null,
-                    ripple, null, null);
-            button.setCompoundDrawablePadding(button.dp(4));
+        });
+    }
+
+    @Override
+    public void onSkinChanged() {
+        if (mRail != null) {
+            mRail.invalidate();
+        }
+    }
+
+    /**
+     * The settings page needs two editors the v2 widget set does not reimplement and the
+     * colour studio; everything else it builds itself. Config dirtiness is tracked here
+     * because this is the fragment that outlives the page.
+     */
+    private final class SettingsHost implements SettingsPages.Host {
+
+        private final java.util.Set<Integer> mDirty = new java.util.LinkedHashSet<>();
+
+        java.util.List<Integer> takeDirty() {
+            var result = new java.util.ArrayList<>(mDirty);
+            mDirty.clear();
+            return result;
         }
 
-        var params = new LinearLayout.LayoutParams(button.dp(76), WRAP_CONTENT);
-        button.setLayoutParams(params);
+        @NonNull
+        @Override
+        public Runnable clientChanged() {
+            return () -> {
+                mDirty.add(icyllis.modernui.mc.Config.TYPE_CLIENT);
+                icyllis.modernui.mc.Config.CLIENT.reload();
+            };
+        }
 
-        return button;
+        @NonNull
+        @Override
+        public Runnable commonChanged() {
+            return () -> {
+                mDirty.add(icyllis.modernui.mc.Config.TYPE_COMMON);
+                icyllis.modernui.mc.Config.COMMON.reload();
+            };
+        }
+
+        @NonNull
+        @Override
+        public Runnable textChanged() {
+            return () -> {
+                mDirty.add(icyllis.modernui.mc.Config.TYPE_TEXT);
+                icyllis.modernui.mc.Config.TEXT.reload();
+            };
+        }
+
+        @NonNull
+        @Override
+        public View legacyBlock(@NonNull Context context, @NonNull String which) {
+            var column = new LinearLayout(context);
+            column.setOrientation(LinearLayout.VERTICAL);
+            switch (which) {
+                case SettingsPages.LEGACY_FONT -> new PreferredFontAccordion(column,
+                        clientChanged(), clientChanged()).buildInto(column);
+                case SettingsPages.LEGACY_TOOLTIP -> new TooltipBorderAccordion(column,
+                        clientChanged()).buildInto(column);
+                default -> {
+                }
+            }
+            return column;
+        }
+
+        @NonNull
+        @Override
+        public View colorListRow(@NonNull Context context, @NonNull String key,
+                                 @NonNull icyllis.modernui.mc.ConfigItem<List<? extends String>> item,
+                                 @NonNull Runnable onChanged) {
+            return UiSupport.colorListRow(context, key, item, onChanged,
+                    (field, alpha) -> openStudio(field, alpha));
+        }
+
+        @NonNull
+        @Override
+        public View guiScaleRow(@NonNull Context context) {
+            return UiSupport.guiScaleRow(context);
+        }
+
+        @Override
+        public void openColorStudio(@NonNull icyllis.modernui.mc.ui.v2.widget.TgColorField field,
+                                    boolean alpha) {
+            openStudio(field, alpha);
+        }
+
+        @Override
+        public void showSkinPicker() {
+            if (mShell != null) {
+                mShell.showSkinPicker();
+            }
+        }
+
+        private void openStudio(@NonNull icyllis.modernui.mc.ui.v2.widget.TgColorField field,
+                                boolean alpha) {
+            icyllis.modernui.mc.ui.v2.color.ColorSheet.show(field, field.getColor(), alpha,
+                    new icyllis.modernui.mc.ui.v2.color.ColorStudio.OnColor() {
+                        @Override
+                        public void onPreview(int argb) {
+                            field.previewColor(argb);
+                        }
+
+                        @Override
+                        public void onCommit(int argb) {
+                            field.commitColor(argb);
+                        }
+                    });
+        }
+    }
+
+    /** Narrow glyph rail that switches between the four destinations. */
+    private final class DestinationRail extends View {
+
+        private final List<Integer> mDestinations = new ArrayList<>();
+        private final List<Integer> mGlyphs = new ArrayList<>();
+        private int mActive;
+        private int mPressed = -1;
+
+        DestinationRail(@NonNull Context context) {
+            super(context);
+            setWillNotDraw(false);
+            add(DEST_DASHBOARD, Skin.GLYPH_DASHBOARD);
+            add(DEST_SETTINGS, Skin.GLYPH_SETTINGS);
+            add(DEST_DEVELOPER, Skin.GLYPH_CODE);
+            add(DEST_MUSIC, Skin.GLYPH_MUSIC);
+            if (ModernUIMod.isDeveloperMode()) {
+                add(DEST_MARKDOWN, Skin.GLYPH_TEXT);
+            }
+            SkinRegistry.addListener(CenterFragment2.this);
+        }
+
+        private void add(int destination, int glyph) {
+            mDestinations.add(destination);
+            mGlyphs.add(glyph);
+        }
+
+        void setActive(int destination) {
+            mActive = destination;
+            invalidate();
+        }
+
+        void release() {
+            SkinRegistry.removeListener(CenterFragment2.this);
+        }
+
+        private float itemHeight() {
+            return getHeight() / (float) Math.max(1, mDestinations.size());
+        }
+
+        @Override
+        protected void onDraw(@NonNull Canvas canvas) {
+            var skin = SkinRegistry.get(getContext());
+            var tk = skin.tokens();
+            float h = itemHeight();
+            float cx = getWidth() * 0.5f;
+            for (int i = 0; i < mDestinations.size(); i++) {
+                float top = i * h;
+                float bottom = top + h;
+                boolean active = mDestinations.get(i) == mActive;
+                skin.drawRailMarker(canvas, dp(6f), top + dp(6f), getWidth() - dp(6f),
+                        bottom - dp(6f), active);
+                skin.drawGlyph(canvas, mGlyphs.get(i), cx, (top + bottom) * 0.5f,
+                        dp(22f), active ? tk.accent : tk.muted);
+            }
+        }
+
+        @Override
+        public boolean onTouchEvent(@NonNull MotionEvent event) {
+            float h = itemHeight();
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN -> {
+                    mPressed = indexAt(event.getY(), h);
+                    invalidate();
+                    return true;
+                }
+                case MotionEvent.ACTION_UP -> {
+                    int index = indexAt(event.getY(), h);
+                    mPressed = -1;
+                    if (index >= 0 && index < mDestinations.size()) {
+                        setDestination(mDestinations.get(index));
+                    }
+                    invalidate();
+                    return true;
+                }
+                case MotionEvent.ACTION_CANCEL -> {
+                    mPressed = -1;
+                    invalidate();
+                    return true;
+                }
+                default -> {
+                    return true;
+                }
+            }
+        }
+
+        private int indexAt(float y, float h) {
+            if (h <= 0f) {
+                return -1;
+            }
+            return (int) (y / h);
+        }
     }
 }
