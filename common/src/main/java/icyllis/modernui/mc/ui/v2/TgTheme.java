@@ -45,8 +45,16 @@ public final class TgTheme {
     public final int onSurfaceVariant;
     public final int outline;
 
+    /**
+     * The player's screen backdrop colour. The blur layer paints it before the UI runs, so a
+     * skin must never cover it with an opaque colour: that would hide both the game world and
+     * the player's own backdrop setting.
+     */
+    public final int backdrop;
+
     private TgTheme(float density, boolean dark, int accent, int onAccent, int accentSoft,
-                    int surface, int surfaceHigh, int onSurface, int onSurfaceVariant, int outline) {
+                    int surface, int surfaceHigh, int onSurface, int onSurfaceVariant, int outline,
+                    int backdrop) {
         this.density = density;
         this.dark = dark;
         this.accent = accent;
@@ -57,6 +65,7 @@ public final class TgTheme {
         this.onSurface = onSurface;
         this.onSurfaceVariant = onSurfaceVariant;
         this.outline = outline;
+        this.backdrop = backdrop;
     }
 
     @NonNull
@@ -85,7 +94,23 @@ public final class TgTheme {
                 resolve(context, R.attr.colorSurfaceContainerHigh, 0xFF1E1B23),
                 resolve(context, R.attr.colorOnSurface, 0xFFE8E2EC),
                 resolve(context, R.attr.colorOnSurfaceVariant, 0xFFCAC4D0),
-                resolve(context, R.attr.colorOutlineVariant, 0xFF3A3540));
+                resolve(context, R.attr.colorOutlineVariant, 0xFF3A3540),
+                resolveBackdrop(context));
+    }
+
+    /**
+     * First of the four player backdrop colours, which is what the blur layer paints. Falls
+     * back to the historical 60% black when the config is not loaded yet.
+     */
+    private static int resolveBackdrop(@NonNull Context context) {
+        try {
+            var colors = icyllis.modernui.mc.Config.CLIENT.mBackgroundColor.get();
+            if (colors != null && !colors.isEmpty()) {
+                return Color.parseColor(colors.get(0));
+            }
+        } catch (Throwable ignored) {
+        }
+        return 0x99000000;
     }
 
     private static int resolve(@NonNull Context context, @NonNull String name, int fallback) {

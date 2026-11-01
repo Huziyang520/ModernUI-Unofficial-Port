@@ -48,14 +48,15 @@ public abstract class BaseSkin implements Skin {
 
     @Override
     public void drawBackdrop(@NonNull Canvas canvas, int width, int height) {
-        canvas.drawColor(mTokens.bg);
+        // deliberately empty: the blur layer already painted the player's backdrop colour over
+        // the blurred world. Filling here would black out both and override that setting.
     }
 
     @Override
     public void drawPanel(@NonNull Canvas canvas, float l, float t, float r, float b, float radius) {
         var paint = Paint.obtain();
         paint.setAntiAlias(true);
-        paint.setColor(mTokens.panel);
+        paint.setColor(mTokens.panelSurface());
         canvas.drawRoundRect(l, t, r, b, dp(radius), paint);
         if (mTokens.lineWidth > 0f) {
             paint.setStyle(Paint.STROKE);
@@ -69,13 +70,22 @@ public abstract class BaseSkin implements Skin {
     @Override
     public void drawRowBackground(@NonNull Canvas canvas, float l, float t, float r, float b,
                                   boolean first, boolean last, boolean pressed) {
-        if (!pressed) {
-            return;
-        }
+        // rows sit on top of the blurred world, so they need their own surface to stay
+        // readable; the panel colour is translucent enough to keep the backdrop visible
         var paint = Paint.obtain();
         paint.setAntiAlias(true);
-        paint.setColor(TgTheme.alpha(mTokens.text, 0.06f));
-        canvas.drawRoundRect(l, t, r, b, dp(mTokens.radiusControl), paint);
+        float radius = dp(mTokens.radiusControl);
+        paint.setColor(pressed ? TgTheme.alpha(mTokens.accent, 0.16f) : mTokens.panelSurface());
+        if (first || last) {
+            // only the ends of a group are rounded; the middle joins them into one card
+            float topLeft = first ? radius : 0f;
+            float topRight = first ? radius : 0f;
+            float bottomRight = last ? radius : 0f;
+            float bottomLeft = last ? radius : 0f;
+            canvas.drawRoundRect(l, t, r, b, topLeft, topRight, bottomRight, bottomLeft, paint);
+        } else {
+            canvas.drawRect(l, t, r, b, paint);
+        }
         paint.recycle();
     }
 

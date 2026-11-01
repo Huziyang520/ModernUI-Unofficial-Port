@@ -80,7 +80,7 @@ public final class BlueprintSkin extends BaseSkin {
 
     @Override
     public void drawBackdrop(@NonNull Canvas canvas, int width, int height) {
-        canvas.drawColor(mTokens.bg);
+        // no base fill: the blur layer owns the backdrop colour
         var paint = Paint.obtain();
         paint.setAntiAlias(false);
         paint.setStrokeWidth(Math.max(1f, dp(1f)));
@@ -109,7 +109,7 @@ public final class BlueprintSkin extends BaseSkin {
     public void drawPanel(@NonNull Canvas canvas, float l, float t, float r, float b, float radius) {
         var paint = Paint.obtain();
         paint.setAntiAlias(false);
-        paint.setColor(TgTheme.alpha(mTokens.panel, 0.90f));
+        paint.setColor(mTokens.panelSurface());
         canvas.drawRect(l, t, r, b, paint);
         paint.setStyle(Paint.STROKE);
         paint.setStrokeWidth(dp(1f));

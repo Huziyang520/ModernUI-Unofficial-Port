@@ -57,6 +57,7 @@ public class TgField extends TgGroup {
                 commit();
             }
         });
+        applyType();
     }
 
     public EditText input() {
@@ -87,14 +88,19 @@ public class TgField extends TgGroup {
     }
 
     @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+    public void onSkinChanged() {
+        super.onSkinChanged();
+        applyType();
+    }
+
+    /** Text metrics feed the measure pass, so they are applied on style change only. */
+    private void applyType() {
         var tk = tokens();
         mInput.setTextSize(tk.valueSize);
         mInput.setTextColor(tk.text);
         if (tk.typeface != null) {
             mInput.setTypeface(tk.typeface);
         }
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
     @Override

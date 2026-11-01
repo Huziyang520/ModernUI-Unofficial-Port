@@ -279,5 +279,9 @@
   "mui.v2.section.fontRendering": "字型算繪",
   "mui.v2.section.textEngine": "文字引擎",
   "mui.v2.tooltip.lineWrapping": "提示框自動換行",
-  "mui.v2.restart.note": "重新啟動遊戲後生效。"
+  "mui.v2.restart.note": "重新啟動遊戲後生效。",
+  "mui.v2.shell.resetAll": "全域重設",
+  "mui.v2.shell.resetAll.desc": "把本模組的全部設定恢復為預設值，包括目前頁面沒有顯示的設定。此操作無法復原。",
+  "mui.v2.shell.resetAll.confirm": "全部重設",
+  "mui.v2.shell.resetAll.done": "已重設 %s 項設定"
 }

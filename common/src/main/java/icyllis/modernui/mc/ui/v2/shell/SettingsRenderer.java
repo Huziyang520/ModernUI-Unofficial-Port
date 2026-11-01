@@ -128,10 +128,15 @@ final class SettingsRenderer {
             var params = new LayoutParams(MATCH_PARENT, WRAP_CONTENT);
             params.gravity = Gravity.CENTER_VERTICAL;
             addView(mLabel, params);
+            applyStyle();
         }
 
-        @Override
-        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        /**
+         * Padding and type are layout inputs, so they are applied on construction and on a
+         * style change. Setting them from {@code onMeasure} would request another layout from
+         * inside the pass that is measuring this view, which is what clipped the text.
+         */
+        private void applyStyle() {
             var tk = tokens();
             float density = tk.density;
             int padH = Math.round(tk.padH * density);
@@ -141,16 +146,22 @@ final class SettingsRenderer {
 
             mLabel.setTextSize(mGroup ? tk.sectionSize * 1.25f : tk.sectionSize);
             mLabel.setTextColor(mGroup ? tk.text : tk.muted);
-            String text = mLabel.getText().toString();
-            if (tk.upperCaseSections && !text.equals(text.toUpperCase(Locale.ROOT))) {
-                mLabel.setText(text.toUpperCase(Locale.ROOT));
+            String text = Rows.label(mLabel.getText().toString());
+            if (tk.upperCaseSections) {
+                text = text.toUpperCase(Locale.ROOT);
             }
+            mLabel.setText(text);
             var typeface = mGroup ? (tk.titleTypeface != null ? tk.titleTypeface : tk.typeface)
                     : tk.typeface;
             if (typeface != null) {
                 mLabel.setTypeface(typeface);
             }
-            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        }
+
+        @Override
+        public void onSkinChanged() {
+            super.onSkinChanged();
+            applyStyle();
         }
 
         @Override

@@ -279,5 +279,9 @@
   "mui.v2.section.fontRendering": "FONT RENDERING",
   "mui.v2.section.textEngine": "TEXT ENGINE",
   "mui.v2.tooltip.lineWrapping": "Tooltip line wrapping",
-  "mui.v2.restart.note": "Takes effect after restarting the game."
+  "mui.v2.restart.note": "Takes effect after restarting the game.",
+  "mui.v2.shell.resetAll": "Reset all",
+  "mui.v2.shell.resetAll.desc": "Restore every setting of this mod to its default value, including settings that are not shown on the current page. This cannot be undone.",
+  "mui.v2.shell.resetAll.confirm": "Reset everything",
+  "mui.v2.shell.resetAll.done": "Reset %s settings"
 }

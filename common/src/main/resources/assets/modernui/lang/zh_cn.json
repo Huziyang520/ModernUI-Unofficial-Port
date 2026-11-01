@@ -279,5 +279,9 @@
   "mui.v2.section.fontRendering": "字体渲染",
   "mui.v2.section.textEngine": "文本引擎",
   "mui.v2.tooltip.lineWrapping": "提示框自动换行",
-  "mui.v2.restart.note": "重启游戏后生效。"
+  "mui.v2.restart.note": "重启游戏后生效。",
+  "mui.v2.shell.resetAll": "全局重置",
+  "mui.v2.shell.resetAll.desc": "把本模组的全部设置恢复为默认值，包括当前页面没有显示的设置。此操作无法撤销。",
+  "mui.v2.shell.resetAll.confirm": "全部重置",
+  "mui.v2.shell.resetAll.done": "已重置 %s 项设置"
 }

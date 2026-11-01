@@ -51,13 +51,17 @@ public class TgMenu extends TgGroup {
         mItems = items;
         setClickable(true);
         setFocusable(true);
+        applyMetrics();
+
+        // the frame base stacks children, so label and chevron need a linear row of their own
+        var line = new LinearLayout(context);
+        line.setOrientation(LinearLayout.HORIZONTAL);
+        line.setGravity(Gravity.CENTER_VERTICAL);
 
         mLabel = new TextView(context);
         mLabel.setSingleLine(true);
         mLabel.setClickable(false);
-        var labelParams = new LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
-        labelParams.gravity = Gravity.CENTER_VERTICAL;
-        addView(mLabel, labelParams);
+        line.addView(mLabel, new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT));
 
         mChevron = new View(context) {
             @Override
@@ -67,10 +71,14 @@ public class TgMenu extends TgGroup {
             }
         };
         mChevron.setWillNotDraw(false);
-        var chevronParams = new LayoutParams(Math.round(dp(14f)), Math.round(dp(14f)));
+        var chevronParams = new LinearLayout.LayoutParams(Math.round(dp(14f)), Math.round(dp(14f)));
         chevronParams.gravity = Gravity.CENTER_VERTICAL;
         chevronParams.setMargins(Math.round(dp(5f)), 0, 0, 0);
-        addView(mChevron, chevronParams);
+        line.addView(mChevron, chevronParams);
+
+        var lineParams = new LayoutParams(MATCH_PARENT, WRAP_CONTENT);
+        lineParams.gravity = Gravity.CENTER_VERTICAL;
+        addView(line, lineParams);
 
         var list = new LinearLayout(context);
         list.setOrientation(LinearLayout.VERTICAL);
@@ -144,20 +152,18 @@ public class TgMenu extends TgGroup {
     public void onSkinChanged() {
         super.onSkinChanged();
         applyColors();
+        applyMetrics();
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        applyColors();
+    /** Padding is a layout input, so it is set on style change rather than every measure. */
+    private void applyMetrics() {
         int padH = Math.round(dp(12f));
         int padV = Math.round(dp(6f));
         setPadding(padH, padV, padH, padV);
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
-        float radius = tokens().radiusControl;
         skin().drawField(canvas, 0, 0, getWidth(), getHeight(), false);
     }
 }

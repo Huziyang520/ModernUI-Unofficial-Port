@@ -29,6 +29,11 @@ import icyllis.modernui.widget.FrameLayout;
  * Base of the controls that need a real {@link icyllis.modernui.widget.TextView} for their
  * label, because the canvas has no text primitive. Chrome is drawn by the skin in
  * {@code onDraw}, the label is an ordinary child laid out on top.
+ *
+ * <p>A frame, so a control may stack its chrome and its label. Controls that lay their
+ * label and value out <em>side by side</em> must not rely on weights here: a frame drops
+ * them and collapses the weighted child to zero width. Those controls nest a
+ * {@link LinearLayout} row instead.</p>
  */
 public abstract class TgGroup extends FrameLayout implements SkinRegistry.Listener {
 

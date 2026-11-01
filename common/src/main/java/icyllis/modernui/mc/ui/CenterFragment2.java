@@ -97,6 +97,8 @@ public class CenterFragment2 extends Fragment implements SkinRegistry.Listener {
 
         mShell = new CenterShell(context);
         mShell.setVersionText("Modern UI " + ModernUIMod.getVersion());
+        // a global reset rewrites every config, so all three have to be written back
+        mShell.setOnResetListener(() -> host().markAllDirty());
         mShell.setPageSource(new CenterShell.PageSource() {
             @NonNull
             @Override
@@ -202,6 +204,13 @@ public class CenterFragment2 extends Fragment implements SkinRegistry.Listener {
             var result = new java.util.ArrayList<>(mDirty);
             mDirty.clear();
             return result;
+        }
+
+        /** Marks all three configs for saving; used after a global reset. */
+        void markAllDirty() {
+            mDirty.add(icyllis.modernui.mc.Config.TYPE_CLIENT);
+            mDirty.add(icyllis.modernui.mc.Config.TYPE_COMMON);
+            mDirty.add(icyllis.modernui.mc.Config.TYPE_TEXT);
         }
 
         @NonNull

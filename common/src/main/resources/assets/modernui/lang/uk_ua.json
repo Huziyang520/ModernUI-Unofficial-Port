@@ -211,5 +211,9 @@
   "mui.v2.section.fontRendering": "ВІДОБРАЖЕННЯ ШРИФТІВ",
   "mui.v2.section.textEngine": "ТЕКСТОВИЙ РУШІЙ",
   "mui.v2.tooltip.lineWrapping": "Перенесення рядків у підказках",
-  "mui.v2.restart.note": "Набуває чинності після перезапуску гри."
+  "mui.v2.restart.note": "Набуває чинності після перезапуску гри.",
+  "mui.v2.shell.resetAll": "Скинути все",
+  "mui.v2.shell.resetAll.desc": "Повернути всі налаштування моду до значень за замовчуванням, зокрема ті, що не показані на поточній сторінці. Скасувати це неможливо.",
+  "mui.v2.shell.resetAll.confirm": "Скинути все",
+  "mui.v2.shell.resetAll.done": "Скинуто налаштувань: %s"
 }

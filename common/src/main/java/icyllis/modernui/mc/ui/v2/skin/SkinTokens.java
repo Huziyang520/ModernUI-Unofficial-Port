@@ -45,6 +45,13 @@ public final class SkinTokens {
     public int accentSoft;
     public int danger;
 
+    /**
+     * Opacity of the surfaces a skin paints over the backdrop, 0..1. The backdrop is the
+     * player's own colour over the blurred world, so surfaces stay translucent enough that
+     * the game remains recognisable behind the screen.
+     */
+    public float surfaceAlpha = 0.82f;
+
     /** Metrics. */
     public float radiusPanel = 12f;
     public float radiusControl = 6f;
@@ -111,6 +118,11 @@ public final class SkinTokens {
     /** Convenience: the easing function of this skin. */
     public float ease(float t) {
         return ease.ease(t);
+    }
+
+    /** The panel colour at the skin's surface opacity, for painting over the backdrop. */
+    public int panelSurface() {
+        return TgTheme.alpha(panel, surfaceAlpha);
     }
 
     public enum TgEase {

@@ -33,6 +33,7 @@ import icyllis.modernui.mc.ui.v2.widget.TgGroup;
 import icyllis.modernui.view.Gravity;
 import icyllis.modernui.view.View;
 import icyllis.modernui.widget.FrameLayout;
+import icyllis.modernui.widget.LinearLayout;
 import icyllis.modernui.widget.ScrollView;
 import icyllis.modernui.widget.TextView;
 import net.minecraft.client.resources.language.I18n;
@@ -80,6 +81,7 @@ public final class CenterShell extends TgGroup {
     private final SearchField mSearch;
     private final TextView mVersion;
     private final StyleButton mStyleButton;
+    private final ResetButton mResetButton;
     private final FrameLayout mBody;
     private final IndexRail mRail;
     private final ScrollView mScroll;
@@ -96,6 +98,7 @@ public final class CenterShell extends TgGroup {
     private int mDestination = DESTINATION_SETTINGS;
     private boolean mRendered;
     private boolean mRailEnabled = true;
+    private Runnable mResetListener;
 
     private long mFirstFrameAt;
     private float mCoverAlpha = 1f;
@@ -119,6 +122,17 @@ public final class CenterShell extends TgGroup {
         styleParams.gravity = Gravity.START | Gravity.CENTER_VERTICAL;
         styleParams.leftMargin = Math.round(dp(16f));
         mHeader.addView(mStyleButton, styleParams);
+
+        mResetButton = new ResetButton(context);
+        mResetButton.setOnClickListener(v -> confirmResetAll());
+        var resetParams = new FrameLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
+        resetParams.gravity = Gravity.START | Gravity.CENTER_VERTICAL;
+        resetParams.leftMargin = Math.round(dp(16f));
+        // sits right after the style button; the offset is re-applied once it is measured
+        mHeader.addView(mResetButton, resetParams);
+        mStyleButton.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) ->
+                ((FrameLayout.LayoutParams) mResetButton.getLayoutParams()).leftMargin =
+                        r + Math.round(dp(8f)));
 
         mVersion = new TextView(context);
         mVersion.setSingleLine(true);
@@ -231,6 +245,28 @@ public final class CenterShell extends TgGroup {
         applyFilter(mSearch.getQuery());
         mRendered = true;
         mScroll.scrollTo(0, 0);
+
+        // one line per render so a broken page is diagnosable from the log alone
+        final var builtPage = page;
+        mRows.post(() -> {
+            int children = mRows.getChildCount();
+            int visible = 0;
+            int tall = 0;
+            for (int i = 0; i < children; i++) {
+                var child = mRows.getChildAt(i);
+                if (child.getVisibility() != GONE) {
+                    visible++;
+                    if (child.getMeasuredHeight() > Math.round(dp(200f))) {
+                        tall++;
+                    }
+                }
+            }
+            icyllis.modernui.mc.ModernUIMod.LOGGER.info(
+                    icyllis.modernui.mc.ModernUIMod.MARKER,
+                    "Settings page: {} groups, {} anchors, {} entries ({} visible, {} over 200dp), column {}x{}",
+                    builtPage.groups().size(), mAnchors.size(), children, visible, tall,
+                    mRows.getWidth(), mRows.getMeasuredHeight());
+        });
     }
 
     private void rebuildRail() {
@@ -469,6 +505,94 @@ public final class CenterShell extends TgGroup {
             canvas.drawRect(0, 0, getWidth(), getHeight(), paint);
             paint.recycle();
         }
+    }
+
+    // ---------------------------------------------------------------- reset
+
+    /**
+     * Restores every setting of the mod, not just the visible ones. Destructive, so it asks
+     * first: the confirm sheet names what will happen and offers a cancel.
+     */
+    private void confirmResetAll() {
+        var context = getContext();
+        var column = new LinearLayout(context);
+        column.setOrientation(LinearLayout.VERTICAL);
+        int pad = Math.round(dp(18f));
+        column.setPadding(pad, pad, pad, pad);
+        column.setBackground(icyllis.modernui.mc.ui.v2.TgDrawable.rounded(context,
+                tokens().panel, tokens().radiusPanel));
+
+        var title = new TextView(context);
+        title.setText(I18n.get("mui.v2.shell.resetAll"));
+        title.setTextSize(tokens().titleSize + 1f);
+        title.setTextColor(tokens().text);
+        column.addView(title, new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+
+        var body = new TextView(context);
+        body.setText(I18n.get("mui.v2.shell.resetAll.desc"));
+        body.setTextSize(tokens().descSize);
+        body.setTextColor(tokens().muted);
+        body.setSingleLine(false);
+        var bodyParams = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
+        bodyParams.setMargins(0, Math.round(dp(6f)), 0, Math.round(dp(14f)));
+        column.addView(body, bodyParams);
+
+        var actions = new LinearLayout(context);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        int gap = Math.round(dp(8f));
+
+        var cancel = icyllis.modernui.mc.ui.v2.page.Rows.button(context,
+                I18n.get("gui.cancel"), () -> {
+                });
+        var cancelParams = new LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f);
+        cancelParams.setMargins(0, 0, gap / 2, 0);
+        actions.addView(cancel, cancelParams);
+
+        var confirm = icyllis.modernui.mc.ui.v2.page.Rows.button(context,
+                I18n.get("mui.v2.shell.resetAll.confirm"), () -> {
+                });
+        var confirmParams = new LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f);
+        confirmParams.setMargins(gap / 2, 0, 0, 0);
+        actions.addView(confirm, confirmParams);
+
+        column.addView(actions, new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+
+        var popup = new icyllis.modernui.widget.PopupWindow(column);
+        popup.setFocusable(true);
+        popup.setOutsideTouchable(true);
+        popup.setElevation(dp(12f));
+        popup.setWidth(Math.round(dp(320f)));
+
+        cancel.setOnAction(popup::dismiss);
+        confirm.setOnAction(() -> {
+            popup.dismiss();
+            resetEverything();
+        });
+        popup.showAsDropDown(mResetButton, 0, Math.round(dp(6f)), Gravity.TOP);
+    }
+
+    /** Writes the defaults, drops the accent override, and re-renders in place. */
+    private void resetEverything() {
+        int changed = icyllis.modernui.mc.Config.resetAllToDefaults();
+        // the accent lives outside the config specs, in the bootstrap properties
+        icyllis.modernui.mc.ui.AccentPalette.setSeed(0);
+        SkinRegistry.setActive(SkinRegistry.DEFAULT_ID);
+        SkinRegistry.invalidate();
+        renderPage();
+        if (mResetListener != null) {
+            mResetListener.run();
+        }
+        icyllis.modernui.mc.ModernUIMod.LOGGER.info(
+                icyllis.modernui.mc.ModernUIMod.MARKER,
+                "Reset {} settings to their defaults", changed);
+        icyllis.modernui.widget.Toast.makeText(getContext(),
+                I18n.get("mui.v2.shell.resetAll.done", changed),
+                icyllis.modernui.widget.Toast.LENGTH_SHORT).show();
+    }
+
+    /** Called after a global reset so the host can mark every config dirty. */
+    public void setOnResetListener(@Nullable Runnable listener) {
+        mResetListener = listener;
     }
 
     // ---------------------------------------------------------------- misc

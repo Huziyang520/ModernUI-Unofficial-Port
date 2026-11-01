@@ -80,7 +80,7 @@ public final class TerminalSkin extends BaseSkin {
 
     @Override
     public void drawBackdrop(@NonNull Canvas canvas, int width, int height) {
-        canvas.drawColor(mTokens.bg);
+        // no base fill: the blur layer owns the backdrop colour
         var paint = Paint.obtain();
         paint.setAntiAlias(false);
         // scanline every 2dp
@@ -106,7 +106,7 @@ public final class TerminalSkin extends BaseSkin {
     public void drawPanel(@NonNull Canvas canvas, float l, float t, float r, float b, float radius) {
         var paint = Paint.obtain();
         paint.setAntiAlias(false);
-        paint.setColor(mTokens.panel);
+        paint.setColor(mTokens.panelSurface());
         canvas.drawRect(l, t, r, b, paint);
         paint.setColor(mTokens.line);
         paint.setStrokeWidth(dp(1f));

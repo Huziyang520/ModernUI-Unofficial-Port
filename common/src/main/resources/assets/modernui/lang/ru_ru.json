@@ -211,5 +211,9 @@
   "mui.v2.section.fontRendering": "ОТРИСОВКА ШРИФТОВ",
   "mui.v2.section.textEngine": "ТЕКСТОВЫЙ ДВИЖОК",
   "mui.v2.tooltip.lineWrapping": "Перенос строк в подсказках",
-  "mui.v2.restart.note": "Вступает в силу после перезапуска игры."
+  "mui.v2.restart.note": "Вступает в силу после перезапуска игры.",
+  "mui.v2.shell.resetAll": "Сбросить всё",
+  "mui.v2.shell.resetAll.desc": "Вернуть все настройки мода к значениям по умолчанию, включая те, что не показаны на текущей странице. Отменить это нельзя.",
+  "mui.v2.shell.resetAll.confirm": "Сбросить всё",
+  "mui.v2.shell.resetAll.done": "Сброшено настроек: %s"
 }

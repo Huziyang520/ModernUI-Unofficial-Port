@@ -73,7 +73,7 @@ public final class GlassSkin extends BaseSkin {
 
     @Override
     public void drawBackdrop(@NonNull Canvas canvas, int width, int height) {
-        canvas.drawColor(mTokens.bg);
+        // no base fill: the blur layer owns the backdrop colour
         // a soft accent wash from the top left corner
         var paint = Paint.obtain();
         paint.setAntiAlias(true);
@@ -98,7 +98,7 @@ public final class GlassSkin extends BaseSkin {
         canvas.drawRoundRect(l, t, r, b, rad + dp(1f), paint);
 
         paint.setStyle(Paint.FILL);
-        paint.setColor(mTokens.panel);
+        paint.setColor(mTokens.panelSurface());
         canvas.drawRoundRect(l, t, r, b, rad, paint);
 
         paint.setStyle(Paint.STROKE);

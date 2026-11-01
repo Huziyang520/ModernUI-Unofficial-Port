@@ -78,7 +78,7 @@ public final class EditorialSkin extends BaseSkin {
     public void drawPanel(@NonNull Canvas canvas, float l, float t, float r, float b, float radius) {
         var paint = Paint.obtain();
         paint.setAntiAlias(true);
-        paint.setColor(mTokens.panel);
+        paint.setColor(mTokens.panelSurface());
         canvas.drawRect(l, t, r, b, paint);
         paint.setStyle(Paint.STROKE);
         paint.setStrokeWidth(Math.max(1f, dp(1f)));

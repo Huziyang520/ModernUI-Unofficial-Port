@@ -79,7 +79,7 @@ public final class PixelSkin extends BaseSkin {
 
     @Override
     public void drawBackdrop(@NonNull Canvas canvas, int width, int height) {
-        canvas.drawColor(mTokens.bg);
+        // no base fill: the blur layer owns the backdrop colour
         // 8dp checkerboard, two shades three percent apart
         var paint = Paint.obtain();
         paint.setAntiAlias(false);
@@ -101,7 +101,7 @@ public final class PixelSkin extends BaseSkin {
     public void drawPanel(@NonNull Canvas canvas, float l, float t, float r, float b, float radius) {
         var paint = Paint.obtain();
         paint.setAntiAlias(false);
-        paint.setColor(mTokens.panel);
+        paint.setColor(mTokens.panelSurface());
         canvas.drawRect(l, t, r, b, paint);
         bevel(canvas, paint, l, t, r, b);
         paint.recycle();

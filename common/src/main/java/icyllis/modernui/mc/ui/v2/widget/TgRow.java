@@ -49,6 +49,12 @@ public class TgRow extends TgGroup {
         super(context);
         mControl = control;
 
+        // the row is a frame, so the label/value split needs a real linear row inside it;
+        // a frame would drop the weight and collapse the label to zero width
+        var line = new LinearLayout(context);
+        line.setOrientation(LinearLayout.HORIZONTAL);
+        line.setGravity(Gravity.CENTER_VERTICAL);
+
         var block = new LinearLayout(context);
         block.setOrientation(LinearLayout.VERTICAL);
         block.setGravity(Gravity.CENTER_VERTICAL);
@@ -72,13 +78,17 @@ public class TgRow extends TgGroup {
 
         var blockParams = new LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f);
         blockParams.setMargins(0, 0, Math.round(dp(10f)), 0);
-        addView(block, blockParams);
+        line.addView(block, blockParams);
 
-        var controlParams = new LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
+        var controlParams = new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
         controlParams.gravity = Gravity.CENTER_VERTICAL;
-        addView(control, controlParams);
+        line.addView(control, controlParams);
+
+        addView(line, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
 
         setClickable(true);
+        applyType();
+        applyMetrics();
     }
 
     /** The translation keys carry {@code §} formatting on some entries; the UI styles text. */
@@ -128,6 +138,7 @@ public class TgRow extends TgGroup {
     public void onSkinChanged() {
         super.onSkinChanged();
         applyType();
+        applyMetrics();
     }
 
     private void applyType() {
@@ -145,14 +156,16 @@ public class TgRow extends TgGroup {
         }
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        applyType();
+    /**
+     * Padding and the minimum height are layout inputs, so they are applied on construction
+     * and on a style change. Setting them from {@code onMeasure} would request another layout
+     * from inside the pass that is measuring this view, which clipped the label.
+     */
+    private void applyMetrics() {
         var tk = tokens();
         setPadding(Math.round(dp(tk.padH)), Math.round(dp(tk.padV)),
                 Math.round(dp(tk.padH)), Math.round(dp(tk.padV)));
         setMinimumHeight(Math.round(dp(tk.rowHeight)));
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
     @Override
