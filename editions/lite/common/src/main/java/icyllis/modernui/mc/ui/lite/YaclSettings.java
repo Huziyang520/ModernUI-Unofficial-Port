@@ -54,7 +54,26 @@ public final class YaclSettings {
     private YaclSettings() {
     }
 
+    /**
+     * A failing screen must still open: an empty page or a dead button hides the cause,
+     * and the reason ends up somewhere the player does not look.
+     */
     public static Screen create(Screen parent) {
+        try {
+            return build(parent);
+        } catch (Throwable t) {
+            ModernUIMod.LOGGER.error("Failed to build the settings screen", t);
+            return YetAnotherConfigLib.createBuilder()
+                    .title(Component.translatable("mui.lite.title"))
+                    .category(ConfigCategory.createBuilder()
+                            .name(Component.translatable("mui.lite.category.about"))
+                            .option(LabelOption.create(Component.literal(String.valueOf(t))))
+                            .build())
+                    .build().generateScreen(parent);
+        }
+    }
+
+    private static Screen build(Screen parent) {
         var config = YetAnotherConfigLib.createBuilder()
                 .title(Component.translatable("mui.lite.title"))
                 .save(YaclSettings::save);
@@ -243,22 +262,33 @@ public final class YaclSettings {
 
     private static OptionGroup group(String name, Option<?>... options) {
         var builder = OptionGroup.createBuilder().name(Component.translatable(name));
+        int count = 0;
         for (var option : options) {
-            builder.option(option);
+            if (option != null) {
+                builder.option(option);
+                count++;
+            }
+        }
+        if (count == 0) {
+            builder.option(LabelOption.create(Component.translatable(name)));
         }
         return builder.build();
     }
 
+    // An item is absent when its loader does not register it, e.g. a Fabric-only option.
     private static Option<Boolean> tick(String key, ConfigItem<Boolean> item) {
-        return create(key, item, TickBoxControllerBuilder::create);
+        return item == null ? null : create(key, item, TickBoxControllerBuilder::create);
     }
 
     private static Option<String> field(String key, ConfigItem<String> item) {
-        return create(key, item, StringControllerBuilder::create);
+        return item == null ? null : create(key, item, StringControllerBuilder::create);
     }
 
     /** A slider needs both a range and a step; without them it is a plain number field. */
     private static Option<Integer> slider(String key, ConfigItem<Integer> item) {
+        if (item == null) {
+            return null;
+        }
         return create(key, item, option -> {
             var range = item.getRange();
             if (range == null) {
@@ -275,6 +305,9 @@ public final class YaclSettings {
     }
 
     private static Option<Double> decimal(String key, ConfigItem<Double> item) {
+        if (item == null) {
+            return null;
+        }
         return create(key, item, option -> {
             var range = item.getRange();
             if (range == null) {
@@ -291,7 +324,7 @@ public final class YaclSettings {
     }
 
     private static <E extends Enum<E>> Option<E> enumChoice(String key, ConfigItem<E> item) {
-        return create(key, item, EnumControllerBuilder::create);
+        return item == null ? null : create(key, item, EnumControllerBuilder::create);
     }
 
     private static <T> Option<T> create(String key, ConfigItem<T> item,

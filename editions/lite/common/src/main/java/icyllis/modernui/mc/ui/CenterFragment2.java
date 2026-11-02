@@ -21,6 +21,7 @@ package icyllis.modernui.mc.ui;
 import icyllis.modernui.annotation.NonNull;
 import icyllis.modernui.annotation.Nullable;
 import icyllis.modernui.fragment.Fragment;
+import icyllis.modernui.mc.ModernUIMod;
 import icyllis.modernui.mc.ui.lite.YaclBridge;
 import icyllis.modernui.util.DataSet;
 import icyllis.modernui.view.LayoutInflater;
@@ -40,9 +41,17 @@ public class CenterFragment2 extends Fragment {
         super.onCreate(savedInstanceState);
         // The screen swap has to happen on the client thread, not on the UI thread.
         Minecraft.getInstance().execute(() -> {
+            var minecraft = Minecraft.getInstance();
             var screen = YaclBridge.open(null);
             if (screen != null) {
-                Minecraft.getInstance().setScreenAndShow(screen);
+                minecraft.setScreenAndShow(screen);
+                return;
+            }
+            // A blank page would look like a broken screen, so try to drop it.
+            try {
+                minecraft.setScreenAndShow(null);
+            } catch (Throwable t) {
+                ModernUIMod.LOGGER.warn("Cannot close the empty page", t);
             }
         });
     }
