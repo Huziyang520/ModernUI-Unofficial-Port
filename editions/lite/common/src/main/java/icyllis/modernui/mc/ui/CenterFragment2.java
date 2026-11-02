@@ -21,42 +21,35 @@ package icyllis.modernui.mc.ui;
 import icyllis.modernui.annotation.NonNull;
 import icyllis.modernui.annotation.Nullable;
 import icyllis.modernui.fragment.Fragment;
-import icyllis.modernui.fragment.FragmentContainerView;
+import icyllis.modernui.mc.ui.lite.YaclBridge;
 import icyllis.modernui.util.DataSet;
 import icyllis.modernui.view.LayoutInflater;
 import icyllis.modernui.view.View;
 import icyllis.modernui.view.ViewGroup;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
-
-import static icyllis.modernui.view.ViewGroup.LayoutParams.MATCH_PARENT;
+import icyllis.modernui.widget.FrameLayout;
+import net.minecraft.client.Minecraft;
 
 /**
- * The lite build only has an info page: no navigation rail, no pages, no settings entries.
- * The configuration belongs to the config library and is opened from the mod list directly.
+ * Stand-in for the entry points that still construct this fragment: the lite edition has
+ * no screen of its own, so it forwards straight to the config library.
  */
 public class CenterFragment2 extends Fragment {
-
-    /** Referenced by the info page for its log output. */
-    public static final Marker MARKER = MarkerManager.getMarker("Center");
-
-    private static final int id_content = 0x2002;
 
     @Override
     public void onCreate(@Nullable DataSet savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getChildFragmentManager().beginTransaction()
-                .replace(id_content, DashboardFragment.class, null, "dashboard")
-                .setReorderingAllowed(true)
-                .commit();
+        // The screen swap has to happen on the client thread, not on the UI thread.
+        Minecraft.getInstance().execute(() -> {
+            var screen = YaclBridge.open(null);
+            if (screen != null) {
+                Minecraft.getInstance().setScreenAndShow(screen);
+            }
+        });
     }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable DataSet savedInstanceState) {
-        var content = new FragmentContainerView(requireContext());
-        content.setId(id_content);
-        content.setLayoutParams(new ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT));
-        return content;
+        return new FrameLayout(requireContext());
     }
 }

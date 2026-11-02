@@ -20,13 +20,16 @@ package icyllis.modernui.mc.ui.lite;
 
 import dev.isxander.yacl3.api.ButtonOption;
 import dev.isxander.yacl3.api.ConfigCategory;
+import dev.isxander.yacl3.api.LabelOption;
 import dev.isxander.yacl3.api.controller.ControllerBuilder;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
 import dev.isxander.yacl3.api.OptionGroup;
 import dev.isxander.yacl3.api.YetAnotherConfigLib;
+import dev.isxander.yacl3.api.controller.DoubleFieldControllerBuilder;
 import dev.isxander.yacl3.api.controller.DoubleSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.EnumControllerBuilder;
+import dev.isxander.yacl3.api.controller.IntegerFieldControllerBuilder;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.StringControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
@@ -34,9 +37,11 @@ import icyllis.modernui.mc.Config;
 import icyllis.modernui.mc.ConfigItem;
 import icyllis.modernui.mc.ModernUIMod;
 import icyllis.modernui.mc.MuiPlatform;
+import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
+import java.net.URI;
 import java.util.function.Function;
 
 /**
@@ -172,7 +177,47 @@ public final class YaclSettings {
                 .group(developerGroup)
                 .build());
 
+        // The info page the full edition shows next to its settings lives here instead.
+        config.category(ConfigCategory.createBuilder()
+                .name(Component.translatable("mui.lite.category.about"))
+                .group(OptionGroup.createBuilder()
+                        .name(Component.translatable("mui.lite.group.links"))
+                        .option(link("mui.lite.link.source",
+                                "https://github.com/Huziyang520/ModernUI-Unofficial-Port"))
+                        .option(link("mui.lite.link.releases",
+                                "https://www.curseforge.com/minecraft/mc-mods/modernui-unofficial-port"))
+                        .option(link("mui.lite.link.preReleases",
+                                "https://github.com/Huziyang520/ModernUI-Unofficial-Port/releases"))
+                        .option(link("mui.lite.link.mcmod", "https://www.mcmod.cn/class/31032.html"))
+                        .option(link("mui.lite.link.discord", "https://discord.gg/kmyGKt2"))
+                        .build())
+                .group(OptionGroup.createBuilder()
+                        .name(Component.translatable("mui.lite.group.original"))
+                        .option(link("mui.lite.link.sourceOriginal",
+                                "https://github.com/BloCamLimb/ModernUI"))
+                        .option(link("mui.lite.link.sourceOriginalMc",
+                                "https://github.com/BloCamLimb/ModernUI-MC"))
+                        .option(link("mui.lite.link.releasesOriginal",
+                                "https://www.curseforge.com/minecraft/mc-mods/modern-ui"))
+                        .option(link("mui.lite.link.modrinthOriginal", "https://modrinth.com/mod/modern-ui"))
+                        .build())
+                .group(OptionGroup.createBuilder()
+                        .name(Component.translatable("mui.lite.group.changelog"))
+                        .option(LabelOption.create(Component.translatable("mui.lite.changelog.version")))
+                        .option(LabelOption.create(Component.translatable("mui.lite.changelog.fix")))
+                        .option(LabelOption.create(Component.translatable("mui.lite.changelog.preview")))
+                        .build())
+                .build());
+
         return config.build().generateScreen(parent);
+    }
+
+    private static ButtonOption link(String name, String url) {
+        return ButtonOption.createBuilder()
+                .name(Component.translatable(name))
+                .text(Component.translatable("mui.lite.link.open"))
+                .action((screen, button) -> ConfirmLinkScreen.confirmLinkNow(screen, URI.create(url)))
+                .build();
     }
 
     /** The full edition writes on close; here YACL owns the lifecycle, so save on demand. */
@@ -212,25 +257,36 @@ public final class YaclSettings {
         return create(key, item, StringControllerBuilder::create);
     }
 
+    /** A slider needs both a range and a step; without them it is a plain number field. */
     private static Option<Integer> slider(String key, ConfigItem<Integer> item) {
         return create(key, item, option -> {
-            var builder = IntegerSliderControllerBuilder.create(option);
             var range = item.getRange();
-            if (range != null && range.getMinimum() != null && range.getMaximum() != null) {
-                builder.range(range.getMinimum(), range.getMaximum());
+            if (range == null) {
+                return IntegerFieldControllerBuilder.create(option);
             }
-            return builder;
+            Integer min = range.getMinimum(), max = range.getMaximum();
+            if (min == null || max == null || min >= max) {
+                return IntegerFieldControllerBuilder.create(option);
+            }
+            return IntegerSliderControllerBuilder.create(option)
+                    .range(min, max)
+                    .step(Math.max(1, (max - min) / 200));
         });
     }
 
     private static Option<Double> decimal(String key, ConfigItem<Double> item) {
         return create(key, item, option -> {
-            var builder = DoubleSliderControllerBuilder.create(option);
             var range = item.getRange();
-            if (range != null && range.getMinimum() != null && range.getMaximum() != null) {
-                builder.range(range.getMinimum(), range.getMaximum());
+            if (range == null) {
+                return DoubleFieldControllerBuilder.create(option);
             }
-            return builder;
+            Double min = range.getMinimum(), max = range.getMaximum();
+            if (min == null || max == null || min >= max) {
+                return DoubleFieldControllerBuilder.create(option);
+            }
+            return DoubleSliderControllerBuilder.create(option)
+                    .range(min, max)
+                    .step(Math.max(1.0E-4, (max - min) / 200));
         });
     }
 

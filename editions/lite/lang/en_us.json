@@ -159,5 +159,22 @@
   "mui.lite.linearMetrics": "Linear metrics",
   "mui.lite.linearMetrics.desc": "Fractional glyph advances instead of whole pixels.",
   "mui.lite.developerMode": "Developer mode",
-  "mui.lite.developerMode.desc": "Show the debug entries and extra logging."
+  "mui.lite.developerMode.desc": "Show the debug entries and extra logging.",
+  "mui.lite.category.about": "About and links",
+  "mui.lite.group.links": "Links",
+  "mui.lite.group.original": "Original projects",
+  "mui.lite.link.open": "Open",
+  "mui.lite.link.source": "Source code (this port)",
+  "mui.lite.link.releases": "Downloads (CurseForge)",
+  "mui.lite.link.preReleases": "Preview builds (GitHub)",
+  "mui.lite.link.mcmod": "MC百科",
+  "mui.lite.link.discord": "Discord",
+  "mui.lite.link.sourceOriginal": "ModernUI source",
+  "mui.lite.link.sourceOriginalMc": "ModernUI-MC source",
+  "mui.lite.link.releasesOriginal": "Modern UI (CurseForge)",
+  "mui.lite.link.modrinthOriginal": "Modern UI (Modrinth)",
+  "mui.lite.group.changelog": "Changelog",
+  "mui.lite.changelog.version": "Modern UI 3.14.8.3",
+  "mui.lite.changelog.fix": "* Fix the tooltip border not following the item rarity 修复提示框边框不随物品稀有度变色",
+  "mui.lite.changelog.preview": "* Add a preview build link and move MC百科 before Discord 新增预览版获取链接，并把 MC百科 排到 Discord 之前"
 }

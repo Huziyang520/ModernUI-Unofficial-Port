@@ -17,7 +17,6 @@
  */
 package icyllis.modernui.mc.neoforge;
 
-import icyllis.modernui.mc.ui.CenterFragment2;
 import icyllis.modernui.mc.ui.lite.YaclBridge;
 import net.minecraft.client.gui.screens.Screen;
 
@@ -32,10 +31,7 @@ public final class MuiConfigScreens {
 
     public static Screen create(Screen parent) {
         var screen = YaclBridge.open(parent);
-        if (screen != null) {
-            return screen;
-        }
-        // Without the library, show the info page so the entry never dead-ends.
-        return MuiForgeApi.get().createScreen(new CenterFragment2(), null, parent);
+        // Without the library the button stays where it was: there is no fallback screen.
+        return screen != null ? screen : parent;
     }
 }

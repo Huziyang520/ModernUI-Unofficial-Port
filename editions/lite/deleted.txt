@@ -1,12 +1,13 @@
 # Files the lite edition does not contain at all.
 # Paths are module-relative, exactly like targets/<target>/deleted.txt.
 #
-# This edition has no in-house settings screen: the configuration belongs to the config
-# library the player installs, so the settings UI is absent rather than hidden. The
-# operation center keeps its info page and the music page.
+# This edition has no screen of its own: the settings belong to the config library the
+# player installs, and the info the full edition shows beside them lives inside that
+# screen instead of in a page of its own.
 
 common/src/main/java/icyllis/modernui/mc/ui/PreferencesFragment.java
 common/src/main/java/icyllis/modernui/mc/ui/AdvancedOptionsFragment.java
+common/src/main/java/icyllis/modernui/mc/ui/DashboardFragment.java
 common/src/main/java/icyllis/modernui/mc/ui/FourColorPicker.java
 common/src/main/java/icyllis/modernui/mc/ui/ColorPickerView.java
 common/src/main/java/icyllis/modernui/mc/ui/PreferredFontAccordion.java

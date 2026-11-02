@@ -159,5 +159,22 @@
   "mui.lite.linearMetrics": "线性度量",
   "mui.lite.linearMetrics.desc": "使用分数字形步进而非整像素。",
   "mui.lite.developerMode": "开发者模式",
-  "mui.lite.developerMode.desc": "显示调试条目与额外日志。"
+  "mui.lite.developerMode.desc": "显示调试条目与额外日志。",
+  "mui.lite.category.about": "关于与链接",
+  "mui.lite.group.links": "链接",
+  "mui.lite.group.original": "原项目",
+  "mui.lite.link.open": "打开",
+  "mui.lite.link.source": "源码仓库（本移植）",
+  "mui.lite.link.releases": "下载页面（CurseForge）",
+  "mui.lite.link.preReleases": "预览版（GitHub）",
+  "mui.lite.link.mcmod": "MC百科",
+  "mui.lite.link.discord": "Discord",
+  "mui.lite.link.sourceOriginal": "ModernUI 源码",
+  "mui.lite.link.sourceOriginalMc": "ModernUI-MC 源码",
+  "mui.lite.link.releasesOriginal": "Modern UI（CurseForge）",
+  "mui.lite.link.modrinthOriginal": "Modern UI（Modrinth）",
+  "mui.lite.group.changelog": "更新日志",
+  "mui.lite.changelog.version": "Modern UI 3.14.8.3",
+  "mui.lite.changelog.fix": "* Fix the tooltip border not following the item rarity 修复提示框边框不随物品稀有度变色",
+  "mui.lite.changelog.preview": "* Add a preview build link and move MC百科 before Discord 新增预览版获取链接，并把 MC百科 排到 Discord 之前"
 }
