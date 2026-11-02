@@ -26,12 +26,13 @@ import icyllis.modernui.view.View;
 
 /**
  * Rounded color chip that shows transparency over a checkerboard. It is a real click
- * target, and it lightens on hover so that it reads as something you can press.
+ * target and lightens on hover, so that it reads as something you can press.
  */
 public class ColorSwatchView extends View {
 
     private int mColor = 0xFFFFFFFF;
-    private float mCornerRadius = -1;
+    /** Corner radius in dp; negative means the default rounding. */
+    private float mCornerRadius = -1f;
 
     public ColorSwatchView(Context context) {
         super(context);
@@ -51,7 +52,6 @@ public class ColorSwatchView extends View {
         }
     }
 
-    /** A negative radius keeps the default rounding; used to follow the border radius. */
     public void setCornerRadius(float dp) {
         if (mCornerRadius != dp) {
             mCornerRadius = dp;
@@ -61,8 +61,10 @@ public class ColorSwatchView extends View {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int size = dp(28);
-        setMeasuredDimension(resolveSize(size, widthMeasureSpec), resolveSize(size, heightMeasureSpec));
+        int minHeight = dp(32);
+        setMeasuredDimension(
+                resolveSize(dp(48), widthMeasureSpec),
+                Math.max(minHeight, resolveSize(minHeight, heightMeasureSpec)));
     }
 
     @Override
@@ -77,12 +79,12 @@ public class ColorSwatchView extends View {
     protected void onDraw(@NonNull Canvas canvas) {
         var paint = Paint.obtain();
         paint.setAntiAlias(true);
-        float radius = mCornerRadius >= 0 ? dp(mCornerRadius) : dp(8);
         float w = getWidth();
         float h = getHeight();
-        radius = Math.min(radius, Math.min(w, h) / 2f);
+        float radius = mCornerRadius >= 0 ? dp(mCornerRadius) : dp(8);
+        radius = Math.max(0f, Math.min(radius, Math.min(w, h) / 2f));
 
-        float cell = dp(5);
+        float cell = dp(6);
         boolean dark = true;
         for (float y = 0; y < h; y += cell) {
             dark = !dark;

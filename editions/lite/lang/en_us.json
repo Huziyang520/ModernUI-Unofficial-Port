@@ -1,6 +1,7 @@
 {
   "mui.lite.title": "Modern UI Lite",
   "mui.lite.redirect": "This build has no settings screen of its own. The configuration is rendered by YetAnotherConfigLib.",
+  "mui.lite.missing": "YetAnotherConfigLib is not installed, so this build has no settings screen. Install it to configure the mod.",
   "mui.lite.open": "Open settings",
   "mui.lite.openFolder": "Open config folder",
   "mui.lite.openFolder.text": "Open the folder that holds the config files.",

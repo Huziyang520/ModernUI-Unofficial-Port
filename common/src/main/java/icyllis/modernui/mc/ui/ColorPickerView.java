@@ -288,6 +288,12 @@ public class ColorPickerView extends View {
                 if (mDragging == DRAG_NONE) {
                     return false;
                 }
+                // The page scrolls vertically, so a drag inside the wheel must not be taken
+                // away from it once the gesture has started here.
+                var parent = getParent();
+                if (parent != null) {
+                    parent.requestDisallowInterceptTouchEvent(true);
+                }
                 updateFromTouch(event.getX(), event.getY(), false);
                 return true;
             }
@@ -301,6 +307,10 @@ public class ColorPickerView extends View {
                 if (mDragging != DRAG_NONE) {
                     updateFromTouch(event.getX(), event.getY(), true);
                     mDragging = DRAG_NONE;
+                    var parent = getParent();
+                    if (parent != null) {
+                        parent.requestDisallowInterceptTouchEvent(false);
+                    }
                     return true;
                 }
             }

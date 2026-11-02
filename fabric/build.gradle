@@ -248,12 +248,15 @@ processResources {
         expand 'version': targetModVersion
     }
 
-    // Declaring the dependency here keeps both targets on one metadata file.
+    // Recommended, not required: a missing YACL must never stop the game from starting.
     if (isLite) {
         doLast {
             def meta = file("${destinationDir}/fabric.mod.json")
             def json = new groovy.json.JsonSlurper().parseText(meta.text)
-            json.depends.put("yet-another-config-lib", ">=3.9.7")
+            if (json.recommends == null) {
+                json.recommends = [:]
+            }
+            json.recommends.put("yet_another_config_lib_v3", ">=3.9.7")
             meta.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(json))
         }
     }

@@ -1,6 +1,7 @@
 {
   "mui.lite.title": "Modern UI Lite",
   "mui.lite.redirect": "此版本没有自带的设置界面，配置由 YetAnotherConfigLib 渲染。",
+  "mui.lite.missing": "未安装 YetAnotherConfigLib，因此本版本没有设置界面。安装该模组后即可配置。",
   "mui.lite.open": "打开设置",
   "mui.lite.openFolder": "打开配置文件夹",
   "mui.lite.openFolder.text": "打开存放配置文件的文件夹。",

@@ -22,7 +22,7 @@ import icyllis.modernui.R;
 import icyllis.modernui.annotation.NonNull;
 import icyllis.modernui.annotation.Nullable;
 import icyllis.modernui.fragment.Fragment;
-import icyllis.modernui.mc.ui.lite.YaclSettings;
+import icyllis.modernui.mc.ui.lite.YaclBridge;
 import icyllis.modernui.util.DataSet;
 import icyllis.modernui.view.Gravity;
 import icyllis.modernui.view.LayoutInflater;
@@ -57,8 +57,9 @@ public class PreferencesFragment extends Fragment {
         layout.addView(title, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
+        boolean available = YaclBridge.isAvailable();
         var body = new TextView(context);
-        body.setText(I18n.get("mui.lite.redirect"));
+        body.setText(I18n.get(available ? "mui.lite.redirect" : "mui.lite.missing"));
         body.setTextSize(13);
         body.setGravity(Gravity.CENTER);
         int dp16 = layout.dp(16);
@@ -66,14 +67,19 @@ public class PreferencesFragment extends Fragment {
         layout.addView(body, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        var button = new Button(context, null, R.attr.buttonOutlinedStyle);
-        button.setText(I18n.get("mui.lite.open"));
-        button.setOnClickListener(v -> {
-            var minecraft = Minecraft.getInstance();
-            minecraft.gui.setScreen(YaclSettings.create(minecraft.gui.screen()));
-        });
-        layout.addView(button, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        if (available) {
+            var button = new Button(context, null, R.attr.buttonOutlinedStyle);
+            button.setText(I18n.get("mui.lite.open"));
+            button.setOnClickListener(v -> {
+                var minecraft = Minecraft.getInstance();
+                var screen = YaclBridge.open(minecraft.gui.screen());
+                if (screen != null) {
+                    minecraft.gui.setScreen(screen);
+                }
+            });
+            layout.addView(button, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        }
 
         return layout;
     }

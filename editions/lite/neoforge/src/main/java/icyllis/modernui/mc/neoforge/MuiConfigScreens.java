@@ -18,7 +18,7 @@
 
 package icyllis.modernui.mc.neoforge;
 
-import icyllis.modernui.mc.ui.lite.YaclSettings;
+import icyllis.modernui.mc.ui.lite.YaclBridge;
 import net.minecraft.client.gui.screens.Screen;
 
 /**
@@ -30,7 +30,8 @@ public final class MuiConfigScreens {
     private MuiConfigScreens() {
     }
 
+    /** Returns {@code null} when YetAnotherConfigLib is absent. */
     public static Screen create(Screen parent) {
-        return YaclSettings.create(parent);
+        return YaclBridge.open(parent);
     }
 }

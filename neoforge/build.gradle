@@ -246,14 +246,15 @@ processResources {
         expand 'version': targetModVersion
     }
 
-    // Appending the block keeps both targets on one metadata file.
+    // Appending the block keeps both targets on one metadata file. Optional rather than
+    // required, so a missing YACL degrades to "no settings screen" instead of no launch.
     if (isLite) {
         doLast {
             def meta = file("${destinationDir}/META-INF/neoforge.mods.toml")
             meta.text = meta.text + '''
 [[dependencies.modernui]]
-    modId="yet-another-config-lib"
-    type="required"
+    modId="yet_another_config_lib_v3"
+    type="optional"
     versionRange="[3.9.7,)"
     ordering="NONE"
     side="CLIENT"

@@ -7,7 +7,6 @@
 common/src/main/java/icyllis/modernui/mc/ui/PreferencesFragment.java
 common/src/main/java/icyllis/modernui/mc/ui/FourColorPicker.java
 common/src/main/java/icyllis/modernui/mc/ui/ColorPickerView.java
-common/src/main/java/icyllis/modernui/mc/ui/ColorPickerPopup.java
 common/src/main/java/icyllis/modernui/mc/ui/ColorSwatchView.java
 common/src/main/java/icyllis/modernui/mc/ui/PreferredFontAccordion.java
 common/src/main/java/icyllis/modernui/mc/ui/TooltipBorderAccordion.java
