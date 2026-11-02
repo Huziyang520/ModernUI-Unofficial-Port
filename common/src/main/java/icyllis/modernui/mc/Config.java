@@ -82,49 +82,6 @@ public final class Config {
     public static void initialize() {
     }
 
-    /**
-     * Writes every item of every config back to its declared default and reloads the three
-     * configs, so the whole mod returns to a known state in one step.
-     *
-     * <p>Items are discovered reflectively because the field list is the only registry: a
-     * config added later is reset without having to touch this method.</p>
-     *
-     * @return the number of items that actually changed
-     */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public static int resetAllToDefaults() {
-        int changed = 0;
-        for (Object holder : new Object[]{CLIENT, COMMON, TEXT}) {
-            if (holder == null) {
-                continue;
-            }
-            for (var field : holder.getClass().getDeclaredFields()) {
-                if (!ConfigItem.class.isAssignableFrom(field.getType())) {
-                    continue;
-                }
-                try {
-                    field.setAccessible(true);
-                    var item = (ConfigItem) field.get(holder);
-                    if (item == null) {
-                        continue;
-                    }
-                    Object current = item.get();
-                    Object defaultValue = item.getDefault();
-                    if (defaultValue != null && !defaultValue.equals(current)) {
-                        item.set(defaultValue);
-                        changed++;
-                    }
-                } catch (Throwable ignored) {
-                    // a single unreadable item must not abort the whole reset
-                }
-            }
-        }
-        CLIENT.reload();
-        COMMON.reload();
-        TEXT.reload();
-        return changed;
-    }
-
     @SuppressWarnings("unchecked")
     private static <T> ConfigItem<T> get(Map<String, ConfigItem<?>> map, String name) {
         return (ConfigItem<T>) map.get(name);
@@ -188,11 +145,6 @@ public final class Config {
         public final ConfigItem<Boolean> mUseColorEmoji;
         public final ConfigItem<Boolean> mLinearMetrics;
         public final ConfigItem<Boolean> mEmojiShortcodes;
-        public final ConfigItem<String> mInterfaceThemeColor;
-        public final ConfigItem<Boolean> mInterfaceCompactLayout;
-        public final ConfigItem<Boolean> mInterfaceAnimations;
-        public final ConfigItem<String> mInterfaceThemeStyle;
-        public final ConfigItem<Boolean> mInterfaceIndexRail;
 
         public volatile WindowMode mLastWindowMode = WindowMode.NORMAL;
         public volatile List<? extends String> mLastTheme;
@@ -264,11 +216,6 @@ public final class Config {
             mUseColorEmoji = get(map, "mUseColorEmoji");
             mLinearMetrics = get(map, "mLinearMetrics");
             mEmojiShortcodes = get(map, "mEmojiShortcodes");
-            mInterfaceThemeColor = get(map, "mInterfaceThemeColor");
-            mInterfaceCompactLayout = get(map, "mInterfaceCompactLayout");
-            mInterfaceAnimations = get(map, "mInterfaceAnimations");
-            mInterfaceThemeStyle = get(map, "mInterfaceThemeStyle");
-            mInterfaceIndexRail = get(map, "mInterfaceIndexRail");
         }
 
         public void reload() {

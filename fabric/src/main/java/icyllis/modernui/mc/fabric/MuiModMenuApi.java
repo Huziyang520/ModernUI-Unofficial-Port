@@ -20,19 +20,11 @@ package icyllis.modernui.mc.fabric;
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
-import icyllis.modernui.mc.ui.CenterFragment2;
-import icyllis.modernui.util.DataSet;
 
 public final class MuiModMenuApi implements ModMenuApi {
 
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return (modsScreen) -> {
-            var args = new DataSet();
-            args.putBoolean("navigateToPreferences", true);
-            var fragment = new CenterFragment2();
-            fragment.setArguments(args);
-            return MuiFabricApi.get().createScreen(fragment, null, modsScreen);
-        };
+        return MuiConfigScreens::create;
     }
 }

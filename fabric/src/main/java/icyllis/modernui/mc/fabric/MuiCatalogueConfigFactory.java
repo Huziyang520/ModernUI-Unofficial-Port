@@ -18,8 +18,6 @@
 
 package icyllis.modernui.mc.fabric;
 
-import icyllis.modernui.mc.ui.CenterFragment2;
-import icyllis.modernui.util.DataSet;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.gui.screens.Screen;
 
@@ -47,10 +45,6 @@ public final class MuiCatalogueConfigFactory {
     }
 
     public static Screen createConfigScreen(Screen parent, ModContainer container) {
-        var args = new DataSet();
-        args.putBoolean("navigateToPreferences", true);
-        var fragment = new CenterFragment2();
-        fragment.setArguments(args);
-        return MuiFabricApi.get().createScreen(fragment, null, parent);
+        return MuiConfigScreens.create(parent);
     }
 }

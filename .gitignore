@@ -31,3 +31,7 @@ forge/src/main/resources/assets/modernui/emoji/a.bat
 
 # local build logs
 build_*.txt
+
+# font pack: only the jar is the build input
+libs/ModernUI-Fonts-5.0/
+libs/ModernUI-Fonts-5.0 .zip

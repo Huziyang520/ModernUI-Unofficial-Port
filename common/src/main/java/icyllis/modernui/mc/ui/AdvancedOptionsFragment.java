@@ -58,6 +58,7 @@ import org.apache.commons.io.output.StringBuilderWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 
+import static icyllis.modernui.mc.ui.PreferencesFragment.*;
 import static icyllis.modernui.view.ViewGroup.LayoutParams.*;
 
 /**
@@ -85,20 +86,6 @@ public class AdvancedOptionsFragment extends Fragment {
     TextView mUIGPUResourceDump;
     TextView mPSOStatsDump;
     TextView mGPUStatsDump;
-
-    /**
-     * A toggle backed by a bootstrap property. Those properties are read before the client
-     * exists, so the change only takes effect on the next launch.
-     */
-    @NonNull
-    private static View bootstrapToggle(@NonNull Context context, @NonNull String label,
-                                        @NonNull String key) {
-        var toggle = new icyllis.modernui.mc.ui.v2.widget.TgToggle(context);
-        toggle.setChecked(Boolean.parseBoolean(ModernUIClient.getBootstrapProperty(key)), false);
-        toggle.setOnCheckedChanged(value ->
-                ModernUIClient.setBootstrapProperty(key, Boolean.toString(value)));
-        return new icyllis.modernui.mc.ui.v2.widget.TgRow(context, label, toggle);
-    }
 
     public static Button createDebugButton(Context context, String text) {
         var button = new Button(context, null, R.attr.buttonOutlinedStyle);
@@ -140,24 +127,12 @@ public class AdvancedOptionsFragment extends Fragment {
 
         var dp6 = content.dp(6);
         {
-            var category = new LinearLayout(context);
-            category.setOrientation(LinearLayout.VERTICAL);
+            var category = createCategoryList(content, "Developer");
 
             if (ModernUIMod.isDeveloperMode()) {
                 {
-                    var row = new LinearLayout(context);
-                    row.setOrientation(LinearLayout.HORIZONTAL);
-                    row.setGravity(Gravity.CENTER_VERTICAL);
-                    row.setMinimumHeight(row.dp(52));
-
-                    var title = new TextView(context);
-                    title.setText("Gamma");
-                    title.setTextSize(13.5f);
-                    row.addView(title, new LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f));
-
-                    var input = new EditText(context, null, R.attr.editTextOutlinedStyle);
-                    input.setSingleLine(true);
-                    input.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_END);
+                    var option = createInputBox(context, "Gamma");
+                    var input = option.<EditText>requireViewById(R.id.input);
                     input.setText(Minecraft.getInstance().options.gamma().get().toString());
                     input.setFilters(DigitsInputFilter.getInstance(input.getTextLocale(), false, true),
                             new InputFilter.LengthFilter(6));
@@ -166,9 +141,10 @@ public class AdvancedOptionsFragment extends Fragment {
                             EditText v = (EditText) view;
                             double gamma = Double.parseDouble(v.getText().toString());
                             v.setText(Double.toString(gamma));
-                            // the field is written directly so the vanilla listener does not fire
+                            // no sync, but safe
                             if (OPTION_VALUE != null) {
                                 try {
+                                    // no listener
                                     OPTION_VALUE.set(Minecraft.getInstance().options.gamma(), gamma);
                                     return;
                                 } catch (Exception ignored) {
@@ -177,38 +153,52 @@ public class AdvancedOptionsFragment extends Fragment {
                             Minecraft.getInstance().options.gamma().set(gamma);
                         }
                     });
-                    row.addView(input, new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT));
-                    category.addView(row, new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+                    category.addView(option);
                 }
 
-                {
-                    var toggle = new icyllis.modernui.mc.ui.v2.widget.TgToggle(context);
-                    toggle.setChecked(Config.CLIENT.mRemoveTelemetry.get(), false);
-                    toggle.setOnCheckedChanged(value -> {
-                        Config.CLIENT.mRemoveTelemetry.set(value);
-                        Config.CLIENT.reload();
-                        MuiPlatform.get().saveConfig(Config.TYPE_CLIENT);
-                    });
-                    category.addView(new icyllis.modernui.mc.ui.v2.widget.TgRow(context,
-                            "Remove telemetry session", toggle),
-                            new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT));
-                }
+                /*category.addView(createBooleanOption(context, "Remove Message Signature",
+                        Config.CLIENT.mRemoveSignature, Config.CLIENT::saveAndReloadAsync));*/
+
+                new PreferencesFragment.BooleanOption(context, "Remove telemetry session",
+                        Config.CLIENT.mRemoveTelemetry, () -> {
+                    Config.CLIENT.reload();
+                    MuiPlatform.get().saveConfig(Config.TYPE_CLIENT);
+                })
+                        .create(category);
+
+                /*category.addView(createBooleanOption(context, "Secure Profile Public Key",
+                        Config.CLIENT.mSecurePublicKey, Config.CLIENT::saveAndReloadAsync));*/
             }
             {
-                var toggle = new icyllis.modernui.mc.ui.v2.widget.TgToggle(context);
-                toggle.setChecked(UIManager.getInstance().isShowingLayoutBounds(), false);
-                toggle.setOnCheckedChanged(checked ->
+                var layout = createSwitchLayout(context, "Show layout bounds");
+                var button = layout.<Switch>requireViewById(R.id.button1);
+                button.setChecked(UIManager.getInstance().isShowingLayoutBounds());
+                button.setOnCheckedChangeListener((__, checked) ->
                         UIManager.getInstance().setShowingLayoutBounds(checked));
-                category.addView(new icyllis.modernui.mc.ui.v2.widget.TgRow(context,
-                        "Show layout bounds", toggle),
-                        new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+                category.addView(layout);
             }
-            category.addView(bootstrapToggle(context, "Use staging buffers in OpenGL",
-                    ModernUIClient.BOOTSTRAP_USE_STAGING_BUFFERS_IN_OPENGL),
-                    new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT));
-            category.addView(bootstrapToggle(context, "Allow SPIR-V in OpenGL",
-                    ModernUIClient.BOOTSTRAP_ALLOW_SPIRV_IN_OPENGL),
-                    new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+            new BooleanOption(context, "Use staging buffers in OpenGL",
+                    () -> Boolean.parseBoolean(
+                            ModernUIClient.getBootstrapProperty(ModernUIClient.BOOTSTRAP_USE_STAGING_BUFFERS_IN_OPENGL)
+                    ),
+                    (value) -> ModernUIClient.setBootstrapProperty(
+                            ModernUIClient.BOOTSTRAP_USE_STAGING_BUFFERS_IN_OPENGL,
+                            Boolean.toString(value)
+                    ))
+                    .setDefaultValue(false)
+                    .setNeedsRestart()
+                    .create(category);
+            new BooleanOption(context, "Allow SPIR-V in OpenGL",
+                    () -> Boolean.parseBoolean(
+                            ModernUIClient.getBootstrapProperty(ModernUIClient.BOOTSTRAP_ALLOW_SPIRV_IN_OPENGL)
+                    ),
+                    (value) -> ModernUIClient.setBootstrapProperty(
+                            ModernUIClient.BOOTSTRAP_ALLOW_SPIRV_IN_OPENGL,
+                            Boolean.toString(value)
+                    ))
+                    .setDefaultValue(false)
+                    .setNeedsRestart()
+                    .create(category);
             {
                 var button = createDebugButton(context, "Take UI screenshot (Y)");
                 button.setOnClickListener((__) ->
@@ -312,7 +302,7 @@ public class AdvancedOptionsFragment extends Fragment {
                 });
                 category.addView(button);
             }
-            content.addView(category, new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+            content.addView(category);
         }
 
         Typeface monoFont = Typeface.getSystemFont("JetBrains Mono Medium");

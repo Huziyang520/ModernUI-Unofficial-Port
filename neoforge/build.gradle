@@ -10,8 +10,10 @@ plugins {
 def tv = rootProject.ext.tv
 def targetMinecraft = tv('minecraft_version', minecraft_version)
 def targetModVersion = tv('mod_version', mod_version)
+def isLite = rootProject.ext.isLite
 
-version = "${targetMinecraft}-${targetModVersion}" as String
+// The lite edition is a separate build of the same version, so it carries its own suffix.
+version = "${targetMinecraft}-${targetModVersion}${isLite ? '-lite' : ''}" as String
 
 configurations {
     shadow
@@ -58,6 +60,12 @@ repositories {
     maven { url 'https://modmaven.dev/' }
     maven {
         url 'https://maven.izzel.io/releases/'
+    }
+    maven {
+        url 'https://maven.isxander.dev/releases'
+        content {
+            includeGroup 'dev.isxander'
+        }
     }
     mavenLocal()
     flatDir {
@@ -121,7 +129,14 @@ dependencies {
     include "com.vladsch.flexmark:flexmark-util-visitor:${flexmark_version}"*/
     include "org.commonmark:commonmark:${commonmark_version}"
 
-    shadow ':ModernUI-Fonts-5.0'
+    // Lite ships no font pack at all and renders settings with YetAnotherConfigLib,
+    // which the player installs; it is compiled against the official-mapped artifact.
+    if (isLite) {
+        compileOnly("dev.isxander:yet-another-config-lib:${tv('yacl_version', '3.9.7+26.3-neoforge')}") { transitive = false }
+        testCompileOnly("dev.isxander:yet-another-config-lib:${tv('yacl_version', '3.9.7+26.3-neoforge')}") { transitive = false }
+    } else {
+        shadow ':ModernUI-Fonts-5.0'
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -133,10 +148,14 @@ tasks.withType(Javadoc).configureEach {
 }
 
 sourcesJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from project(":common").sourceSets.main.allSource
 }
 
 tasks.withType(ProcessResources).configureEach {
+    // The merged tree arrives both as a project resource and as an explicit copy, so the
+    // first copy wins instead of failing on the duplicate.
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from project(":common").sourceSets.main.resources
 }
 
@@ -221,9 +240,25 @@ if (project.hasProperty("keystore")) {
 
 processResources {
     inputs.property 'version', targetModVersion
+    inputs.property 'edition', rootProject.ext.editionName
 
     filesMatching("META-INF/neoforge.mods.toml") {
         expand 'version': targetModVersion
+    }
+
+    // Appending the block keeps both targets on one metadata file.
+    if (isLite) {
+        doLast {
+            def meta = file("${destinationDir}/META-INF/neoforge.mods.toml")
+            meta.text = meta.text + '''
+[[dependencies.modernui]]
+    modId="yet-another-config-lib"
+    type="required"
+    versionRange="[3.9.7,)"
+    ordering="NONE"
+    side="CLIENT"
+'''
+        }
     }
 }
 

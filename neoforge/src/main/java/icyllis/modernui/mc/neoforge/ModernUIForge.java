@@ -147,13 +147,7 @@ public final class ModernUIForge extends ModernUIMod {
                     (Consumer<ModConfigEvent>) event -> ConfigImpl.reloadAnyClient(event.getConfig())
             );
             modContainer.registerExtensionPoint(IConfigScreenFactory.class,
-                    (mc, modsScreen) -> {
-                        var args = new DataSet();
-                        args.putBoolean("navigateToPreferences", true);
-                        var fragment = new CenterFragment2();
-                        fragment.setArguments(args);
-                        return MuiForgeApi.get().createScreen(fragment, null, modsScreen);
-                    }
+                    (mc, modsScreen) -> MuiConfigScreens.create(modsScreen)
             );
             /*if (ModernUIMod.sDevelopment) {
                 modEventBus.register(Registration.ModClientDev.class);

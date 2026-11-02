@@ -18,6 +18,8 @@
 
 package icyllis.modernui.mc.neoforge;
 
+import icyllis.modernui.mc.FontDefaults;
+
 import icyllis.modernui.R;
 import icyllis.modernui.mc.Config;
 import icyllis.modernui.mc.ConfigItem;
@@ -223,11 +225,6 @@ public final class ConfigImpl {
         public static final int TOOLTIP_ARROW_SCROLL_FACTOR_MIN = 0;
         public static final int TOOLTIP_ARROW_SCROLL_FACTOR_MAX = 320;
 
-        /** Whitelist of interface style ids; keep in sync with SkinRegistry. */
-        public static final java.util.List<String> STYLES = java.util.List.of(
-                "industrial", "pixel", "mono", "neon",
-                "glass", "blueprint", "terminal", "editorial");
-
         public final ModConfigSpec.BooleanValue mBlurEffect;
         //public final ModConfigSpec.BooleanValue mBlurWithBackground;
         public final ModConfigSpec.BooleanValue mAdditionalBlurEffect;
@@ -293,12 +290,6 @@ public final class ConfigImpl {
         public final ModConfigSpec.BooleanValue mUseColorEmoji;
         public final ModConfigSpec.BooleanValue mLinearMetrics;
         public final ModConfigSpec.BooleanValue mEmojiShortcodes;
-
-        public final ModConfigSpec.ConfigValue<String> mInterfaceThemeColor;
-        public final ModConfigSpec.BooleanValue mInterfaceCompactLayout;
-        public final ModConfigSpec.BooleanValue mInterfaceAnimations;
-        public final ModConfigSpec.ConfigValue<String> mInterfaceThemeStyle;
-        public final ModConfigSpec.BooleanValue mInterfaceIndexRail;
 
         /*public final ModConfigSpec.BooleanValue mSkipGLCapsError;
         public final ModConfigSpec.BooleanValue mShowGLCapsError;*/
@@ -555,7 +546,7 @@ public final class ConfigImpl {
             // Microsoft YaHei UI, STHeiti, SimHei, SansSerif
             mFirstFontFamily = builder.comment(
                             "The first font family to use. See fallbackFontFamilyList")
-                    .define("firstFontFamily", "Inter Frozen Medium");
+                    .define("firstFontFamily", FontDefaults.FIRST_FAMILY);
             mFallbackFontFamilyList = builder.comment(
                             "A set of fallback font families to determine the typeface to use.",
                             "The order is first > fallbacks. TrueType & OpenType are supported.",
@@ -570,20 +561,8 @@ public final class ConfigImpl {
                             "Note that for TTC/OTC font, you should register it and select one of font families.",
                             "Otherwise, only the first font family from the TrueType/OpenType Collection will be used.",
                             "This is only read once when the game is loaded, you can reload via in-game GUI.")
-                    .defineList("fallbackFontFamilyList", () -> {
-                        List<String> list = new ArrayList<>();
-                        list.add("Source Han Sans CN Medium");
-                        list.add("Noto Sans");
-                        list.add("Segoe UI Variable");
-                        list.add("Segoe UI");
-                        list.add("San Francisco");
-                        list.add("Open Sans");
-                        list.add("SimHei");
-                        list.add("STHeiti");
-                        list.add("Segoe UI Symbol");
-                        list.add("mui-i18n-compat");
-                        return list;
-                    }, s -> true);
+                    .defineList("fallbackFontFamilyList",
+                            () -> new ArrayList<>(FontDefaults.FALLBACK_FAMILIES), s -> true);
             mFontRegistrationList = builder.comment(
                             "A set of additional font files (or directories) to register.",
                             "For TrueType/OpenType Collections, all contained font families will be registered.",
@@ -595,34 +574,11 @@ public final class ConfigImpl {
             mUseColorEmoji = builder.comment(
                             "Whether to use Google Noto Color Emoji, otherwise grayscale emoji (faster).",
                             "See Unicode 15.0 specification for details on how this affects text layout.")
-                    .define("useColorEmoji", true);
+                    .define("useColorEmoji", FontDefaults.USE_COLOR_EMOJI);
             mLinearMetrics = builder.comment(
                             "When enabled, text layout uses fractional metrics with no font hinting and applies sub-pixel positioning.",
                             "When disabled, text layout uses integer metrics with full font hinting.")
                     .define("linearMetrics", true);
-
-            builder.pop();
-
-            builder.comment("Interface Config")
-                    .push("interface");
-
-            mInterfaceThemeColor = builder.comment(
-                            "Theme colour of the Modern UI interface, in #RRGGBB or #AARRGGBB format.",
-                            "Leave empty to follow the resource-pack theme.")
-                    .define("themeColor", "");
-            mInterfaceCompactLayout = builder.comment(
-                            "Use a tighter vertical rhythm in the settings screen.")
-                    .define("compactLayout", false);
-            mInterfaceAnimations = builder.comment(
-                            "Animate page changes, selection indicators and expandable sections.")
-                    .define("animations", true);
-            mInterfaceThemeStyle = builder.comment(
-                            "Visual style of the settings screen: industrial, pixel, mono, neon, glass,",
-                            "blueprint, terminal or editorial. Unknown values fall back to industrial.")
-                    .define("themeStyle", "industrial", o -> o instanceof String s && STYLES.contains(s));
-            mInterfaceIndexRail = builder.comment(
-                            "Show the anchor index rail beside the scrolling settings page.")
-                    .define("indexRail", true);
 
             builder.pop();
         }

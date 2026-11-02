@@ -1,0 +1,14 @@
+# Files the lite edition does not contain at all.
+# Paths are module-relative, exactly like targets/<target>/deleted.txt.
+#
+# The whole in-house settings UI is gone: YACL builds the screen instead, so the
+# colour picker widgets and the accordion editors have no caller left.
+
+common/src/main/java/icyllis/modernui/mc/ui/PreferencesFragment.java
+common/src/main/java/icyllis/modernui/mc/ui/FourColorPicker.java
+common/src/main/java/icyllis/modernui/mc/ui/ColorPickerView.java
+common/src/main/java/icyllis/modernui/mc/ui/ColorPickerPopup.java
+common/src/main/java/icyllis/modernui/mc/ui/ColorSwatchView.java
+common/src/main/java/icyllis/modernui/mc/ui/PreferredFontAccordion.java
+common/src/main/java/icyllis/modernui/mc/ui/TooltipBorderAccordion.java
+common/src/main/resources/assets/modernui/emoji_data.json

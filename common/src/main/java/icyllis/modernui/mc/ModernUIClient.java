@@ -388,7 +388,7 @@ public abstract class ModernUIClient extends ModernUI {
                 families.add(colorEmojiFamily);
             }
         }
-        String first = sFirstFontFamily;
+        String first = FontDefaults.resolveFirstFamily(sFirstFontFamily);
         List<? extends String> configs = sFallbackFontFamilyList;
         if (first != null || configs != null) {
             var fallbacks = new LinkedHashSet<String>();

@@ -15,6 +15,12 @@ repositories {
     maven {
         url 'https://maven.izzel.io/releases/'
     }
+    maven {
+        url 'https://maven.isxander.dev/releases'
+        content {
+            includeGroup 'dev.isxander'
+        }
+    }
     mavenLocal()
 }
 
@@ -28,6 +34,12 @@ dependencies {
     implementation("dev.icyllis:modernui-core:${tv('core_version', core_version)}")
     implementation("icyllis.modernui:ModernUI-Markflow:3.12.0") {
         transitive = false
+    }
+
+    // Only the lite edition compiles against YetAnotherConfigLib; the regular build
+    // never sees the class, so its jar cannot accidentally depend on it.
+    if (rootProject.ext.isLite) {
+        compileOnly "dev.isxander:yet-another-config-lib:${tv('yacl_version', '3.9.7+26.3-neoforge')}"
     }
 
     // Optional VulkanMod integration: compile-only, never bundled or required at runtime.

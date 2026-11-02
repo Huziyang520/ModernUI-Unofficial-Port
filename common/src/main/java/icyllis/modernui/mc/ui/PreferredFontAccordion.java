@@ -19,164 +19,260 @@
 package icyllis.modernui.mc.ui;
 
 import icyllis.modernui.ModernUI;
+import icyllis.modernui.R;
 import icyllis.modernui.annotation.NonNull;
 import icyllis.modernui.core.Context;
 import icyllis.modernui.core.Core;
 import icyllis.modernui.graphics.text.FontFamily;
 import icyllis.modernui.mc.Config;
+
 import icyllis.modernui.mc.ModernUIClient;
-import icyllis.modernui.mc.ui.v2.page.Rows;
-import icyllis.modernui.mc.ui.v2.widget.TgButton;
-import icyllis.modernui.mc.ui.v2.widget.TgField;
-import icyllis.modernui.mc.ui.v2.widget.TgMenu;
+import icyllis.modernui.view.ContextMenu;
 import icyllis.modernui.view.Gravity;
+import icyllis.modernui.view.MenuItem;
 import icyllis.modernui.view.View;
 import icyllis.modernui.view.ViewGroup;
+import icyllis.modernui.widget.AdapterView;
+import icyllis.modernui.widget.ArrayAdapter;
+import icyllis.modernui.widget.Button;
+import icyllis.modernui.widget.EditText;
 import icyllis.modernui.widget.LinearLayout;
+import icyllis.modernui.widget.Spinner;
 import icyllis.modernui.widget.TextView;
 import net.minecraft.client.resources.language.I18n;
+import org.lwjgl.PointerBuffer;
+import org.lwjgl.system.MemoryStack;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static icyllis.modernui.view.ViewGroup.LayoutParams.*;
 
-/**
- * Preferred font family picker plus the fallback and registration lists. Mounted as one
- * block by the settings page; the surrounding toggles are ordinary page rows.
- */
-public class PreferredFontAccordion {
+public class PreferredFontAccordion implements View.OnClickListener,
+        View.OnFocusChangeListener, AdapterView.OnItemSelectedListener,
+        View.OnCreateContextMenuListener, MenuItem.OnMenuItemClickListener {
 
-    private final ViewGroup mParent;
-    private final Runnable mOnChanged;
-    private final Runnable mOnFontChanged;
+    final ViewGroup mParent;
+    final Runnable mOnChanged;
+    final Runnable mOnFontChanged;
 
-    private TgField mInput;
+    // lazy-init
+    LinearLayout mContent;
+    EditText mInput;
+    Spinner mSpinner;
+    ArrayAdapter<FontFamilyItem> mAdapter;
 
-    public PreferredFontAccordion(@NonNull ViewGroup parent, @NonNull Runnable onChanged,
-                                  @NonNull Runnable onFontChanged) {
+    // this callback is registered on a child view of 'parent'
+    // so no weak ref
+    public PreferredFontAccordion(ViewGroup parent, Runnable onChanged, Runnable onFontChanged) {
         mParent = parent;
         mOnChanged = onChanged;
         mOnFontChanged = onFontChanged;
     }
 
-    /** Builds the editor into {@code column}; the caller mounts the column. */
-    public void buildInto(@NonNull LinearLayout column) {
+    @Override
+    public void onClick(View v) {
+        if (mContent != null) {
+            // toggle
+            mContent.setVisibility(mContent.getVisibility() == View.GONE
+                    ? View.VISIBLE
+                    : View.GONE);
+            return;
+        }
+        addContent();
+    }
+
+    private void addContent() {
         var context = mParent.getContext();
+        mContent = new LinearLayout(context);
+        mContent.setOrientation(LinearLayout.VERTICAL);
+        {
+            var layout = createRowLayout(context, "gui.modernui.configValue");
+            var input = mInput = new EditText(context, null, R.attr.editTextOutlinedStyle);
+            input.setText(Config.CLIENT.mFirstFontFamily.get());
+            input.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_END);
+            input.setMinimumWidth(input.dp(100));
+            input.setOnFocusChangeListener(this);
+            input.setSingleLine();
 
-        column.addView(Rows.text(context, "gui.modernui.configValue",
-                Config.CLIENT.mFirstFontFamily, () -> {
-                    mOnChanged.run();
-                    UiSupport.reloadDefaultTypeface(context, mOnFontChanged);
-                }));
+            var params = new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
+            params.gravity = Gravity.CENTER_VERTICAL;
+            layout.addView(input, params);
+            mContent.addView(layout);
+        }
+        {
+            var layout = createRowLayout(context, "modernui.center.font.chooseFont");
+            var spinner = mSpinner = new Spinner(context);
+            spinner.setMinimumWidth(spinner.dp(300));
+            CompletableFuture.supplyAsync(() -> {
+                var values = FontFamily.getSystemFontMap()
+                        .values()
+                        .stream()
+                        .map(family -> new FontFamilyItem(family.getFamilyName(),
+                                family.getFamilyName(ModernUI.getSelectedLocale())))
+                        .sorted()
+                        .collect(Collectors.toList());
+                values.add(0, new FontFamilyItem("\u2026", "\u2026"));
+                return values;
+            }).thenAcceptAsync(values -> {
+                mSpinner.setAdapter(mAdapter = new ArrayAdapter<>(mParent.getContext(), values));
+                mSpinner.setOnItemSelectedListener(this);
+                updateSpinnerSelection();
+            }, Core.getUiThreadExecutor());
 
-        column.addView(chooseFontRow(context));
-        column.addView(openFileRow(context));
+            var params = new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
+            params.gravity = Gravity.CENTER_VERTICAL;
+            layout.addView(spinner, params);
+            mContent.addView(layout);
+        }
+        {
+            var layout = createRowLayout(context, "modernui.center.font.openFontFile");
+            var openFile = new Button(context, null, R.attr.buttonOutlinedStyle);
+            openFile.setText(I18n.get("gui.modernui.browseFiles"));
+            openFile.setTextSize(14);
+            openFile.setOnClickListener(v1 -> CompletableFuture.runAsync(() -> {
+                String path = FontFilePicker.openFontFile();
+                if (path != null) {
+                    v1.post(() -> {
+                        boolean changed = applyNewValue(v1.getContext(), path, mOnFontChanged);
+                        if (changed) {
+                            mInput.setText(path);
+                        }
+                        mSpinner.setSelection(0);
+                    });
+                }
+            }));
+            var params = new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
+            params.gravity = Gravity.CENTER_VERTICAL;
+            layout.addView(openFile, params);
+            mContent.addView(layout);
+        }
+        var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
+        params.setMargins(0, mContent.dp(6), 0, 0);
+        mParent.addView(mContent, params);
     }
 
-    /** Family list loaded off the game thread; the spinner fills in when it is ready. */
-    @NonNull
-    private View chooseFontRow(@NonNull Context context) {
-        var row = labelRow(context, "modernui.center.font.chooseFont");
-        var holder = (LinearLayout) row.getChildAt(1);
+    private static LinearLayout createRowLayout(Context context, String name) {
+        var layout = new LinearLayout(context);
+        layout.setOrientation(LinearLayout.HORIZONTAL);
+        layout.setHorizontalGravity(Gravity.START);
 
-        var menu = new TgMenu(context, new CharSequence[]{"\u2026"});
-        holder.addView(menu, new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT));
+        final int dp6 = layout.dp(6);
+        {
+            var title = new TextView(context);
+            title.setText(I18n.get(name));
+            title.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+            title.setTextSize(14);
 
-        CompletableFuture.supplyAsync(() -> {
-            var values = FontFamily.getSystemFontMap().values().stream()
-                    .map(family -> new FontFamilyItem(family.getFamilyName(),
-                            family.getFamilyName(ModernUI.getSelectedLocale())))
-                    .sorted()
-                    .collect(Collectors.toList());
-            values.add(0, new FontFamilyItem("\u2026", "\u2026"));
-            return values;
-        }).thenAcceptAsync(values -> {
-            var labels = new CharSequence[values.size()];
-            for (int i = 0; i < values.size(); i++) {
-                labels[i] = values.get(i).localeName();
-            }
-            var rebuilt = new TgMenu(context, labels);
-            rebuilt.setSelected(selectionOf(values), false);
-            rebuilt.setOnChosen(index -> {
-                if (index == 0) {
-                    return;
-                }
-                applyNewValue(context, values.get(index).rootName(), mOnFontChanged);
-            });
-            holder.removeView(menu);
-            holder.addView(rebuilt, new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT));
-        }, Core.getUiThreadExecutor());
-        return row;
+            var params = new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT, 1);
+            params.gravity = Gravity.START | Gravity.CENTER_VERTICAL;
+            layout.addView(title, params);
+        }
+
+        var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
+        params.gravity = Gravity.CENTER;
+        params.setMargins(dp6, 0, dp6, 0);
+        layout.setLayoutParams(params);
+
+        layout.setMinimumHeight(layout.dp(44));
+
+        return layout;
     }
 
-    private static int selectionOf(@NonNull List<FontFamilyItem> values) {
-        FontFamily first = ModernUIClient.getInstance().getFirstFontFamily();
-        if (first != null) {
-            String name = first.getFamilyName();
-            for (int i = 1; i < values.size(); i++) {
-                if (values.get(i).rootName().equalsIgnoreCase(name)) {
-                    return i;
-                }
+    @Override
+    public void onFocusChange(View v, boolean hasFocus) {
+        if (v == mInput) {
+            if (!hasFocus) {
+                EditText v1 = (EditText) v;
+                String newValue = v1.getText().toString().strip();
+                applyNewValue(v1.getContext(), newValue, () -> {
+                    mOnFontChanged.run();
+                    updateSpinnerSelection();
+                });
             }
         }
-        return 0;
     }
 
-    @NonNull
-    private View openFileRow(@NonNull Context context) {
-        var row = labelRow(context, "modernui.center.font.openFontFile");
-        var holder = (LinearLayout) row.getChildAt(1);
-        var browse = new TgButton(context, I18n.get("gui.modernui.browseFiles"));
-        browse.setOnAction(() -> CompletableFuture.runAsync(() -> {
-            String path = UiSupport.pickFontFile();
-            if (path != null) {
-                browse.post(() -> applyNewValue(context, path, mOnFontChanged));
-            }
-        }));
-        holder.addView(browse, new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT));
-        return row;
+    @Override
+    public void onItemSelected(@NonNull AdapterView<?> parent, View view, int position, long id) {
+        if (position == 0) {
+            return;
+        }
+        String newValue = mAdapter.getItem(position).rootName;
+        boolean changed = applyNewValue(view.getContext(), newValue, mOnFontChanged);
+        if (changed) {
+            mInput.setText(newValue);
+        }
     }
 
-    /** Two column row: label on the left, an empty control holder on the right. */
-    @NonNull
-    private static LinearLayout labelRow(@NonNull Context context, @NonNull String key) {
-        var row = new LinearLayout(context);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        float density = context.getResources().getDisplayMetrics().density;
-        row.setPadding(Math.round(16f * density), Math.round(8f * density),
-                Math.round(16f * density), Math.round(8f * density));
-        row.setMinimumHeight(Math.round(52f * density));
-
-        var title = new TextView(context);
-        title.setText(Rows.label(key));
-        title.setTextSize(13.5f);
-        row.addView(title, new LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f));
-
-        var holder = new LinearLayout(context);
-        holder.setOrientation(LinearLayout.HORIZONTAL);
-        holder.setGravity(Gravity.CENTER_VERTICAL);
-        row.addView(holder, new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT));
-        return row;
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        boolean canReset = !Objects.equals(Config.CLIENT.mFirstFontFamily.get(),
+                Config.CLIENT.mFirstFontFamily.getDefault());
+        PreferencesFragment.addResetToDefaultMenuItem(menu)
+                .setEnabled(canReset)
+                .setOnMenuItemClickListener(this);
     }
 
-    private boolean applyNewValue(@NonNull Context context, @NonNull String newValue,
-                                  @NonNull Runnable onFontChanged) {
-        if (!newValue.equals(Config.CLIENT.mFirstFontFamily.get())) {
-            Config.CLIENT.mFirstFontFamily.set(newValue);
-            mOnChanged.run();
-            UiSupport.reloadDefaultTypeface(context, onFontChanged);
-            if (mInput != null) {
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        if (item.getItemId() == PreferencesFragment.ID_RESET_TO_DEFAULT) {
+
+            String newValue = Config.CLIENT.mFirstFontFamily.getDefault();
+            boolean changed = applyNewValue(mParent.getContext(), newValue, () -> {
+                mOnFontChanged.run();
+                updateSpinnerSelection();
+            });
+            if (changed && mInput != null) {
                 mInput.setText(newValue);
             }
+
             return true;
         }
         return false;
     }
 
-    public record FontFamilyItem(String rootName, String localeName) {
+    private void updateSpinnerSelection() {
+        if (mSpinner == null) {
+            return;
+        }
+        FontFamily first = ModernUIClient.getInstance().getFirstFontFamily();
+        if (first != null) {
+            String firstName = first.getFamilyName();
+            for (int i = 1; i < mAdapter.getCount(); i++) {
+                var candidate = mAdapter.getItem(i);
+                if (candidate.rootName.equalsIgnoreCase(firstName)) {
+                    mSpinner.setSelection(i);
+                    return;
+                }
+            }
+        }
+        mSpinner.setSelection(0);
+    }
+
+    public record FontFamilyItem(String rootName, String localeName)
+            implements Comparable<FontFamilyItem> {
+
+        @Override
+        public String toString() {
+            return localeName;
+        }
+
+        @Override
+        public int compareTo(@NonNull FontFamilyItem o) {
+            return localeName.compareTo(o.localeName);
+        }
+    }
+
+    private boolean applyNewValue(Context context, @NonNull String newValue,
+                                  Runnable onFontChanged) {
+        if (!newValue.equals(Config.CLIENT.mFirstFontFamily.get())) {
+            Config.CLIENT.mFirstFontFamily.set(newValue);
+            mOnChanged.run();
+            PreferencesFragment.reloadDefaultTypeface(context, onFontChanged);
+            return true;
+        }
+        return false;
     }
 }

@@ -160,7 +160,7 @@ public class DashboardFragment extends Fragment {
                                             "[Modrinth(Original Project)](https://modrinth.com/mod/modern-ui)",
                                             "", "") + "  \n" +
                                     I18n.get("gui.modernui.preReleases_ssss",
-                                            "[GitHub(Pre-releases)](https://github.com/Huziyang520/ModernUI-Unofficial-Port/releases)",
+                                            "[GitHub(Pre-releases)](https://github.com/Huziyang520/Practical-Enchantments/releases)",
                                             "", "", "") + "  \n" +
                                     I18n.get("gui.modernui.community_ssss",
                                             "[MC百科](https://www.mcmod.cn/class/31032.html)",
@@ -192,7 +192,7 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.14.9-beta") + """
+                                "Modern UI 3.14.8.3") + """
                                 
                                 ----
                                 * Fix the tooltip border not following the item rarity 修复提示框边框不随物品稀有度变色

@@ -33,8 +33,7 @@
   },
   "mixins": [
     "mixins.modernui-fabric.json",
-    "mixins.modernui-textmc.json",
-    "mixins.modernui-lib.json"
+    "mixins.modernui-textmc.json"
   ],
   "accessWidener" : "modernui.classtweaker",
   "custom": {
