@@ -16,22 +16,33 @@
  * License along with Modern UI. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package icyllis.modernui.mc.neoforge;
+package icyllis.modernui.mc;
 
+import icyllis.modernui.annotation.Nullable;
 import icyllis.modernui.mc.ui.lite.YaclBridge;
 import net.minecraft.client.gui.screens.Screen;
 
 /**
- * Single place that builds the settings screen; the lite edition delegates to
- * YetAnotherConfigLib instead of the in-house page.
+ * Lite settings are rendered by the config library the player installs, so every option page
+ * of the operation center only hands over to it.
  */
-public final class MuiConfigScreens {
+public final class Edition {
 
-    private MuiConfigScreens() {
+    public static final boolean EXTERNAL_CONFIG_UI = true;
+
+    private Edition() {
     }
 
-    /** Returns {@code null} when YetAnotherConfigLib is absent. */
-    public static Screen create(Screen parent) {
+    public static boolean usesExternalConfigUi() {
+        return EXTERNAL_CONFIG_UI;
+    }
+
+    public static boolean hasExternalConfigUi() {
+        return YaclBridge.isAvailable();
+    }
+
+    @Nullable
+    public static Screen createExternalConfigScreen(@Nullable Screen parent) {
         return YaclBridge.open(parent);
     }
 }

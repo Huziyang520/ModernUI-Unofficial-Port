@@ -1,13 +1,9 @@
 # Files the lite edition does not contain at all.
 # Paths are module-relative, exactly like targets/<target>/deleted.txt.
 #
-# The whole in-house settings UI is gone: YACL builds the screen instead, so the
-# colour picker widgets and the accordion editors have no caller left.
+# The lite edition bundles no font pack, and the pack is also what carries the emoji
+# images, so the shortcode table would only name emoji that cannot be drawn. Every class
+# stays: the operation center keeps all of its pages, only the two settings pages hand
+# over to the config library the player installs.
 
-common/src/main/java/icyllis/modernui/mc/ui/PreferencesFragment.java
-common/src/main/java/icyllis/modernui/mc/ui/FourColorPicker.java
-common/src/main/java/icyllis/modernui/mc/ui/ColorPickerView.java
-common/src/main/java/icyllis/modernui/mc/ui/ColorSwatchView.java
-common/src/main/java/icyllis/modernui/mc/ui/PreferredFontAccordion.java
-common/src/main/java/icyllis/modernui/mc/ui/TooltipBorderAccordion.java
 common/src/main/resources/assets/modernui/emoji_data.json

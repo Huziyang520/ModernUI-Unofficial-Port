@@ -19,8 +19,8 @@
 package icyllis.modernui.mc.ui;
 
 /**
- * The developer options of the full edition live in the in-house settings page, which
- * the lite edition does not contain, so this tab reuses the settings hand-over page.
+ * The developer options belong to the in-house settings page, so this tab shows the same
+ * hand-over page as the preferences tab.
  */
 public class AdvancedOptionsFragment extends PreferencesFragment {
 }
