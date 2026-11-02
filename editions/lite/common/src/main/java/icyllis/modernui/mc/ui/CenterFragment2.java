@@ -18,60 +18,35 @@
 
 package icyllis.modernui.mc.ui;
 
-import icyllis.modernui.ModernUI;
-import icyllis.modernui.R;
 import icyllis.modernui.annotation.NonNull;
 import icyllis.modernui.annotation.Nullable;
-import icyllis.modernui.core.Context;
 import icyllis.modernui.fragment.Fragment;
 import icyllis.modernui.fragment.FragmentContainerView;
-import icyllis.modernui.fragment.FragmentTransaction;
-import icyllis.modernui.graphics.Image;
-import icyllis.modernui.graphics.drawable.ImageDrawable;
-import icyllis.modernui.graphics.drawable.RippleDrawable;
-import icyllis.modernui.graphics.drawable.ShapeDrawable;
-import icyllis.modernui.mc.ModernUIMod;
-import icyllis.modernui.resources.TypedValue;
-import icyllis.modernui.util.ColorStateList;
 import icyllis.modernui.util.DataSet;
-import icyllis.modernui.util.DisplayMetrics;
-import icyllis.modernui.util.StateSet;
-import icyllis.modernui.view.Gravity;
 import icyllis.modernui.view.LayoutInflater;
 import icyllis.modernui.view.View;
 import icyllis.modernui.view.ViewGroup;
-import icyllis.modernui.widget.FrameLayout;
-import icyllis.modernui.widget.LinearLayout;
-import icyllis.modernui.widget.RadioButton;
-import icyllis.modernui.widget.RadioGroup;
-import net.minecraft.client.resources.language.I18n;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
-import static icyllis.modernui.view.ViewGroup.LayoutParams.*;
+import static icyllis.modernui.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
 /**
- * The lite operation center. It keeps the info page, but the settings pages are gone: this
- * edition has no in-house settings UI, the configuration belongs to the config library.
+ * The lite build only has an info page: no navigation rail, no pages, no settings entries.
+ * The configuration belongs to the config library and is opened from the mod list directly.
  */
 public class CenterFragment2 extends Fragment {
 
+    /** Referenced by the info page for its log output. */
     public static final Marker MARKER = MarkerManager.getMarker("Center");
-    private static final int id_tab_container = 0x2002;
 
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        getParentFragmentManager().beginTransaction()
-                .setPrimaryNavigationFragment(this)
-                .commit();
-    }
+    private static final int id_content = 0x2002;
 
     @Override
     public void onCreate(@Nullable DataSet savedInstanceState) {
         super.onCreate(savedInstanceState);
         getChildFragmentManager().beginTransaction()
-                .replace(id_tab_container, DashboardFragment.class, null, "dashboard")
+                .replace(id_content, DashboardFragment.class, null, "dashboard")
                 .setReorderingAllowed(true)
                 .commit();
     }
@@ -79,184 +54,9 @@ public class CenterFragment2 extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable DataSet savedInstanceState) {
-        final long startTime = System.nanoTime();
-        var value = new TypedValue();
-        var theme = requireContext().getTheme();
-
-        var base = new LinearLayout(getContext());
-        base.setOrientation(LinearLayout.HORIZONTAL);
-        base.setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE);
-        base.setDividerDrawable(ThemeControl.makeDivider(base, true));
-
-        // NAV BUTTONS
-        {
-            var buttonGroup = new RadioGroup(getContext());
-            if (theme.resolveAttribute(R.ns, R.attr.colorSurfaceContainer, value, true))
-                buttonGroup.setBackground(theme.getResources().loadDrawable(value, null, theme));
-            buttonGroup.setOrientation(LinearLayout.VERTICAL);
-            buttonGroup.setGravity(Gravity.CENTER);
-
-            var icons = Image.create(ModernUI.ID, "gui/new_icon.png");
-            if (icons != null) {
-                // icons are designed for xxhigh
-                icons.setDensity(DisplayMetrics.DENSITY_DEFAULT * 3);
-            }
-            int colorOnSecondaryContainer;
-            ColorStateList itemTextColor;
-            {
-                int[] colors = new int[2];
-                theme.resolveAttribute(R.ns, R.attr.colorSecondary, value, true);
-                colors[0] = value.data; // selected
-                theme.resolveAttribute(R.ns, R.attr.colorOnSurfaceVariant, value, true);
-                colors[1] = value.data; // other
-                itemTextColor = new ColorStateList(
-                        new int[][]{
-                                new int[]{R.attr.state_checked},
-                                StateSet.WILD_CARD
-                        },
-                        colors
-                );
-            }
-            ColorStateList itemIconTint;
-            {
-                int[] colors = new int[2];
-                theme.resolveAttribute(R.ns, R.attr.colorOnSecondaryContainer, value, true);
-                colors[0] = colorOnSecondaryContainer = value.data; // selected
-                theme.resolveAttribute(R.ns, R.attr.colorOnSurfaceVariant, value, true);
-                colors[1] = value.data; // other
-                itemIconTint = new ColorStateList(
-                        new int[][]{
-                                new int[]{R.attr.state_checked},
-                                StateSet.WILD_CARD
-                        },
-                        colors
-                );
-            }
-            ColorStateList itemRippleColor = new ColorStateList(
-                    new int[][]{
-                            new int[]{R.attr.state_pressed},
-                            new int[]{R.attr.state_focused},
-                            new int[]{R.attr.state_hovered},
-                            StateSet.WILD_CARD
-                    },
-                    new int[]{
-                            ColorStateList.modulateColor(colorOnSecondaryContainer, 0.1f),
-                            ColorStateList.modulateColor(colorOnSecondaryContainer, 0.1f),
-                            ColorStateList.modulateColor(colorOnSecondaryContainer, 0.08f),
-                            ColorStateList.modulateColor(colorOnSecondaryContainer, 0.08f)
-                    }
-            );
-            ColorStateList activeIndicatorColor;
-            {
-                int[] colors = new int[2];
-                theme.resolveAttribute(R.ns, R.attr.colorSecondaryContainer, value, true);
-                colors[0] = value.data; // selected
-                activeIndicatorColor = new ColorStateList(
-                        new int[][]{
-                                new int[]{R.attr.state_checked},
-                                StateSet.WILD_CARD
-                        },
-                        colors
-                );
-            }
-
-            buttonGroup.addView(createNavButton(1001, "modernui.center.tab.dashboard",
-                    itemTextColor, icons, 2, 0,
-                    itemIconTint, itemRippleColor, activeIndicatorColor));
-            buttonGroup.addView(createNavButton(1004, "soundCategory.music",
-                    itemTextColor, icons, 1, 1,
-                    itemIconTint, itemRippleColor, activeIndicatorColor));
-            if (ModernUIMod.isDeveloperMode()) {
-                buttonGroup.addView(createNavButton(1006, "Markdown",
-                        itemTextColor, icons, 0, 6,
-                        itemIconTint, itemRippleColor, activeIndicatorColor));
-            }
-
-            buttonGroup.check(1001);
-
-            buttonGroup.setOnCheckedChangeListener((group, checkedId) -> {
-                var fm = getChildFragmentManager();
-                FragmentTransaction ft = null;
-                switch (checkedId) {
-                    case 1001 -> {
-                        ft = fm.beginTransaction()
-                                .replace(id_tab_container, DashboardFragment.class, null, "dashboard");
-                    }
-                    case 1004 -> {
-                        ft = fm.beginTransaction()
-                                .replace(id_tab_container, MusicFragment.class, null, "music");
-                    }
-                    case 1006 -> {
-                        ft = fm.beginTransaction()
-                                .replace(id_tab_container, MarkdownFragment.class, null, "markdown");
-                    }
-                }
-                if (ft != null) {
-                    ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                            .setReorderingAllowed(true)
-                            .commit();
-                }
-            });
-
-            var params = new LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT);
-            params.gravity = Gravity.CENTER;
-            base.addView(buttonGroup, params);
-        }
-
-        // TAB CONTAINER
-        {
-            var tabContainer = new FragmentContainerView(getContext());
-            tabContainer.setId(id_tab_container);
-            var params = new LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
-            base.addView(tabContainer, params);
-        }
-
-        var params = new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
-        base.setLayoutParams(params);
-        ModernUIMod.LOGGER.info(MARKER, "Built the settings navigation in {} ms",
-                (System.nanoTime() - startTime) / 1_000_000L);
-        return base;
-    }
-
-    private RadioButton createNavButton(int id, String text,
-                                        ColorStateList itemTextColor,
-                                        Image icons, int row, int col,
-                                        ColorStateList itemIconTint,
-                                        ColorStateList itemRippleColor,
-                                        ColorStateList activeIndicatorColor) {
-        var button = new RadioButton(getContext(), null, null, null);
-        button.setFocusable(true);
-        button.setClickable(true);
-        button.setId(id);
-        button.setText(ThemeControl.stripFormattingCodes(I18n.get(text)));
-        button.setTextSize(12);
-        button.setTextColor(itemTextColor);
-        button.setGravity(Gravity.CENTER);
-        final int dp8 = button.dp(8);
-        button.setPadding(0, dp8, 0, dp8);
-
-        {
-            ShapeDrawable indicator = new ShapeDrawable();
-            indicator.setSize(button.dp(56), button.dp(32));
-            indicator.setColor(activeIndicatorColor);
-            indicator.setCornerRadius(1000);
-            RippleDrawable ripple = new RippleDrawable(itemRippleColor,
-                    indicator, null);
-            if (icons != null) {
-                ImageDrawable icon = new ImageDrawable(requireContext().getResources(), icons);
-                icon.setSrcRect(col * 72, row * 72, (col + 1) * 72, (row + 1) * 72);
-                icon.setTintList(itemIconTint);
-                icon.setGravity(Gravity.CENTER);
-                ripple.addLayer(icon);
-            }
-            button.setCompoundDrawablesWithIntrinsicBounds(null,
-                    ripple, null, null);
-            button.setCompoundDrawablePadding(button.dp(4));
-        }
-
-        var params = new LinearLayout.LayoutParams(button.dp(88), WRAP_CONTENT);
-        button.setLayoutParams(params);
-
-        return button;
+        var content = new FragmentContainerView(requireContext());
+        content.setId(id_content);
+        content.setLayoutParams(new ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+        return content;
     }
 }
