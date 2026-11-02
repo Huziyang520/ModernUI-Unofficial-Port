@@ -31,7 +31,6 @@ import icyllis.modernui.resources.TypedValue;
 import icyllis.modernui.text.InputFilter;
 import icyllis.modernui.text.Typeface;
 import icyllis.modernui.view.ContextMenu;
-import icyllis.modernui.view.MotionEvent;
 import icyllis.modernui.widget.EditText;
 import icyllis.modernui.widget.RelativeLayout;
 
@@ -47,6 +46,9 @@ public class FourColorPicker extends RelativeLayout {
     // upper left, upper right, lower right, lower left
     private final EditText[] mColorFields = new EditText[4];
 
+    /** One visible chip per corner; clicking a chip opens the wheel for that colour. */
+    private final ColorSwatchView[] mSwatches = new ColorSwatchView[4];
+
     private final int[] mColors = {~0, ~0, ~0, ~0};
 
     private final Rect mPreviewBox = new Rect();
@@ -60,11 +62,7 @@ public class FourColorPicker extends RelativeLayout {
     private final Runnable mOnChanged;
     private final OnFocusChangeListener mOnFieldFocusChange;
 
-    /** Touching the preview opens the wheel for that quadrant instead of typing a hex code. */
     private ColorPickerPopup mWheel;
-    private float mDownX;
-    private float mDownY;
-    private int mDownIndex = -1;
 
     public FourColorPicker(Context context,
                            ConfigItem<List<? extends String>> config,
@@ -134,6 +132,17 @@ public class FourColorPicker extends RelativeLayout {
         for (var f : mColorFields) {
             mOnFieldFocusChange.onFocusChange(f, false);
         }
+
+        // The preview is split into four independent chips so that picking a corner colour
+        // is discoverable: every chip is a visible, clickable target of its own.
+        for (int i = 0; i < mSwatches.length; i++) {
+            var swatch = new ColorSwatchView(getContext());
+            final int index = i;
+            swatch.setOnClickListener(v -> openWheel(index));
+            mSwatches[i] = swatch;
+            addView(swatch, new LayoutParams(WRAP_CONTENT, WRAP_CONTENT));
+        }
+
         setWillNotDraw(false);
         setLongClickable(true);
     }
@@ -171,6 +180,12 @@ public class FourColorPicker extends RelativeLayout {
         borderRadius = getContext().getResources().getDisplayMetrics().density * borderRadius * 2.0f;
         if (mBorderRadius != borderRadius) {
             mBorderRadius = borderRadius;
+            for (var swatch : mSwatches) {
+                if (swatch != null) {
+                    swatch.setCornerRadius(borderRadius / getContext()
+                            .getResources().getDisplayMetrics().density);
+                }
+            }
             invalidate();
         }
     }
@@ -200,6 +215,10 @@ public class FourColorPicker extends RelativeLayout {
         if (field != null && !formatted.contentEquals(field.getText())) {
             field.setText(formatted);
         }
+        var swatch = mSwatches[index];
+        if (swatch != null) {
+            swatch.setColor(color);
+        }
         invalidate();
         var oldList = mConfig.get();
         var newList = new ArrayList<String>(oldList);
@@ -216,15 +235,6 @@ public class FourColorPicker extends RelativeLayout {
         }
     }
 
-    private int quadrantOf(float x, float y) {
-        boolean right = x > mPreviewBox.centerX();
-        boolean bottom = y > mPreviewBox.centerY();
-        if (!bottom) {
-            return right ? 1 : 0;
-        }
-        return right ? 2 : 3;
-    }
-
     private void openWheel(int index) {
         if (mWheel != null) {
             mWheel.dismiss();
@@ -235,73 +245,12 @@ public class FourColorPicker extends RelativeLayout {
     }
 
     @Override
-    public boolean onTouchEvent(@NonNull MotionEvent event) {
-        switch (event.getActionMasked()) {
-            case MotionEvent.ACTION_DOWN -> {
-                float x = event.getX();
-                float y = event.getY();
-                if (mPreviewBox.contains((int) x, (int) y)) {
-                    mDownX = x;
-                    mDownY = y;
-                    mDownIndex = quadrantOf(x, y);
-                    return true;
-                }
-                return super.onTouchEvent(event);
-            }
-            case MotionEvent.ACTION_UP -> {
-                if (mDownIndex >= 0) {
-                    int index = mDownIndex;
-                    mDownIndex = -1;
-                    float slop = dp(8);
-                    if (Math.abs(event.getX() - mDownX) <= slop &&
-                            Math.abs(event.getY() - mDownY) <= slop) {
-                        openWheel(index);
-                        return true;
-                    }
-                }
-                return super.onTouchEvent(event);
-            }
-            case MotionEvent.ACTION_CANCEL -> {
-                mDownIndex = -1;
-                return super.onTouchEvent(event);
-            }
-            default -> {
-                return mDownIndex >= 0 || super.onTouchEvent(event);
-            }
-        }
-    }
-
-    @Override
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
 
+        // Only the frame is drawn here; the four colours live in their own swatch views,
+        // so this view needs no touch handling at all.
         var paint = Paint.obtain();
-
-        paint.setColor(mColors[0]);
-        canvas.drawRoundRect(
-                mPreviewBox.left + mBorderWidth, mPreviewBox.top + mBorderWidth, mPreviewBox.centerX() - 1,
-                mPreviewBox.centerY() - 1,
-                mBorderRadius, paint
-        );
-        paint.setColor(mColors[1]);
-        canvas.drawRoundRect(
-                mPreviewBox.centerX() + 1, mPreviewBox.top + mBorderWidth, mPreviewBox.right - mBorderWidth,
-                mPreviewBox.centerY() - 1,
-                mBorderRadius, paint
-        );
-        paint.setColor(mColors[2]);
-        canvas.drawRoundRect(
-                mPreviewBox.centerX() + 1, mPreviewBox.centerY() + 1, mPreviewBox.right - mBorderWidth,
-                mPreviewBox.bottom - mBorderWidth,
-                mBorderRadius, paint
-        );
-        paint.setColor(mColors[3]);
-        canvas.drawRoundRect(
-                mPreviewBox.left + mBorderWidth, mPreviewBox.centerY() + 1, mPreviewBox.centerX() - 1,
-                mPreviewBox.bottom - mBorderWidth,
-                mBorderRadius, paint
-        );
-
         paint.setColor(mBorderColor);
         paint.setStyle(Paint.STROKE);
         paint.setStrokeWidth(mBorderWidth);
@@ -322,6 +271,33 @@ public class FourColorPicker extends RelativeLayout {
         );
         int inset = dp(8);
         mPreviewBox.inset(inset, inset);
+
+        // Lay the four chips out over the quadrants of the preview box. They are inset by
+        // the stroke width so that the frame drawn by this view stays visible around them.
+        int frame = Math.max((int) Math.ceil(mBorderWidth), 1);
+        int l = mPreviewBox.left + frame;
+        int t = mPreviewBox.top + frame;
+        int r = mPreviewBox.right - frame;
+        int b = mPreviewBox.bottom - frame;
+        int cx = (l + r) / 2;
+        int cy = (t + b) / 2;
+        int gap = Math.max(dp(2), 1);
+        layoutSwatch(0, l, t, cx - gap, cy - gap);
+        layoutSwatch(1, cx + gap, t, r, cy - gap);
+        layoutSwatch(2, cx + gap, cy + gap, r, b);
+        layoutSwatch(3, l, cy + gap, cx - gap, b);
+    }
+
+    private void layoutSwatch(int index, int l, int t, int r, int b) {
+        var swatch = mSwatches[index];
+        if (swatch == null) {
+            return;
+        }
+        swatch.layout(
+                Math.max(l, 0),
+                Math.max(t, 0),
+                Math.max(r, l),
+                Math.max(b, t));
     }
 
     @Override
