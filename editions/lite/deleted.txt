@@ -1,9 +1,14 @@
 # Files the lite edition does not contain at all.
 # Paths are module-relative, exactly like targets/<target>/deleted.txt.
 #
-# The lite edition bundles no font pack, and the pack is also what carries the emoji
-# images, so the shortcode table would only name emoji that cannot be drawn. Every class
-# stays: the operation center keeps all of its pages, only the two settings pages hand
-# over to the config library the player installs.
+# This edition has no in-house settings screen: the configuration belongs to the config
+# library the player installs, so the settings UI is absent rather than hidden. The
+# operation center keeps its info page and the music page.
 
+common/src/main/java/icyllis/modernui/mc/ui/PreferencesFragment.java
+common/src/main/java/icyllis/modernui/mc/ui/AdvancedOptionsFragment.java
+common/src/main/java/icyllis/modernui/mc/ui/FourColorPicker.java
+common/src/main/java/icyllis/modernui/mc/ui/ColorPickerView.java
+common/src/main/java/icyllis/modernui/mc/ui/PreferredFontAccordion.java
+common/src/main/java/icyllis/modernui/mc/ui/TooltipBorderAccordion.java
 common/src/main/resources/assets/modernui/emoji_data.json

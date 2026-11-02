@@ -15,34 +15,27 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with Modern UI. If not, see <https://www.gnu.org/licenses/>.
  */
+package icyllis.modernui.mc.fabric;
 
-package icyllis.modernui.mc;
-
-import icyllis.modernui.annotation.Nullable;
+import icyllis.modernui.mc.ui.CenterFragment2;
 import icyllis.modernui.mc.ui.lite.YaclBridge;
 import net.minecraft.client.gui.screens.Screen;
 
 /**
- * Lite settings are rendered by the config library the player installs, so every option page
- * of the operation center only hands over to it.
+ * Every entry point of this edition opens the config library directly; there is no
+ * in-house settings screen to route through.
  */
-public final class Edition {
+public final class MuiConfigScreens {
 
-    public static final boolean EXTERNAL_CONFIG_UI = true;
-
-    private Edition() {
+    private MuiConfigScreens() {
     }
 
-    public static boolean usesExternalConfigUi() {
-        return EXTERNAL_CONFIG_UI;
-    }
-
-    public static boolean hasExternalConfigUi() {
-        return YaclBridge.isAvailable();
-    }
-
-    @Nullable
-    public static Screen createExternalConfigScreen(@Nullable Screen parent) {
-        return YaclBridge.open(parent);
+    public static Screen create(Screen parent) {
+        var screen = YaclBridge.open(parent);
+        if (screen != null) {
+            return screen;
+        }
+        // Without the library, show the info page so the entry never dead-ends.
+        return MuiFabricApi.get().createScreen(new CenterFragment2(), null, parent);
     }
 }

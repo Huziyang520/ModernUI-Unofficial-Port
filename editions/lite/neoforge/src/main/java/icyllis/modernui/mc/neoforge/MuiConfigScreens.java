@@ -15,12 +15,27 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with Modern UI. If not, see <https://www.gnu.org/licenses/>.
  */
+package icyllis.modernui.mc.neoforge;
 
-package icyllis.modernui.mc.ui;
+import icyllis.modernui.mc.ui.CenterFragment2;
+import icyllis.modernui.mc.ui.lite.YaclBridge;
+import net.minecraft.client.gui.screens.Screen;
 
 /**
- * The developer options belong to the in-house settings page, so this tab shows the same
- * hand-over page as the preferences tab.
+ * Every entry point of this edition opens the config library directly; there is no
+ * in-house settings screen to route through.
  */
-public class AdvancedOptionsFragment extends PreferencesFragment {
+public final class MuiConfigScreens {
+
+    private MuiConfigScreens() {
+    }
+
+    public static Screen create(Screen parent) {
+        var screen = YaclBridge.open(parent);
+        if (screen != null) {
+            return screen;
+        }
+        // Without the library, show the info page so the entry never dead-ends.
+        return MuiForgeApi.get().createScreen(new CenterFragment2(), null, parent);
+    }
 }

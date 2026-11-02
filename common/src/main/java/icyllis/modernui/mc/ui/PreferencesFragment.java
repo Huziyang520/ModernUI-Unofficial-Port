@@ -38,12 +38,10 @@ import icyllis.modernui.graphics.drawable.StateListDrawable;
 import icyllis.modernui.graphics.text.FontFamily;
 import icyllis.modernui.mc.Config;
 import icyllis.modernui.mc.ConfigItem;
-import icyllis.modernui.mc.Edition;
 import icyllis.modernui.mc.ModernUIClient;
 import icyllis.modernui.mc.ModernUIMod;
 import icyllis.modernui.mc.MuiModApi;
 import icyllis.modernui.mc.MuiPlatform;
-import icyllis.modernui.mc.MuiScreen;
 import icyllis.modernui.mc.UIManager;
 import icyllis.modernui.resources.TypedValue;
 import icyllis.modernui.text.Editable;
@@ -98,9 +96,6 @@ public class PreferencesFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable DataSet savedInstanceState) {
-        if (Edition.usesExternalConfigUi()) {
-            return createHandoverPage();
-        }
         var context = requireContext();
         var base = new FrameLayout(context);
         var pager = new ViewPager(context);
@@ -141,60 +136,6 @@ public class PreferencesFragment extends Fragment {
         }
 
         return base;
-    }
-
-    /**
-     * Stands in for the whole settings UI when an external library owns it: one button that
-     * opens it, or an explanation when it is missing. Never throws on the missing case.
-     */
-    private View createHandoverPage() {
-        var context = requireContext();
-        var layout = new LinearLayout(context);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setGravity(Gravity.CENTER_HORIZONTAL);
-        final int dp24 = layout.dp(24);
-        layout.setPadding(dp24, dp24, dp24, dp24);
-
-        var title = new TextView(context);
-        title.setText(I18n.get("mui.lite.title"));
-        title.setTextSize(20);
-        title.setGravity(Gravity.CENTER);
-        layout.addView(title, new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT));
-
-        final boolean available = Edition.hasExternalConfigUi();
-        var body = new TextView(context);
-        body.setText(I18n.get(available ? "mui.lite.redirect" : "mui.lite.missing"));
-        body.setTextSize(13);
-        body.setGravity(Gravity.CENTER);
-        final int dp16 = layout.dp(16);
-        body.setPadding(dp16, dp16, dp16, dp16);
-        layout.addView(body, new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT));
-
-        if (available) {
-            var button = new Button(context, null, R.attr.buttonOutlinedStyle);
-            button.setText(I18n.get("mui.lite.open"));
-            button.setOnClickListener(v -> {
-                var minecraft = Minecraft.getInstance();
-                var current = minecraft.gui.screen();
-                // The hub tears itself down when the library screen replaces it, so hand the
-                // library the screen the hub was opened from instead of a dead instance.
-                var parent = current;
-                if (current instanceof MuiScreen mui) {
-                    var previous = mui.getPreviousScreen();
-                    if (previous != null) {
-                        parent = previous;
-                    }
-                }
-                var screen = Edition.createExternalConfigScreen(parent);
-                if (screen != null) {
-                    // setScreenAndShow is what notifies the screen change listeners.
-                    minecraft.setScreenAndShow(screen);
-                }
-            });
-            layout.addView(button, new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT));
-        }
-
-        return layout;
     }
 
     @Override
