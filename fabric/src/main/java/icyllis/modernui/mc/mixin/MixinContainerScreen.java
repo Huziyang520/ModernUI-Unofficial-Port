@@ -28,26 +28,33 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+/**
+ * Captures the hovered stack so the tooltip renderer can look it up.
+ * <p>
+ * MC 26.3 passes the stack to {@code setTooltipForNextFrame} as a parameter, so the target
+ * descriptor has to contain it. A slightly different descriptor never matches, and with
+ * {@code CAPTURE_FAILSOFT} the injector fails without saying so, which leaves the stack
+ * empty and makes the tooltip lose its item context.
+ */
 @Mixin(AbstractContainerScreen.class)
 public class MixinContainerScreen {
 
+    private static final String TARGET = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;setTooltipForNextFrame" +
+            "(Lnet/minecraft/client/gui/Font;Ljava/util/List;Ljava/util/Optional;" +
+            "Lnet/minecraft/world/item/ItemStack;IILnet/minecraft/resources/Identifier;Z)V";
+
     @Inject(method = "extractTooltip",
-            at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;setTooltipForNextFrame" +
-                            "(Lnet/minecraft/client/gui/Font;Ljava/util/List;Ljava/util/Optional;" +
-                            "IILnet/minecraft/resources/Identifier;Z)V"),
-            locals = LocalCapture.CAPTURE_FAILSOFT)
+            at = @At(value = "INVOKE", target = TARGET),
+            locals = LocalCapture.CAPTURE_FAILSOFT,
+            require = 1)
     private void preRenderTooltip(GuiGraphicsExtractor gr, int x, int y, CallbackInfo ci, ItemStack stack) {
         ((IModernGuiGraphics) gr).modernUI_MC$setTooltipStack(stack);
     }
 
     @Inject(method = "extractTooltip",
-            at = @At(value = "INVOKE",
-                    shift = At.Shift.AFTER,
-                    target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;setTooltipForNextFrame" +
-                            "(Lnet/minecraft/client/gui/Font;Ljava/util/List;Ljava/util/Optional;" +
-                            "IILnet/minecraft/resources/Identifier;Z)V"),
-            locals = LocalCapture.CAPTURE_FAILSOFT)
+            at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = TARGET),
+            locals = LocalCapture.CAPTURE_FAILSOFT,
+            require = 1)
     private void postRenderTooltip(GuiGraphicsExtractor gr, int x, int y, CallbackInfo ci, ItemStack stack) {
         ((IModernGuiGraphics) gr).modernUI_MC$setTooltipStack(ItemStack.EMPTY);
     }

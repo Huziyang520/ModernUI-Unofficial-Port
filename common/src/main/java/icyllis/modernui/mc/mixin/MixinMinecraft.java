@@ -50,6 +50,14 @@ public abstract class MixinMinecraft {
         MuiModApi.dispatchOnScreenChange(
                 ((Minecraft) (Object) this).gui.screen(),
                 guiScreen);
+        // setScreenAndShow delegates to Gui.setScreen, which reports the same change
+        // again unless it is told that this one already happened.
+        ((GuiDispatchGuard) ((Minecraft) (Object) this).gui).modernUI_MC$suppressNextDispatch();
+    }
+
+    @Inject(method = "setScreenAndShow", at = @At("TAIL"))
+    private void onSetScreenTail(Screen guiScreen, CallbackInfo ci) {
+        ((GuiDispatchGuard) ((Minecraft) (Object) this).gui).modernUI_MC$restoreDispatch();
     }
 
     @Inject(method = "onGameLoadFinished", at = @At("HEAD"))
