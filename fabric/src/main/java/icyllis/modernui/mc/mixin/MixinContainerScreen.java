@@ -21,41 +21,41 @@ package icyllis.modernui.mc.mixin;
 import icyllis.modernui.mc.IModernGuiGraphics;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+
+import javax.annotation.Nullable;
 
 /**
  * Captures the hovered stack so the tooltip renderer can look it up.
  * <p>
- * MC 26.3 passes the stack to {@code setTooltipForNextFrame} as a parameter, so the target
- * descriptor has to contain it. A slightly different descriptor never matches, and with
- * {@code CAPTURE_FAILSOFT} the injector fails without saying so, which leaves the stack
- * empty and makes the tooltip lose its item context.
+ * Reading the field instead of capturing a local keeps this free of any method descriptor:
+ * a descriptor that does not match after remapping fails the whole screen class, and the
+ * stack is passed to setTooltipForNextFrame as a parameter, so it is not even a local of
+ * the method that was targeted before.
  */
 @Mixin(AbstractContainerScreen.class)
 public class MixinContainerScreen {
 
-    private static final String TARGET = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;setTooltipForNextFrame" +
-            "(Lnet/minecraft/client/gui/Font;Ljava/util/List;Ljava/util/Optional;" +
-            "Lnet/minecraft/world/item/ItemStack;IILnet/minecraft/resources/Identifier;Z)V";
+    @Shadow
+    @Nullable
+    protected Slot hoveredSlot;
 
-    @Inject(method = "extractTooltip",
-            at = @At(value = "INVOKE", target = TARGET),
-            locals = LocalCapture.CAPTURE_FAILSOFT,
-            require = 1)
-    private void preRenderTooltip(GuiGraphicsExtractor gr, int x, int y, CallbackInfo ci, ItemStack stack) {
-        ((IModernGuiGraphics) gr).modernUI_MC$setTooltipStack(stack);
+    @Inject(method = "extractTooltip", at = @At("HEAD"))
+    private void preRenderTooltip(GuiGraphicsExtractor gr, int x, int y, CallbackInfo ci) {
+        Slot slot = hoveredSlot;
+        if (slot != null && slot.hasItem()) {
+            ((IModernGuiGraphics) gr).modernUI_MC$setTooltipStack(slot.getItem());
+        }
     }
 
-    @Inject(method = "extractTooltip",
-            at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = TARGET),
-            locals = LocalCapture.CAPTURE_FAILSOFT,
-            require = 1)
-    private void postRenderTooltip(GuiGraphicsExtractor gr, int x, int y, CallbackInfo ci, ItemStack stack) {
+    @Inject(method = "extractTooltip", at = @At("TAIL"))
+    private void postRenderTooltip(GuiGraphicsExtractor gr, int x, int y, CallbackInfo ci) {
         ((IModernGuiGraphics) gr).modernUI_MC$setTooltipStack(ItemStack.EMPTY);
     }
 }
