@@ -182,15 +182,13 @@ public final class YaclSettings {
                         tick("mui.lite.linearMetrics", text.mLinearMetrics)))
                 .build());
 
-        var developerGroup = OptionGroup.createBuilder()
-                .name(Component.translatable("mui.lite.group.developer"))
-                .option(tick("mui.lite.developerMode", Config.COMMON.developerMode))
-                .option(ButtonOption.createBuilder()
+        var developerGroup = group("mui.lite.group.developer",
+                tick("mui.lite.developerMode", Config.COMMON.developerMode),
+                ButtonOption.createBuilder()
                         .name(Component.translatable("mui.lite.openFolder"))
                         .text(Component.translatable("mui.lite.openFolder.text"))
                         .action((screen, button) -> openConfigFolder())
-                        .build())
-                .build();
+                        .build());
         config.category(ConfigCategory.createBuilder()
                 .name(Component.translatable("mui.lite.category.advanced"))
                 .group(developerGroup)
@@ -323,17 +321,41 @@ public final class YaclSettings {
         });
     }
 
+    /** The cycling controller has no way to learn the enum type, so it is passed explicitly. */
     private static <E extends Enum<E>> Option<E> enumChoice(String key, ConfigItem<E> item) {
-        return item == null ? null : create(key, item, EnumControllerBuilder::create);
+        if (item == null || item.getDefault() == null) {
+            return null;
+        }
+        Class<E> enumClass = item.getDefault().getDeclaringClass();
+        return create(key, item, option -> EnumControllerBuilder.<E>create(option).enumClass(enumClass));
     }
 
+    /**
+     * One option that cannot be built must not take the rest of the screen with it, so
+     * every value read and every controller build is guarded here.
+     */
     private static <T> Option<T> create(String key, ConfigItem<T> item,
                                         Function<Option<T>, ControllerBuilder<T>> controller) {
-        return Option.<T>createBuilder()
-                .name(Component.translatable(key))
-                .description(OptionDescription.of(Component.translatable(key + ".desc")))
-                .binding(item.getDefault(), item::get, item::set)
-                .controller(controller)
-                .build();
+        T def;
+        try {
+            def = item.getDefault();
+        } catch (Throwable t) {
+            ModernUIMod.LOGGER.warn("Skipping the option '{}': {}", key, t.toString());
+            return null;
+        }
+        if (def == null) {
+            return null;
+        }
+        try {
+            return Option.<T>createBuilder()
+                    .name(Component.translatable(key))
+                    .description(OptionDescription.of(Component.translatable(key + ".desc")))
+                    .binding(def, item::get, item::set)
+                    .controller(controller)
+                    .build();
+        } catch (Throwable t) {
+            ModernUIMod.LOGGER.warn("Skipping the option '{}': {}", key, t.toString());
+            return null;
+        }
     }
 }
