@@ -1,6 +1,17 @@
 Changelogs
 ===
 
+### Modern UI 3.14.9
+Changes from
+* 3.14.8.3 → 3.14.9 for Minecraft 26.3
+#### All Extensions 26.3
+* Move the mui-i18n-compat licence out of `assets/modernui/font` so the resource pack no longer logs an invalid-path error on every reload 把 mui-i18n-compat 的许可证移出 `assets/modernui/font`，资源包不再在每次重载时报路径无效
+#### Lite Edition 26.3
+* This edition no longer ships the in-house settings screen: the configuration entry opens the config library (YetAnotherConfigLib) directly, and the settings classes are absent from the jar rather than hidden 本版本不再内置自研设置界面：配置入口直接打开配置库（YetAnotherConfigLib），相关设置类不再打进 jar，而不是被隐藏
+* Add the tooltip border style section (rounded shapes, border width, corner radius, shadow radius and opacity, adaptive colours, border cycle time) with the four colour presets and one colour picker per corner 新增提示框边框样式分区（圆角化、边框宽度、圆角半径、阴影半径与不透明度、动态颜色、边框颜色周期），含四套预设配色与每个角一个取色器
+* The first font family is chosen from a list of the installed families instead of being typed, and applying it reloads the typeface immediately 首选字体家族改为从已安装字体列表中选择，应用后立即重载字形
+* Options that the running loader does not register are skipped instead of hiding the whole screen 当前加载器未注册的配置项会被跳过，而不是让整个界面消失
+
 ### Modern UI 3.14.8.3
 Changes from
 * 3.14.8.2 → 3.14.8.3 for Minecraft 26.3
