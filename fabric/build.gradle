@@ -335,7 +335,7 @@ curseforge {
         changelog = ''
         releaseType = project.findProperty('curse_release_type') ?: 'release'
         mainArtifact(tasks.named('shadowJar').get()) {
-            displayName = "Modern UI ${targetModVersion} (Fabric) for Minecraft ${targetMinecraft}"
+            displayName = "Modern UI ${targetModVersion} (Fabric${isLite ? ', Lite' : ''}) for Minecraft ${targetMinecraft}"
         }
         addGameVersion targetMinecraft
         addGameVersion 'Fabric'

@@ -340,7 +340,7 @@ curseforge {
         changelog = ''
         releaseType = project.findProperty('curse_release_type') ?: 'release'
         mainArtifact(tasks.named('shadowJar').get()) {
-            displayName = "Modern UI ${targetModVersion} (NeoForge) for Minecraft ${targetMinecraft}"
+            displayName = "Modern UI ${targetModVersion} (NeoForge${isLite ? ', Lite' : ''}) for Minecraft ${targetMinecraft}"
         }
         addGameVersion targetMinecraft
         addGameVersion 'NeoForge'
