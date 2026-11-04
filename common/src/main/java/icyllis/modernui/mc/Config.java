@@ -145,6 +145,8 @@ public final class Config {
         public final ConfigItem<Boolean> mUseColorEmoji;
         public final ConfigItem<Boolean> mLinearMetrics;
         public final ConfigItem<Boolean> mEmojiShortcodes;
+        /** Only the lite edition shows the notice; the regular build keeps the value untouched. */
+        public final ConfigItem<Boolean> mLiteNotice;
 
         public volatile WindowMode mLastWindowMode = WindowMode.NORMAL;
         public volatile List<? extends String> mLastTheme;
@@ -216,6 +218,7 @@ public final class Config {
             mUseColorEmoji = get(map, "mUseColorEmoji");
             mLinearMetrics = get(map, "mLinearMetrics");
             mEmojiShortcodes = get(map, "mEmojiShortcodes");
+            mLiteNotice = get(map, "mLiteNotice");
         }
 
         public void reload() {

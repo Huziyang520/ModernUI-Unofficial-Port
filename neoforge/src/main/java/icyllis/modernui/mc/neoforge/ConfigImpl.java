@@ -290,6 +290,7 @@ public final class ConfigImpl {
         public final ModConfigSpec.BooleanValue mUseColorEmoji;
         public final ModConfigSpec.BooleanValue mLinearMetrics;
         public final ModConfigSpec.BooleanValue mEmojiShortcodes;
+        public final ModConfigSpec.BooleanValue mLiteNotice;
 
         /*public final ModConfigSpec.BooleanValue mSkipGLCapsError;
         public final ModConfigSpec.BooleanValue mShowGLCapsError;*/
@@ -484,6 +485,10 @@ public final class ConfigImpl {
             mEmojiShortcodes = builder.comment(
                             "Allow Slack or Discord shortcodes to replace Unicode Emoji Sequences in chat.")
                     .define("emojiShortcodes", true);
+            mLiteNotice = builder.comment(
+                            "Show the lite edition notice when joining a world.",
+                            "Only the lite edition displays it.")
+                    .define("liteNotice", true);
 
             builder.pop();
 

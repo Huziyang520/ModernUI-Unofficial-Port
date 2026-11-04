@@ -146,6 +146,8 @@ public final class Config {
         public final ConfigItem<Boolean> mUseColorEmoji;
         public final ConfigItem<Boolean> mLinearMetrics;
         public final ConfigItem<Boolean> mEmojiShortcodes;
+        /** Only the lite edition shows the notice; the regular build keeps the value untouched. */
+        public final ConfigItem<Boolean> mLiteNotice;
         public final ConfigItem<String> mInterfaceThemeColor;
         public final ConfigItem<Boolean> mInterfaceCompactLayout;
         public final ConfigItem<Boolean> mInterfaceAnimations;
@@ -222,6 +224,7 @@ public final class Config {
             mUseColorEmoji = get(map, "mUseColorEmoji");
             mLinearMetrics = get(map, "mLinearMetrics");
             mEmojiShortcodes = get(map, "mEmojiShortcodes");
+            mLiteNotice = get(map, "mLiteNotice");
             mInterfaceThemeColor = get(map, "mInterfaceThemeColor");
             mInterfaceCompactLayout = get(map, "mInterfaceCompactLayout");
             mInterfaceAnimations = get(map, "mInterfaceAnimations");

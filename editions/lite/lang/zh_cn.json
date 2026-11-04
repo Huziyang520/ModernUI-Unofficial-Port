@@ -190,8 +190,14 @@
   "modernui.center.screen.blurBlacklist.desc": "这些界面类的子类打开时不启用模糊效果，每行一个完整类名。",
   "mui.lite.tweakExperienceText": "调整经验等级文字描边",
   "mui.lite.tweakExperienceText.desc": "开启后经验等级数字的描边会被调整。",
+  "mui.lite.notice": "Modern UI Lite：你正在游玩的是 MUI 的轻量版，相比普通版少了一些内容。该提示可在配置界面关闭（按 Ctrl+K 可以打开配置界面）。",
+  "mui.lite.option.notice": "进入世界时提示当前为 Lite 版",
+  "mui.lite.option.notice.desc": "进入世界时在聊天栏提示一次当前游玩的版本；关闭后不再提示。",
   "mui.lite.group.changelog": "更新日志",
-  "mui.lite.changelog.version": "Modern UI 3.14.8.3",
-  "mui.lite.changelog.fix": "* Fix the tooltip border not following the item rarity 修复提示框边框不随物品稀有度变色",
-  "mui.lite.changelog.preview": "* Add a preview build link and move MC百科 before Discord 新增预览版获取链接，并把 MC百科 排到 Discord 之前"
+  "mui.lite.changelog.version": "Modern UI 3.14.9.1",
+  "mui.lite.changelog.settings": "* Drop the in-house settings screen and open the config library instead 移除自研设置界面，改为直接打开配置库",
+  "mui.lite.changelog.border": "* Add the tooltip border style section with presets and per-corner colours 新增提示框边框样式分区，含预设配色与逐角取色器",
+  "mui.lite.changelog.font": "* Pick the first font family from a list, applying it immediately 首选字体家族改为从列表选择，应用后立即重载",
+  "mui.lite.changelog.loader": "* Skip config options the running loader never registers 跳过加载器未注册的配置项",
+  "mui.lite.changelog.notice": "* Print a notice on world join, which can be turned off here, and move 关于与链接 to the first tab 进入世界时提示当前为 Lite 版（可在此关闭），并把「关于与链接」移到第一个页签"
 }

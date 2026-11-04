@@ -107,6 +107,7 @@ public final class YaclSettings {
 
         sFontFamilyAtOpen = Config.CLIENT.mFirstFontFamily.get();
 
+        addAbout(config);
         addBackground(config);
         addTooltip(config);
         addTooltipBorder(config);
@@ -115,7 +116,6 @@ public final class YaclSettings {
         addFont(config);
         addText(config);
         addAdvanced(config);
-        addAbout(config);
 
         return config.build().generateScreen(parent);
     }
@@ -311,15 +311,22 @@ public final class YaclSettings {
                 .option(link("mui.lite.link.modrinthOriginal", "https://modrinth.com/mod/modern-ui"))
                 .option(link("mui.lite.link.discord", "https://discord.gg/kmyGKt2"))
                 .build();
-        config.category(ConfigCategory.createBuilder()
-                .name(label("mui.lite.category.about"))
+        var notice = tick("mui.lite.option.notice", Config.CLIENT.mLiteNotice);
+        var about = ConfigCategory.createBuilder().name(label("mui.lite.category.about"));
+        if (notice != null) {
+            about.option(notice);
+        }
+        config.category(about
                 .group(links)
                 .group(original)
                 .group(OptionGroup.createBuilder()
                         .name(label("mui.lite.group.changelog"))
                         .option(LabelOption.create(label("mui.lite.changelog.version")))
-                        .option(LabelOption.create(label("mui.lite.changelog.fix")))
-                        .option(LabelOption.create(label("mui.lite.changelog.preview")))
+                        .option(LabelOption.create(label("mui.lite.changelog.settings")))
+                        .option(LabelOption.create(label("mui.lite.changelog.border")))
+                        .option(LabelOption.create(label("mui.lite.changelog.font")))
+                        .option(LabelOption.create(label("mui.lite.changelog.loader")))
+                        .option(LabelOption.create(label("mui.lite.changelog.notice")))
                         .build())
                 .build());
     }

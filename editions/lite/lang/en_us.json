@@ -190,8 +190,14 @@
   "modernui.center.screen.blurBlacklist.desc": "Screens whose class extends one of these do not get the blur effect, one fully qualified name per line.",
   "mui.lite.tweakExperienceText": "Tweak the experience level outline",
   "mui.lite.tweakExperienceText.desc": "Adjust the outline of the experience level text.",
+  "mui.lite.notice": "Modern UI Lite: you are playing the lite edition, which omits some content of the regular edition. This notice can be turned off in the settings screen (press Ctrl+K to open it).",
+  "mui.lite.option.notice": "Show the lite edition notice on world join",
+  "mui.lite.option.notice.desc": "Prints the notice in chat once when joining a world. Turn it off to stop showing it.",
   "mui.lite.group.changelog": "Changelog",
-  "mui.lite.changelog.version": "Modern UI 3.14.8.3",
-  "mui.lite.changelog.fix": "* Fix the tooltip border not following the item rarity 修复提示框边框不随物品稀有度变色",
-  "mui.lite.changelog.preview": "* Add a preview build link and move MC百科 before Discord 新增预览版获取链接，并把 MC百科 排到 Discord 之前"
+  "mui.lite.changelog.version": "Modern UI 3.14.9.1",
+  "mui.lite.changelog.settings": "* Drop the in-house settings screen and open the config library instead",
+  "mui.lite.changelog.border": "* Add the tooltip border style section with presets and per-corner colours",
+  "mui.lite.changelog.font": "* Pick the first font family from a list, applying it immediately",
+  "mui.lite.changelog.loader": "* Skip config options the running loader never registers",
+  "mui.lite.changelog.notice": "* Print a notice on world join, which can be turned off here, and move About & Links to the first tab"
 }

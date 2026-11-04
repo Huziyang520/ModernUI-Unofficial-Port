@@ -1345,6 +1345,7 @@ public abstract class UIManager implements LifecycleOwner {
     protected void onClientTick(boolean isEnd) {
         if (isEnd) {
             BlurHandler.INSTANCE.onClientTick();
+            LiteEdition.onClientTick();
             if (mTestChars) {
                 int cp = mTestCodepoint;
                 if (cp > 0x9FFF)

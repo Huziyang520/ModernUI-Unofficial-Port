@@ -6,34 +6,28 @@ Modern UI is a desktop-grade UI framework for Minecraft, featuring a view system
 
 This repository is a community port. The copyright of the framework itself belongs to its original author; this project only handles version adaptation.
 
-Both loaders are built from the same common module.
+## Editions
+
+Two editions are published for every Minecraft version. Pick one file, not both.
+
+| Edition | What you get |
+|---|---|
+| **Modern UI** | The complete build: the in-house settings screen, the bundled font pack, and everything below. |
+| **Modern UI Lite** | The same rendering and text engine, but without the in-house settings screen and without the bundled font pack. Smaller download, lower memory use. |
+
+### Modern UI Lite — read this first
+
+- **A config library is required.** Lite has no settings screen of its own; every option is drawn by [YetAnotherConfigLib](https://modrinth.com/mod/yacl). Without it the mod still runs, but there is no way to change any option in-game.
+- **The settings entry opens YetAnotherConfigLib directly.** In the mod list, or with the config key, you land straight in the library's screen.
+- **Fabric needs [Fabric API](https://modrinth.com/mod/fabric-api) and [Forge Config API Port](https://modrinth.com/mod/forge-config-api-port).** [Mod Menu](https://modrinth.com/mod/modmenu) is optional and only provides the in-game entry point.
+- **The bundled font pack is absent**, so the default font comes from your system instead of the shipped families. You can pick a family in the settings.
+- **A notice is printed in chat when you join a world.** Turn it off under "About & Links" in the settings screen.
+- **Do not install both editions at once.** They share the same mod id; the launcher will refuse to load the second one.
 
 ## Requirements
 
 - **NeoForge**: No additional dependency mods required.
 - **Fabric**: [Fabric API](https://modrinth.com/mod/fabric-api) and [Forge Config API Port](https://modrinth.com/mod/forge-config-api-port) are required (dependencies). [Mod Menu](https://modrinth.com/mod/modmenu) (or a similar mod) is optional, used to open the config screen in-game.
-
-## Building
-
-Requires a JDK and an internet connection (to download Gradle dependencies).
-
-```bash
-./gradlew :ModernUI-NeoForge:build     # Output: neoforge/build/libs/*-universal.jar
-./gradlew :ModernUI-Fabric:build       # Output: fabric/build/libs/*-universal.jar
-./gradlew build                        # Build both loaders
-```
-
-The installable files are the `*-universal.jar` under each module's `build/libs/`.
-
-## Project Structure
-
-```text
-common/     Shared code, Mixins, shaders and resources
-neoforge/   NeoForge entry point and loader-specific adaptation
-fabric/     Fabric entry point and loader-specific adaptation
-libs/       Build-time dependencies bundled with the repo (ModernUI-Fonts)
-assets/     Art source files such as Blockbench models
-```
 
 ## Credits
 
@@ -56,34 +50,28 @@ Modern UI 是一套面向 Minecraft 的桌面级 UI 框架，包含视图系统�
 
 本仓库为社区移植版本，框架本身著作权归原作者所有，仅做版本适配工作。
 
-两个加载器由同一份 common 模块构建。
+## 两个版本
+
+每个 Minecraft 版本都会发布两个版本，**只装其中一个**。
+
+| 版本 | 内容 |
+|---|---|
+| **Modern UI** | 完整版：自带设置界面、自带字体包，以及下文全部功能。 |
+| **Modern UI Lite** | 渲染与文本引擎相同，但**不含自带设置界面**，也**不含自带字体包**。体积更小、内存占用更低。 |
+
+### Modern UI Lite 必看
+
+- **必须另装配置库。** Lite 版没有自己的设置界面，所有配置项由 [YetAnotherConfigLib](https://modrinth.com/mod/yacl) 绘制。不装该模组时游戏能正常启动，但游戏内无法修改任何配置。
+- **配置入口直接打开 YetAnotherConfigLib。** 无论从模组列表还是快捷键进入，看到的都是配置库的界面。
+- **Fabric 端需要 [Fabric API](https://modrinth.com/mod/fabric-api) 与 [Forge Config API Port](https://modrinth.com/mod/forge-config-api-port)。** [Mod Menu](https://modrinth.com/mod/modmenu) 为可选，只负责提供游戏内入口。
+- **不含自带字体包**，默认字体取自系统字体而非随包字体，可在设置里改选字体家族。
+- **进入世界时会在聊天栏提示一次。** 可在设置界面的「关于与链接」中关闭。
+- **不要同时安装两个版本。** 两者 mod id 相同，加载器会拒绝加载后装的那个。
 
 ## 运行前置
 
 - **NeoForge**：无需任何额外前置模组。
 - **Fabric**：必须安装 [Fabric API](https://modrinth.com/mod/fabric-api) 与 [Forge Config API Port](https://modrinth.com/mod/forge-config-api-port)（前置依赖）；[Mod Menu](https://modrinth.com/mod/modmenu)（或其他类似模组）为可选，用于在游戏内打开配置界面。
-
-## 构建
-
-需要 JDK 以及网络连接（用于下载 Gradle 依赖）。
-
-```bash
-./gradlew :ModernUI-NeoForge:build     # 产物：neoforge/build/libs/*-universal.jar
-./gradlew :ModernUI-Fabric:build       # 产物：fabric/build/libs/*-universal.jar
-./gradlew build                        # 同时构建两个加载器
-```
-
-可安装的文件是各模块 `build/libs/` 下的 `*-universal.jar`。
-
-## 目录结构
-
-```text
-common/     共享代码、Mixin、着色器与资源
-neoforge/   NeoForge 入口与加载器相关适配
-fabric/     Fabric 入口与加载器相关适配
-libs/       随仓库携带的构建期依赖（ModernUI-Fonts）
-assets/     Blockbench 模型等美术源文件
-```
 
 ## 致谢
 

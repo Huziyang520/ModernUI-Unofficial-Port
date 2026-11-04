@@ -192,12 +192,13 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.14.9") + """
+                                "Modern UI 3.14.9.1") + """
                                 
                                 ----
                                 * Lite: drop the built-in settings screen, add the border style section, colour presets and a font menu Lite 版移除自研设置界面，新增边框样式分区、预设配色与字体下拉菜单
                                 * Skip config options the running loader never registers 跳过加载器未注册的配置项
-                                * Fix the resource pack logging an invalid path for the font licence 修复资源包对字体许可证报路径无效""");
+                                * Fix the resource pack logging an invalid path for the font licence 修复资源包对字体许可证报路径无效
+                                * Lite: print a notice on world join, which can be turned off in the settings screen, and move 关于与链接 to the first tab Lite 版新增进世界提示（可在设置界面关闭），并把「关于与链接」移到第一个页签""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);
