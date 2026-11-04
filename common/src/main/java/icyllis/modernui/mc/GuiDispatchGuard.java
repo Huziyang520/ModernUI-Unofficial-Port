@@ -16,12 +16,14 @@
  * License along with Modern UI. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package icyllis.modernui.mc.mixin;
+package icyllis.modernui.mc;
 
 /**
  * Implemented by the Gui mixin so other mixins can coordinate the single screen-change
- * dispatch. It has to be an interface: a mixin target does not actually inherit the
- * mixin class, so casting a Gui to a mixin class fails at runtime.
+ * dispatch.
+ * <p>
+ * This lives outside the mixin package on purpose: a class inside it belongs to the mixin
+ * config and may not be referenced directly, which fails at class load time.
  */
 public interface GuiDispatchGuard {
 

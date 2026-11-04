@@ -18,6 +18,7 @@
 
 package icyllis.modernui.mc.mixin;
 
+import icyllis.modernui.mc.GuiDispatchGuard;
 import icyllis.modernui.mc.MuiModApi;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.Screen;
