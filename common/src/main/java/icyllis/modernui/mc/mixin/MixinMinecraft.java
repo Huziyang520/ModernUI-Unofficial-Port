@@ -51,13 +51,19 @@ public abstract class MixinMinecraft {
                 ((Minecraft) (Object) this).gui.screen(),
                 guiScreen);
         // setScreenAndShow delegates to Gui.setScreen, which reports the same change
-        // again unless it is told that this one already happened.
-        ((GuiDispatchGuard) ((Minecraft) (Object) this).gui).modernUI_MC$suppressNextDispatch();
+        // again unless it is told that this one already happened. Gui only implements
+        // the guard where the Gui mixin is registered, so never cast blindly: NeoForge
+        // does not load it and the cast would throw on every screen change.
+        if (((Minecraft) (Object) this).gui instanceof GuiDispatchGuard guard) {
+            guard.modernUI_MC$suppressNextDispatch();
+        }
     }
 
     @Inject(method = "setScreenAndShow", at = @At("TAIL"))
     private void onSetScreenTail(Screen guiScreen, CallbackInfo ci) {
-        ((GuiDispatchGuard) ((Minecraft) (Object) this).gui).modernUI_MC$restoreDispatch();
+        if (((Minecraft) (Object) this).gui instanceof GuiDispatchGuard guard) {
+            guard.modernUI_MC$restoreDispatch();
+        }
     }
 
     @Inject(method = "onGameLoadFinished", at = @At("HEAD"))
