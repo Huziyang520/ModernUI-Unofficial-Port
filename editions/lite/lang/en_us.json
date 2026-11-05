@@ -191,7 +191,7 @@
   "mui.lite.tweakExperienceText": "Tweak the experience level outline",
   "mui.lite.tweakExperienceText.desc": "Adjust the outline of the experience level text.",
   "mui.lite.notice": "Modern UI Lite: you are playing the lite edition, which omits some content of the regular edition. This notice can be turned off in the settings screen (press Ctrl+K to open it).",
-  "mui.lite.option.notice": "Show the lite edition notice on world join",
+  "mui.lite.option.notice": "World join notice",
   "mui.lite.option.notice.desc": "Prints the notice in chat once when joining a world. Turn it off to stop showing it.",
   "mui.lite.group.changelog": "Changelog",
   "mui.lite.changelog.version": "Modern UI 3.14.9.1",

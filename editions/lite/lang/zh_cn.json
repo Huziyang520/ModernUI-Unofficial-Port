@@ -191,7 +191,7 @@
   "mui.lite.tweakExperienceText": "调整经验等级文字描边",
   "mui.lite.tweakExperienceText.desc": "开启后经验等级数字的描边会被调整。",
   "mui.lite.notice": "Modern UI Lite：你正在游玩的是 MUI 的轻量版，相比普通版少了一些内容。该提示可在配置界面关闭（按 Ctrl+K 可以打开配置界面）。",
-  "mui.lite.option.notice": "进入世界时提示当前为 Lite 版",
+  "mui.lite.option.notice": "进入世界提示",
   "mui.lite.option.notice.desc": "进入世界时在聊天栏提示一次当前游玩的版本；关闭后不再提示。",
   "mui.lite.group.changelog": "更新日志",
   "mui.lite.changelog.version": "Modern UI 3.14.9.1",
