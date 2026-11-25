@@ -702,6 +702,7 @@ public final class YaclSettings {
             ModernUIMod.LOGGER.warn("Cannot open the config folder: no parent for '{}'", bootstrap);
             return;
         }
+        Exception desktopError = null;
         try {
             if (java.awt.Desktop.isDesktopSupported()) {
                 var desktop = java.awt.Desktop.getDesktop();
@@ -711,8 +712,7 @@ public final class YaclSettings {
                 }
             }
         } catch (Exception e) {
-            ModernUIMod.LOGGER.warn("Desktop cannot open the config folder '{}'", dir);
-            ModernUIMod.LOGGER.warn("Failed to open the config folder with Desktop", e);
+            desktopError = e;
         }
         try {
             String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
@@ -727,6 +727,9 @@ public final class YaclSettings {
             builder.start();
         } catch (Exception e) {
             ModernUIMod.LOGGER.warn("Cannot open the config folder '{}'", dir);
+            if (desktopError != null) {
+                ModernUIMod.LOGGER.warn("Failed to open the config folder with Desktop", desktopError);
+            }
             ModernUIMod.LOGGER.warn("Failed to open the config folder with the system tool", e);
         }
     }
