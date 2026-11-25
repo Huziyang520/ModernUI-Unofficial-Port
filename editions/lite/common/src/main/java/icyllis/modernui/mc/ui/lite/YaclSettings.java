@@ -696,12 +696,38 @@ public final class YaclSettings {
     }
 
     private static void openConfigFolder() {
-        var dir = MuiPlatform.get().getBootstrapPath();
+        var bootstrap = MuiPlatform.get().getBootstrapPath();
+        var dir = bootstrap.getParent();
+        if (dir == null) {
+            ModernUIMod.LOGGER.warn("Cannot open the config folder: no parent for '{}'", bootstrap);
+            return;
+        }
         try {
-            java.awt.Desktop.getDesktop().open(dir.toFile());
+            if (java.awt.Desktop.isDesktopSupported()) {
+                var desktop = java.awt.Desktop.getDesktop();
+                if (desktop.isSupported(java.awt.Desktop.Action.OPEN)) {
+                    desktop.open(dir.toFile());
+                    return;
+                }
+            }
         } catch (Exception e) {
-            // A headless JVM cannot open a folder, so the path goes to the log instead.
+            ModernUIMod.LOGGER.warn("Desktop cannot open the config folder '{}'", dir);
+            ModernUIMod.LOGGER.warn("Failed to open the config folder with Desktop", e);
+        }
+        try {
+            String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+            ProcessBuilder builder;
+            if (os.startsWith("win")) {
+                builder = new ProcessBuilder("explorer.exe", dir.toString());
+            } else if (os.startsWith("mac")) {
+                builder = new ProcessBuilder("open", dir.toString());
+            } else {
+                builder = new ProcessBuilder("xdg-open", dir.toString());
+            }
+            builder.start();
+        } catch (Exception e) {
             ModernUIMod.LOGGER.warn("Cannot open the config folder '{}'", dir);
+            ModernUIMod.LOGGER.warn("Failed to open the config folder with the system tool", e);
         }
     }
 }
