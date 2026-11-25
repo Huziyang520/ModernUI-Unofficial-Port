@@ -192,12 +192,12 @@ public class DashboardFragment extends Fragment {
                         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
                         tv.setMovementMethod(LinkMovementMethod.getInstance());
                         markflow.setMarkdown(tv, I18n.get("gui.modernui.whatsNewIn_s",
-                                "Modern UI 3.14.9") + """
+                                "Modern UI 3.14.9.2.263") + """
                                 
                                 ----
-                                * Lite: drop the built-in settings screen, add the border style section, colour presets and a font menu Lite 版移除自研设置界面，新增边框样式分区、预设配色与字体下拉菜单
-                                * Skip config options the running loader never registers 跳过加载器未注册的配置项
-                                * Fix the resource pack logging an invalid path for the font licence 修复资源包对字体许可证报路径无效""");
+                                * Fix 3D world text blurring at low GUI scales: signs, name tags and text displays now use the Modern Text Engine at a GUI-independent SDF density 修复 3D 世界文本（告示牌、命名牌、文本展示）在低 GUI 缩放下变糊的问题：改用现代文本引擎，SDF 密度不再随 GUI 缩放变化
+                                * Fix glowing sign text: one continuous SDF outline replaces the eight offset copies, removing the blurred halo and the seams 修复发光告示牌文字：以单次连续 SDF 描边替代八份偏移副本，消除糊团与细缝
+                                * Full edition: fix the "Browse File" button in the font settings page (wrong reflection argument count) 完整版：修复字体设置页“浏览文件”按钮（反射实参个数错误）""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);

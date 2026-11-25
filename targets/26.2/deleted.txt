@@ -1,4 +1,3 @@
-common/src/main/java/icyllis/modernui/mc/FileDialogs.java
 common/src/main/java/icyllis/modernui/mc/KeyCodes.java
 common/src/main/java/icyllis/modernui/mc/mixin/AccessFrontendGpuDevice.java
 common/src/main/java/org/lwjgl/glfw/Callbacks.java

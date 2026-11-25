@@ -128,6 +128,27 @@ public abstract class TextRenderType {
             .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_fill"))
             .build();
 
+    // World-space stroke variants. Like the fill variants above, each copies the vanilla
+    // pipeline of the same display mode and keeps its depth state; only the fragment shader
+    // changes. The GUI stroke pipeline carries its own (-1/-10) bias and must not be used here.
+    public static final RenderPipeline PIPELINE_SDF_STROKE_WORLD = copyOf(RenderPipelines.TEXT)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
+            .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_stroke_world"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_stroke"))
+            .build();
+
+    public static final RenderPipeline PIPELINE_SDF_STROKE_POLYGON_OFFSET = copyOf(RenderPipelines.TEXT_POLYGON_OFFSET)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
+            .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_stroke_polygon_offset"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_stroke"))
+            .build();
+
+    public static final RenderPipeline PIPELINE_SDF_STROKE_SEE_THROUGH = copyOf(RenderPipelines.TEXT_SEE_THROUGH)
+            .withVertexShader(ModernUIMod.location("core/rendertype_modern_text"))
+            .withLocation(ModernUIMod.location("pipeline/modern_text_sdf_stroke_see_through"))
+            .withFragmentShader(ModernUIMod.location("core/rendertype_modern_text_sdf_stroke"))
+            .build();
+
     /**
      * Copies everything from a vanilla pipeline (shader defines, bind groups, vertex
      * format, blend/depth state, ...) so that only the fragment shader needs replacing.
@@ -246,6 +267,9 @@ public abstract class TextRenderType {
     private static final HashMap<Identifier, RenderType> sModernNormalTypes = new HashMap<>();
     private static final HashMap<Identifier, RenderType> sModernPolygonOffsetTypes = new HashMap<>();
     private static final HashMap<Identifier, RenderType> sModernSeeThroughTypes = new HashMap<>();
+    private static final HashMap<Identifier, RenderType> sModernStrokeNormalTypes = new HashMap<>();
+    private static final HashMap<Identifier, RenderType> sModernStrokePolygonOffsetTypes = new HashMap<>();
+    private static final HashMap<Identifier, RenderType> sModernStrokeSeeThroughTypes = new HashMap<>();
 
     private static RenderType sFirstSDFFillType;
     private static final ByteBufferBuilder sFirstSDFFillBuffer = new ByteBufferBuilder(131072);
@@ -405,6 +429,22 @@ public abstract class TextRenderType {
                     texture -> makeModernType("modern_text_sdf_fill_polygon_offset", PIPELINE_SDF_FILL_POLYGON_OFFSET, texture));
             default -> sModernNormalTypes.computeIfAbsent(GlyphManager.FONT_SHEET,
                     texture -> makeModernType("modern_text_sdf_fill_world", PIPELINE_SDF_FILL_WORLD, texture));
+        };
+    }
+
+    /**
+     * The stroke counterpart of {@link #getModernWorldType(Font.DisplayMode)}, used for the
+     * single continuous outline of glowing sign text.
+     */
+    @Nonnull
+    public static RenderType getModernWorldStrokeType(@Nonnull Font.DisplayMode mode) {
+        return switch (mode) {
+            case SEE_THROUGH -> sModernStrokeSeeThroughTypes.computeIfAbsent(GlyphManager.FONT_SHEET,
+                    texture -> makeModernType("modern_text_sdf_stroke_see_through", PIPELINE_SDF_STROKE_SEE_THROUGH, texture));
+            case POLYGON_OFFSET -> sModernStrokePolygonOffsetTypes.computeIfAbsent(GlyphManager.FONT_SHEET,
+                    texture -> makeModernType("modern_text_sdf_stroke_polygon_offset", PIPELINE_SDF_STROKE_POLYGON_OFFSET, texture));
+            default -> sModernStrokeNormalTypes.computeIfAbsent(GlyphManager.FONT_SHEET,
+                    texture -> makeModernType("modern_text_sdf_stroke_world", PIPELINE_SDF_STROKE_WORLD, texture));
         };
     }
 
@@ -586,6 +626,9 @@ public abstract class TextRenderType {
         sModernNormalTypes.clear();
         sModernPolygonOffsetTypes.clear();
         sModernSeeThroughTypes.clear();
+        sModernStrokeNormalTypes.clear();
+        sModernStrokePolygonOffsetTypes.clear();
+        sModernStrokeSeeThroughTypes.clear();
         sFirstSDFFillBuffer.clear();
         sFirstSDFStrokeBuffer.clear();
         if (cleanup) {

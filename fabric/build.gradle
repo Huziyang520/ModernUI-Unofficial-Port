@@ -12,8 +12,8 @@ def targetMinecraft = tv('minecraft_version', minecraft_version)
 def targetModVersion = tv('mod_version', mod_version)
 def isLite = rootProject.ext.isLite
 
-// The lite edition is a separate build of the same version, so it carries its own suffix.
-version = "${targetMinecraft}-${targetModVersion}${isLite ? '-lite' : ''}" as String
+// Lite and Full share the version; the classifier alone distinguishes their artifacts.
+version = "${targetMinecraft}-${targetModVersion}" as String
 
 configurations {
     shadow
@@ -180,7 +180,7 @@ loom.nestJars(
 )
 
 shadowJar {
-    archiveClassifier.set("universal")
+    archiveClassifier.set(isLite ? "lite" : "universal")
     configurations = [project.configurations.shadow]
 
     /*dependencies {

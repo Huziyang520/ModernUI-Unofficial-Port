@@ -125,9 +125,29 @@ public final class ModernTextRenderer {
         return x;
     }
 
+    public float drawTextWorld(@Nonnull FormattedCharSequence text, float x, float y, int color, boolean dropShadow,
+                               @Nonnull Matrix4fc matrix, @Nonnull WorldBufferSource source,
+                               Font.DisplayMode displayMode, int colorBackground, int packedLight) {
+        if (text == FormattedCharSequence.EMPTY) {
+            return x;
+        }
+
+        TextLayout layout = mEngine.lookupFormattedLayout(text);
+        return x + drawText0(layout, x, y, color, dropShadow, matrix, source, displayMode,
+                colorBackground, packedLight, true);
+    }
+
     public float drawText(@Nonnull TextLayout layout, float x, float y, int color, boolean dropShadow,
                           @Nonnull Matrix4fc matrix, @Nonnull MultiBufferSource source,
                           Font.DisplayMode displayMode, int colorBackground, int packedLight) {
+        return drawText0(layout, x, y, color, dropShadow, matrix, source::getBuffer, displayMode,
+                colorBackground, packedLight, false);
+    }
+
+    private float drawText0(@Nonnull TextLayout layout, float x, float y, int color, boolean dropShadow,
+                            @Nonnull Matrix4fc matrix, @Nonnull WorldBufferSource source,
+                            Font.DisplayMode displayMode, int colorBackground, int packedLight,
+                            final boolean world) {
         // ensure alpha, color can be ARGB, or can be RGB
         // we check if alpha <= 1, then make alpha = 255 (fully opaque)
         /*if ((color & 0xfe000000) == 0) {
@@ -195,14 +215,22 @@ public final class ModernTextRenderer {
             }
         }*/
         if (dropShadow && sAllowShadow) {
-            layout.drawText(matrix, source, x, y, r >> 2, g >> 2, b >> 2, a, true,
-                    mode, polygonOffset, uniformScale, colorBackground, packedLight);
+            if (world) {
+                layout.drawTextWorld(matrix, source, x, y, r >> 2, g >> 2, b >> 2, a, true,
+                        mode, polygonOffset, uniformScale, colorBackground, packedLight);
+            } else {
+                layout.drawText(matrix, source::getBuffer, x, y, r >> 2, g >> 2, b >> 2, a, true,
+                        mode, polygonOffset, uniformScale, colorBackground, packedLight);
+            }
             var newMatrix = new Matrix4f(matrix);
             newMatrix.translate(SHADOW_OFFSET);
             matrix = newMatrix;
         }
 
-        return layout.drawText(matrix, source, x, y, r, g, b, a, false,
+        return world
+                ? layout.drawTextWorld(matrix, source, x, y, r, g, b, a, false,
+                mode, polygonOffset, uniformScale, colorBackground, packedLight)
+                : layout.drawText(matrix, source::getBuffer, x, y, r, g, b, a, false,
                 mode, polygonOffset, uniformScale, colorBackground, packedLight);
     }
 
@@ -305,6 +333,48 @@ public final class ModernTextRenderer {
         var newMatrix = new Matrix4f(matrix);
         newMatrix.translate(OUTLINE_OFFSET);
         layout.drawTextOutline(newMatrix, source, x, y, r, g, b, a, packedLight);
+    }
+
+    public void drawText8xOutlineWorld(@Nonnull FormattedCharSequence text, float x, float y,
+                                       int color, int outlineColor, @Nonnull Matrix4fc matrix,
+                                       @Nonnull WorldBufferSource source, Font.DisplayMode displayMode,
+                                       int packedLight) {
+        if (text == FormattedCharSequence.EMPTY) {
+            return;
+        }
+
+        boolean isBlack = (color & 0xFFFFFF) == 0;
+        if (isBlack) {
+            color = outlineColor;
+        }
+        int a = color >>> 24;
+        int r = color >> 16 & 0xff;
+        int g = color >> 8 & 0xff;
+        int b = color & 0xff;
+
+        TextLayout layout = mEngine.lookupFormattedLayout(text);
+
+        int mode = displayMode == Font.DisplayMode.SEE_THROUGH
+                ? TextRenderType.MODE_SEE_THROUGH : TextRenderType.MODE_SDF_FILL;
+        boolean polygonOffset = displayMode == Font.DisplayMode.POLYGON_OFFSET;
+        layout.drawTextWorld(matrix, source, x, y, r, g, b, a, false,
+                mode, polygonOffset, 1, 0, packedLight);
+
+        // disable outline if either text color is BLACK or SDF shader is unavailable
+        if (isBlack ||
+                (TextLayoutEngine.sCurrentInWorldRendering && !TextLayoutEngine.sUseTextShadersInWorld)) {
+            return;
+        }
+
+        a = outlineColor >>> 24;
+        r = outlineColor >> 16 & 0xff;
+        g = outlineColor >> 8 & 0xff;
+        b = outlineColor & 0xff;
+
+        var newMatrix = new Matrix4f(matrix);
+        newMatrix.translate(OUTLINE_OFFSET);
+        layout.drawTextOutlineWorld(newMatrix, source, x, y, r, g, b, a, packedLight,
+                Font.DisplayMode.NORMAL);
     }
 
     /*public static void change(boolean global, boolean shadow) {

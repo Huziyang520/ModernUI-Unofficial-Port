@@ -5,9 +5,14 @@ import icyllis.modernui.mc.text.TextLayoutEngine;
 import icyllis.modernui.mc.text.TextRenderType;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.font.TextRenderable;
+import net.minecraft.client.renderer.feature.TextFeatureRenderer;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+import org.joml.Matrix4f;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
@@ -30,7 +35,45 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  * @author BloCamLimb
  */
 @Mixin(targets = "net.minecraft.client.renderer.feature.TextFeatureRenderer$GlyphRenderer")
-public class MixinTextFeatureRenderer {
+public class MixinTextFeatureRenderer implements GlyphRendererAccess {
+
+    @Shadow
+    @Final
+    private Matrix4f pose;
+
+    @Shadow
+    private int lightCoords;
+
+    @Shadow
+    private Font.DisplayMode displayMode;
+
+    @Shadow
+    @Final
+    private TextFeatureRenderer this$0;
+
+    @Unique
+    @Override
+    public Matrix4f modernui$getPose() {
+        return pose;
+    }
+
+    @Unique
+    @Override
+    public int modernui$getLightCoords() {
+        return lightCoords;
+    }
+
+    @Unique
+    @Override
+    public Font.DisplayMode modernui$getDisplayMode() {
+        return displayMode;
+    }
+
+    @Unique
+    @Override
+    public TextFeatureRenderer modernui$getOwner() {
+        return this$0;
+    }
 
     @Redirect(method = "acceptRenderable",
             at = @At(value = "INVOKE",

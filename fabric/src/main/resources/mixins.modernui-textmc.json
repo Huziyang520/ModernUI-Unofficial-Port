@@ -20,6 +20,8 @@
     "MixinGuiRenderer",
     "MixinGuiTextRenderState",
     "MixinLanguage",
-    "MixinTextFeatureRenderer"
+    "MixinTextFeatureRenderer",
+    "MixinTextFeatureRendererWorld",
+    "RenderTypeFeatureRendererAccess"
   ]
 }

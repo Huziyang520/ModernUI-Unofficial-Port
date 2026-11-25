@@ -321,6 +321,33 @@ public class TextLayout {
                           final boolean isShadow, int preferredMode,
                           final boolean polygonOffset, final float uniformScale,
                           final int bgColor, final int packedLight) {
+        return drawText0(matrix, source::getBuffer, x, top, r, g, b, a, isShadow, preferredMode,
+                polygonOffset, uniformScale, bgColor, packedLight, false);
+    }
+
+    /**
+     * World-space variant used by the feature renderer, which owns the vertex buffers.
+     * SDF fill is baked at {@link TextLayoutEngine#adjustPixelDensityForSDF(int)} density,
+     * so it is independent of the GUI scale.
+     */
+    public float drawTextWorld(@Nonnull final Matrix4fc matrix,
+                               @Nonnull final WorldBufferSource source,
+                               float x, float top,
+                               int r, int g, int b, final int a,
+                               final boolean isShadow, int preferredMode,
+                               final boolean polygonOffset, final float uniformScale,
+                               final int bgColor, final int packedLight) {
+        return drawText0(matrix, source, x, top, r, g, b, a, isShadow, preferredMode,
+                polygonOffset, uniformScale, bgColor, packedLight, true);
+    }
+
+    private float drawText0(@Nonnull final Matrix4fc matrix,
+                            @Nonnull final WorldBufferSource source,
+                            float x, float top,
+                            int r, int g, int b, final int a,
+                            final boolean isShadow, int preferredMode,
+                            final boolean polygonOffset, final float uniformScale,
+                            final int bgColor, final int packedLight, final boolean world) {
         final int startR = r;
         final int startG = g;
         final int startB = b;
@@ -504,6 +531,8 @@ public class TextLayout {
                 prevVanillaDisplayMode = vanillaDisplayMode;
                 builder = source.getBuffer(vanillaDisplayMode != null
                         ? TextRenderType.getOrCreate(texture, vanillaDisplayMode, isBitmapFont)
+                        : world && !isColorEmoji
+                        ? TextRenderType.getModernWorldType(compatDisplayMode)
                         : TextRenderType.getOrCreate(texture, mode));
             }
             float upSkew = 0;
@@ -586,12 +615,36 @@ public class TextLayout {
      * @param a           the alpha value (0...255)
      * @param packedLight see {@link net.minecraft.util.LightCoordsUtil}
      */
-    @SuppressWarnings("UnnecessaryLocalVariable")
     public void drawTextOutline(@Nonnull Matrix4fc matrix,
                                 @Nonnull MultiBufferSource source,
                                 final float x, final float top,
                                 int r, int g, int b, int a,
                                 int packedLight) {
+        drawTextOutline0(matrix, source::getBuffer, x, top, r, g, b, a, packedLight,
+                false, net.minecraft.client.gui.Font.DisplayMode.NORMAL);
+    }
+
+    /**
+     * World-space stroke variant; the modern stroke render type is chosen for
+     * {@code GlyphManager.FONT_SHEET} glyphs and follows the requested display mode.
+     */
+    public void drawTextOutlineWorld(@Nonnull Matrix4fc matrix,
+                                     @Nonnull WorldBufferSource source,
+                                     final float x, final float top,
+                                     int r, int g, int b, int a,
+                                     int packedLight,
+                                     @Nonnull net.minecraft.client.gui.Font.DisplayMode displayMode) {
+        drawTextOutline0(matrix, source, x, top, r, g, b, a, packedLight, true, displayMode);
+    }
+
+    @SuppressWarnings("UnnecessaryLocalVariable")
+    private void drawTextOutline0(@Nonnull Matrix4fc matrix,
+                                  @Nonnull WorldBufferSource source,
+                                  final float x, final float top,
+                                  int r, int g, int b, int a,
+                                  int packedLight,
+                                  final boolean world,
+                                  @Nonnull net.minecraft.client.gui.Font.DisplayMode worldDisplayMode) {
         final float resLevel = TextLayoutEngine.adjustPixelDensityForSDF(mCreatedResLevel);
 
         final BakedGlyph[] glyphs = getGlyphs((int) resLevel);
@@ -637,8 +690,9 @@ public class TextLayout {
                 ry = Math.round(ry * scale) / scale;
             }*/
             if (builder == null) {
-                builder = source.getBuffer(TextRenderType.getOrCreate(GlyphManager.FONT_SHEET,
-                        TextRenderType.MODE_SDF_STROKE));
+                builder = source.getBuffer(world
+                        ? TextRenderType.getModernWorldStrokeType(worldDisplayMode)
+                        : TextRenderType.getOrCreate(GlyphManager.FONT_SHEET, TextRenderType.MODE_SDF_STROKE));
             }
             float uBloat = (glyph.u2 - glyph.u1) / glyph.width;
             float vBloat = (glyph.v2 - glyph.v1) / glyph.height;
