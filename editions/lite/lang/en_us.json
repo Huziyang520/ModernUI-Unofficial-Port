@@ -195,9 +195,9 @@
   "mui.lite.option.notice.desc": "Prints the notice in chat once when joining a world. Turn it off to stop showing it.",
   "mui.lite.group.changelog": "Changelog",
   "mui.lite.changelog.version": "Modern UI %s",
-  "mui.lite.changelog.settings": "* Drop the in-house settings screen and open the config library instead",
-  "mui.lite.changelog.border": "* Add the tooltip border style section with presets and per-corner colours",
-  "mui.lite.changelog.font": "* Pick the first font family from a list, applying it immediately",
-  "mui.lite.changelog.loader": "* Skip config options the running loader never registers",
-  "mui.lite.changelog.notice": "* Print a notice on world join, which can be turned off here, and move About & Links to the first tab"
+  "mui.lite.changelog.text": "* Fix 3D world text blurring at low GUI scales: signs, name tags and text displays now use the Modern Text Engine at a GUI-independent SDF density",
+  "mui.lite.changelog.glow": "* Fix glowing sign text: one continuous SDF outline replaces the eight offset copies, removing the blurred halo and the seams",
+  "mui.lite.changelog.browse262": "* Full edition: fix the \"Browse File\" button in the font settings page and restore the native font file dialog on 26.2",
+  "mui.lite.changelog.browse263": "* Full edition: fix the \"Browse File\" button in the font settings page (wrong reflection argument count)",
+  "mui.lite.changelog.borderfix": "* Fix the adaptive tooltip border turning common items grey-white: only the hover name line is used now, so common items keep the configured border colour"
 }

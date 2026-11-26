@@ -304,11 +304,10 @@ public final class YaclSettings {
                 .group(OptionGroup.createBuilder()
                         .name(label("mui.lite.group.changelog"))
                         .option(LabelOption.create(label("mui.lite.changelog.version", changelogVersion())))
-                        .option(LabelOption.create(label("mui.lite.changelog.settings")))
-                        .option(LabelOption.create(label("mui.lite.changelog.border")))
-                        .option(LabelOption.create(label("mui.lite.changelog.font")))
-                        .option(LabelOption.create(label("mui.lite.changelog.loader")))
-                        .option(LabelOption.create(label("mui.lite.changelog.notice")))
+                        .option(LabelOption.create(label("mui.lite.changelog.text")))
+                        .option(LabelOption.create(label("mui.lite.changelog.glow")))
+                        .option(LabelOption.create(label(changelogBrowseKey())))
+                        .option(LabelOption.create(label("mui.lite.changelog.borderfix")))
                         .build())
                 .build());
     }
@@ -611,6 +610,14 @@ public final class YaclSettings {
             return version;
         }
         return "3.14.9.2";
+    }
+
+    /** The font dialog entry differs between targets, the manifest prefix picks the wording. */
+    private static String changelogBrowseKey() {
+        String version = ModernUIMod.class.getPackage().getImplementationVersion();
+        return version != null && version.startsWith("26.2")
+                ? "mui.lite.changelog.browse262"
+                : "mui.lite.changelog.browse263";
     }
 
     /**

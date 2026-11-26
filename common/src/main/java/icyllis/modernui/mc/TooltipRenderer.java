@@ -194,11 +194,9 @@ public final class TooltipRenderer implements ScrollController.IListener {
                         }
                 );
             }
-            if (colors.isEmpty()) {
-                // The first tooltip line is the item's styled hover name, so it already carries
-                // the rarity color vanilla gives it. Used when no stack was handed to us: MC 26.2+
-                // moved it out of tooltip(...) into GuiGraphicsExtractor's own bookkeeping, and our
-                // loader hooks can miss it, which left every border on the fixed colors.
+            if (colors.isEmpty() && item.isEmpty()) {
+                // No stack was handed to us, so fall back to the hover name line only. The
+                // rarity color is there; later lines (durability, mod info) must not tint the border.
                 collectTooltipColors(list, colors);
             }
             if (applyWorkingColors(colors, !item.isEmpty() && item.isEnchanted())) {
@@ -211,16 +209,14 @@ public final class TooltipRenderer implements ScrollController.IListener {
 
     private static void collectTooltipColors(@Nonnull List<ClientTooltipComponent> list,
                                              @Nonnull IntOpenHashSet colors) {
-        for (int i = 0, e = Math.min(list.size(), 3); i < e; i++) {
-            if (list.get(i) instanceof ClientTextTooltip) {
-                Style style = findSingleStyle((ClientTextTooltip) list.get(i));
-                TextColor textColor = style != null ? style.getColor() : null;
-                // white is Rarity.COMMON's color, keep the configured border for it
-                if (textColor != null && (textColor.getValue() & 0xFFFFFF) != 0xFFFFFF) {
-                    colors.add(textColor.getValue() & 0xFFFFFF);
-                    return;
-                }
-            }
+        if (list.isEmpty() || !(list.get(0) instanceof ClientTextTooltip line)) {
+            return;
+        }
+        Style style = findSingleStyle(line);
+        TextColor textColor = style != null ? style.getColor() : null;
+        // white is Rarity.COMMON's color, keep the configured border for it
+        if (textColor != null && (textColor.getValue() & 0xFFFFFF) != 0xFFFFFF) {
+            colors.add(textColor.getValue() & 0xFFFFFF);
         }
     }
     /**

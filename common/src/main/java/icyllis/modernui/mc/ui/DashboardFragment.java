@@ -197,7 +197,8 @@ public class DashboardFragment extends Fragment {
                                 ----
                                 * Fix 3D world text blurring at low GUI scales: signs, name tags and text displays now use the Modern Text Engine at a GUI-independent SDF density 修复 3D 世界文本（告示牌、命名牌、文本展示）在低 GUI 缩放下变糊的问题：改用现代文本引擎，SDF 密度不再随 GUI 缩放变化
                                 * Fix glowing sign text: one continuous SDF outline replaces the eight offset copies, removing the blurred halo and the seams 修复发光告示牌文字：以单次连续 SDF 描边替代八份偏移副本，消除糊团与细缝
-                                * Full edition: fix the "Browse File" button in the font settings page (wrong reflection argument count) 完整版：修复字体设置页“浏览文件”按钮（反射实参个数错误）""");
+                                * Full edition: fix the "Browse File" button in the font settings page (wrong reflection argument count) 完整版：修复字体设置页“浏览文件”按钮（反射实参个数错误）
+                                * Fix the adaptive tooltip border turning common items grey-white: only the hover name line is used now, so common items keep the configured border colour 修复动态提示框边框把普通物品染成灰白的问题：现在只取物品名所在行，普通物品保持配置的边框颜色""");
                         var params = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
                         params.bottomMargin = content.dp(20);
                         inner.addView(tv, params);
