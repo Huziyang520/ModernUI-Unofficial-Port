@@ -1,6 +1,7 @@
 package icyllis.modernui.mc.text.mixin;
 
 import icyllis.modernui.mc.text.GlyphManager;
+import icyllis.modernui.mc.text.GlyphRendererAccess;
 import icyllis.modernui.mc.text.TextLayoutEngine;
 import icyllis.modernui.mc.text.TextRenderType;
 import net.minecraft.client.gui.Font;

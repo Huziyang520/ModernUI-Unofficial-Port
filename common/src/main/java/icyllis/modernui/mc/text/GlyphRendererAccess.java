@@ -16,7 +16,7 @@
  * License along with Modern UI. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package icyllis.modernui.mc.text.mixin;
+package icyllis.modernui.mc.text;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.feature.TextFeatureRenderer;
@@ -24,7 +24,7 @@ import org.joml.Matrix4f;
 
 /**
  * The glyph renderer is package-private, so its pose and owning feature renderer
- * are read through methods merged by {@link MixinTextFeatureRenderer}.
+ * are read through methods merged by {@link icyllis.modernui.mc.text.mixin.MixinTextFeatureRenderer}.
  */
 public interface GlyphRendererAccess {
 

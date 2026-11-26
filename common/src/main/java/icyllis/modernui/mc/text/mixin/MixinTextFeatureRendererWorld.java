@@ -19,6 +19,7 @@
 package icyllis.modernui.mc.text.mixin;
 
 import icyllis.modernui.mc.text.FeatureBufferSource;
+import icyllis.modernui.mc.text.GlyphRendererAccess;
 import icyllis.modernui.mc.text.ModernWorldText;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.feature.TextFeatureRenderer;
