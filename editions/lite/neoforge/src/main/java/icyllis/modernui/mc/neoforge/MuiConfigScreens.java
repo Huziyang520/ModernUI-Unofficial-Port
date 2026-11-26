@@ -17,4 +17,11 @@ public final class MuiConfigScreens {
         // Without the library the button stays where it was: there is no fallback screen.
         return screen != null ? screen : parent;
     }
+
+    /**
+     * Ctrl+K goes straight to the config library, skipping the Fragment hand-off screen.
+     */
+    public static Screen createCenter() {
+        return YaclBridge.open(null);
+    }
 }

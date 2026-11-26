@@ -37,4 +37,11 @@ public final class MuiConfigScreens {
         fragment.setArguments(args);
         return MuiFabricApi.get().createScreen(fragment, null, parent);
     }
+
+    /**
+     * Ctrl+K keeps the dashboard entry; only the lite edition opens the library directly.
+     */
+    public static Screen createCenter() {
+        return null;
+    }
 }

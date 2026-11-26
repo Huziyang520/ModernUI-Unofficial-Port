@@ -100,6 +100,11 @@ public final class UIManagerFabric extends UIManager {
                     screen.shouldCloseOnEsc() ||
                     screen instanceof TitleScreen) {
                 if (event.hasControlDownWithQuirk() && OPEN_CENTER_KEY.matches(event)) {
+                    Screen direct = MuiConfigScreens.createCenter();
+                    if (direct != null) {
+                        minecraft.gui.setScreen(direct);
+                        return;
+                    }
                     open(new CenterFragment2());
                     return;
                 }

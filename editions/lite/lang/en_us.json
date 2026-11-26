@@ -194,7 +194,7 @@
   "mui.lite.option.notice": "World join notice",
   "mui.lite.option.notice.desc": "Prints the notice in chat once when joining a world. Turn it off to stop showing it.",
   "mui.lite.group.changelog": "Changelog",
-  "mui.lite.changelog.version": "Modern UI 3.14.9.1",
+  "mui.lite.changelog.version": "Modern UI %s",
   "mui.lite.changelog.settings": "* Drop the in-house settings screen and open the config library instead",
   "mui.lite.changelog.border": "* Add the tooltip border style section with presets and per-corner colours",
   "mui.lite.changelog.font": "* Pick the first font family from a list, applying it immediately",

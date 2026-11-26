@@ -303,7 +303,7 @@ public final class YaclSettings {
                 .group(original)
                 .group(OptionGroup.createBuilder()
                         .name(label("mui.lite.group.changelog"))
-                        .option(LabelOption.create(label("mui.lite.changelog.version")))
+                        .option(LabelOption.create(label("mui.lite.changelog.version", changelogVersion())))
                         .option(LabelOption.create(label("mui.lite.changelog.settings")))
                         .option(LabelOption.create(label("mui.lite.changelog.border")))
                         .option(LabelOption.create(label("mui.lite.changelog.font")))
@@ -596,6 +596,22 @@ public final class YaclSettings {
     }
 
     // ---- labels ------------------------------------------------------------
+
+    /**
+     * Jar manifests prefix the mod version with the target, so strip it for the
+     * changelog heading; dev runs have no package version and show the public one.
+     */
+    private static String changelogVersion() {
+        String version = ModernUIMod.class.getPackage().getImplementationVersion();
+        if (version != null) {
+            int dash = version.indexOf('-');
+            if (dash >= 0) {
+                return version.substring(dash + 1);
+            }
+            return version;
+        }
+        return "3.14.9.2";
+    }
 
     /**
      * The shared tree names the options but rarely describes them, so a missing entry

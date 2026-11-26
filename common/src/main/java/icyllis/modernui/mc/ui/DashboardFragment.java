@@ -260,7 +260,7 @@ public class DashboardFragment extends Fragment {
         tv.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
         tv.setMovementMethod(LinkMovementMethod.getInstance());
         f.mMarkflow.setMarkdown(tv, result != null ? result :
-                "[Full Changelog…](https://github.com/Huziyang520/ModernUI-Unofficial-Port/blob/26.3/changelogs.md)");
+                "[Full Changelog…](https://github.com/Huziyang520/ModernUI-Unofficial-Port/blob/26.X/changelogs.md)");
         list.addView(tv);
     }
 
@@ -499,7 +499,7 @@ public class DashboardFragment extends Fragment {
             future = CompletableFuture.supplyAsync(() -> {
                 HttpURLConnection connection = null;
                 try {
-                    URL url = new URL("https://raw.githubusercontent.com/Huziyang520/ModernUI-Unofficial-Port/refs/heads/26.3/changelogs.md");
+                    URL url = new URL("https://raw.githubusercontent.com/Huziyang520/ModernUI-Unofficial-Port/refs/heads/26.X/changelogs.md");
                     connection = (HttpURLConnection) url.openConnection();
                     connection.setConnectTimeout(60_000); // 1min
                     connection.setReadTimeout(180_000); // 3min
@@ -529,7 +529,7 @@ public class DashboardFragment extends Fragment {
                             sb.append(line).append('\n');
                         }
                     }
-                    sb.append("[Full Changelog…](https://github.com/Huziyang520/ModernUI-Unofficial-Port/blob/26.3/changelogs.md)");
+                    sb.append("[Full Changelog…](https://github.com/Huziyang520/ModernUI-Unofficial-Port/blob/26.X/changelogs.md)");
                     return sb.toString();
                 } catch (IOException e) {
                     throw new CompletionException(e);

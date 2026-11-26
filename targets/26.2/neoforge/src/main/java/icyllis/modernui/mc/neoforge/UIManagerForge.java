@@ -142,6 +142,11 @@ public final class UIManagerForge extends UIManager implements LifecycleOwner {
                     minecraft.gui.screen() instanceof TitleScreen) {
                 InputConstants.Key key = InputConstants.getKey(event);
                 if (OPEN_CENTER_KEY.isActiveAndMatches(key)) {
+                    Screen direct = MuiConfigScreens.createCenter();
+                    if (direct != null) {
+                        minecraft.gui.setScreen(direct);
+                        return;
+                    }
                     open(new CenterFragment2());
                     return;
                 }
